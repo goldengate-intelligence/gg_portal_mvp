@@ -1,0 +1,269 @@
+import React from 'react';
+import { Card } from "../../../ui/card";
+import { GoldengateBarChart } from '../../../../lib/charts';
+import { useDesignPatterns } from '../../../../hooks/useDesignPatterns';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+
+interface AwardsAndRevenueHistoryPanelProps {
+  revenueTimeAggregation: string;
+  revenueTimePeriod: string;
+  onRevenueTimeAggregationChange: (value: string) => void;
+  onRevenueTimePeriodChange: (value: string) => void;
+  getFilteredRevenueData: () => any[];
+}
+
+export function AwardsAndRevenueHistoryPanel({
+  revenueTimeAggregation,
+  revenueTimePeriod,
+  onRevenueTimeAggregationChange,
+  onRevenueTimePeriodChange,
+  getFilteredRevenueData
+}: AwardsAndRevenueHistoryPanelProps) {
+  const { Typography, PanelWrapper } = useDesignPatterns();
+
+  // Format date helper function
+  const formatDate = (monthYear: string) => {
+    const [year, month] = monthYear.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      year: revenueTimeAggregation === 'Y' ? 'numeric' : '2-digit'
+    });
+  };
+
+  return (
+    <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
+      {/* Animated background grid */}
+      <div className="absolute inset-0 opacity-5 z-0">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(90deg, #F97316 1px, transparent 1px),
+            linear-gradient(180deg, #F97316 1px, transparent 1px)
+          `,
+          backgroundSize: '15px 15px'
+        }} />
+      </div>
+
+      {/* Glow effect on hover */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #F9731620, transparent)' }} />
+      <div className="p-4 h-full flex flex-col relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <h3
+            className={Typography.panelTitle}
+            style={Typography.panelTitleFont}
+          >
+            AWARDS & REVENUE HISTORY ({revenueTimePeriod}Y)
+          </h3>
+          <div className="flex items-center gap-2">
+            <select
+              className="bg-black/60 border border-[#F97316] text-white text-xs px-2 py-1 rounded font-light focus:border-[#F97316] focus:outline-none"
+              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+              value={revenueTimeAggregation}
+              onChange={(e) => onRevenueTimeAggregationChange(e.target.value)}
+            >
+              <option value="M">Month</option>
+              <option value="Q">Quarter</option>
+              <option value="Y">Year</option>
+            </select>
+            <select
+              className="bg-black/60 border border-[#F97316] text-white text-xs px-2 py-1 rounded font-light focus:border-[#F97316] focus:outline-none"
+              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+              value={revenueTimePeriod}
+              onChange={(e) => onRevenueTimePeriodChange(e.target.value)}
+            >
+              <option value="1">1 Year</option>
+              <option value="2">2 Years</option>
+              <option value="3">3 Years</option>
+              <option value="5">5 Years</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <GoldengateBarChart
+            title="Lifetime Activity"
+            liveIndicator={true}
+            liveText="TRACKING"
+            height={280}
+            data={{
+              labels: getFilteredRevenueData().map((d: any) => formatDate(d.monthYear)),
+              datasets: [
+                {
+                  type: 'bar' as const,
+                  label: 'Award Value  ',
+                  data: getFilteredRevenueData().map((d: any) => parseFloat(d.monthlyRevenue) / 1000000),
+                  backgroundColor: 'rgba(78, 201, 176, 0.7)',
+                  borderColor: '#4EC9B0',
+                  borderWidth: 2,
+                  yAxisID: 'y',
+                },
+                {
+                  type: 'line' as const,
+                  label: 'Smoothed Revenue',
+                  data: getFilteredRevenueData().map((d: any, index: number) => {
+                    const baseValue = parseFloat(d.monthlyRevenue) / 1000000;
+                    return baseValue * (1 + (index * 0.02)); // Simple growth projection
+                  }),
+                  backgroundColor: 'rgba(210, 172, 56, 0.4)',
+                  borderColor: '#D2AC38',
+                  borderWidth: 2,
+                  fill: false,
+                  tension: 0.4,
+                  pointBackgroundColor: '#D2AC38',
+                  pointBorderColor: '#D2AC38',
+                  pointRadius: 4,
+                  yAxisID: 'y',
+                }
+              ]
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              elements: {
+                line: {
+                  borderWidth: 0
+                }
+              },
+              layout: {
+                padding: {
+                  left: 5,
+                  right: 5,
+                  top: -10,
+                  bottom: -10
+                }
+              },
+              interaction: {
+                mode: 'index' as const,
+                intersect: false,
+              },
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'bottom' as const,
+                  labels: {
+                    color: '#D2AC38',
+                    font: { size: 12 },
+                    padding: 2,
+                    boxWidth: 4,
+                    boxHeight: 4,
+                    usePointStyle: true
+                  }
+                },
+                tooltip: {
+                  enabled: false, // Disable default tooltip since we're using external
+                  // Use external tooltip for full HTML control
+                  external: function(context: any) {
+                    // Get or create tooltip element
+                    let tooltipEl = document.getElementById('chartjs-tooltip');
+
+                    if (!tooltipEl) {
+                      tooltipEl = document.createElement('div');
+                      tooltipEl.id = 'chartjs-tooltip';
+                      tooltipEl.style.cssText = `
+                        background: rgba(0, 0, 0, 0.95);
+                        border: 1px solid #374151;
+                        border-radius: 6px;
+                        color: white;
+                        opacity: 1;
+                        pointer-events: none;
+                        position: absolute;
+                        transform: translate(-50%, 0);
+                        transition: all .1s ease;
+                        font-family: system-ui, -apple-system, sans-serif;
+                        font-size: 12px;
+                        padding: 10px;
+                        min-width: 200px;
+                        z-index: 9999;
+                      `;
+                      document.body.appendChild(tooltipEl);
+                    }
+
+                    // Hide if no tooltip
+                    const tooltipModel = context.tooltip;
+                    if (tooltipModel.opacity === 0) {
+                      tooltipEl.style.opacity = '0';
+                      return;
+                    }
+
+                    // Get data
+                    if (tooltipModel.body) {
+                      const dataPoints = tooltipModel.dataPoints;
+                      const awards = dataPoints[0]?.parsed.y || 0;
+                      const revenue = dataPoints[1]?.parsed.y || 0;
+                      const date = dataPoints[0]?.label || '';
+
+                      // Build HTML with aligned columns using monospace font
+                      let innerHtml = `
+                        <div style="margin-bottom: 8px; color: #9CA3AF; font-size: 11px; border-bottom: 1px solid #374151; padding-bottom: 6px;">
+                          ${date}
+                        </div>
+                        <div style="font-family: system-ui, -apple-system, sans-serif; font-size: 11px;">
+                          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                            <span style="color: #4EC9B0;">Awards Captured:</span>
+                            <span style="color: #4EC9B0; font-weight: bold;">$${awards.toFixed(1)}M</span>
+                          </div>
+                          <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #D2AC38;">Revenue Recognized:</span>
+                            <span style="color: #D2AC38; font-weight: bold;">$${revenue.toFixed(1)}M</span>
+                          </div>
+                        </div>
+                      `;
+
+                      tooltipEl.innerHTML = innerHtml;
+                    }
+
+                    // Position tooltip
+                    const position = context.chart.canvas.getBoundingClientRect();
+                    const bodyFont = tooltipModel.options.bodyFont;
+
+                    tooltipEl.style.opacity = '1';
+                    tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
+                    tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY + 'px';
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  display: true,
+                  border: {
+                    display: false
+                  },
+                  ticks: {
+                    color: '#D2AC38',
+                    font: { family: 'system-ui, -apple-system, sans-serif', size: 10 },
+                    maxRotation: 0
+                  },
+                  grid: {
+                    color: 'rgba(192, 192, 192, 0.3)',
+                    drawBorder: false,
+                    borderColor: 'transparent',
+                    borderWidth: 0
+                  }
+                },
+                y: {
+                  type: 'linear' as const,
+                  display: true,
+                  position: 'left' as const,
+                  border: {
+                    display: false
+                  },
+                  ticks: {
+                    color: '#D2AC38',
+                    font: { family: 'system-ui, -apple-system, sans-serif', size: 10 },
+                    callback: function(value: any) { return '$' + value + 'M'; }
+                  },
+                  grid: {
+                    color: 'rgba(192, 192, 192, 0.3)',
+                    drawBorder: false,
+                    borderColor: 'transparent',
+                    borderWidth: 0
+                  }
+                }
+              }
+            }}
+          />
+        </div>
+      </div>
+    </Card>
+  );
+}

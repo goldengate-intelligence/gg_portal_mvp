@@ -1,0 +1,12 @@
+TEMPORARY SWAP FILE - DELETE AFTER USE
+
+LEFT PANEL SHOULD HAVE (Network Distribution - Contracting Activity):
+- Three Column Container Layout
+- Direct Awards
+- Prime Awards
+- Sub Orders
+
+RIGHT PANEL SHOULD HAVE (Network Map - Operational Zones):
+- USA Map Visualization
+- Network dots
+- Legend

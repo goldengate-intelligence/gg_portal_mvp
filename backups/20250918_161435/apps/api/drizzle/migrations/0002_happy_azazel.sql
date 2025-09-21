@@ -1,0 +1,1 @@
+ALTER TABLE "contractors_cache" ALTER COLUMN "state" SET DATA TYPE varchar(10);

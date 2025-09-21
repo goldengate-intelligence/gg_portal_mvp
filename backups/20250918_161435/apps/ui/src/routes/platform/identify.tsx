@@ -1,0 +1,1098 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { Search, Filter, Download, Save, ChevronLeft, ChevronRight, Crosshair, Database, Terminal, FolderOpen, FileDown, Globe, BarChart3, TrendingUp, Activity, Shield } from 'lucide-react';
+import { SearchInput } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { HudContractorCard } from '../../components/ui/hud-contractor-card';
+import { HudCard, HudCardHeader, HudCardContent } from '../../components/ui/hud-card';
+import { ContractorTable } from '../../components/ui/table';
+import { LoadingState, EmptyState, ContractorCardSkeleton } from '../../components/ui/skeleton';
+import { Sheet } from '../../components/ui/modal';
+import { FilterSidebar } from '../../components/platform/FilterSidebar';
+import { ActiveFilters } from '../../components/platform/ActiveFilters';
+import { HudContractorModal } from '../../components/platform/HudContractorModal';
+import { useContractorProfiles } from '../../hooks/useContractorProfiles';
+import { useContractorFavorites } from '../../hooks/useContractorLists';
+import { transformContractorProfileArray, formatCurrency } from '../../utils/contractor-profile-transform';
+import { exportContractors } from '../../utils/export';
+import { cn } from '../../lib/utils';
+import type { Contractor, SearchFilters, ViewMode } from '../../types';
+import type { ContractorProfileFilters } from '../../hooks/useContractorProfiles';
+
+export function IdentifyTargets() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const [selectedContractor, setSelectedContractor] = useState<Contractor | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(24);
+  
+  // Initialize filters - no defaults since we're using aggregated profiles
+  const [filters, setFilters] = useState<SearchFilters>({
+    query: '',
+    location: [],
+    states: [],
+    sectors: [],
+    contractValueMin: undefined,
+    contractValueMax: undefined,
+    lifecycleStage: [],
+    businessMomentum: [],
+    ownershipType: [],
+  });
+
+  // Convert UI filters to API filters format
+  const apiFilters: ContractorProfileFilters = useMemo(() => ({
+    search: filters.query,
+    states: filters.states,
+    agencies: [], // Could be mapped from other filters if needed
+    industries: filters.sectors,
+    lifecycleStages: filters.lifecycleStage,
+    sizeTiers: [], // Could be mapped from ownershipType
+    minObligated: filters.contractValueMin,
+    maxObligated: filters.contractValueMax,
+  }), [filters]);
+
+  // Fetch contractor profiles using the custom hook
+  const {
+    data: contractorProfiles,
+    pagination,
+    aggregations,
+    isLoading,
+    error,
+    refetch,
+  } = useContractorProfiles({
+    page: currentPage,
+    limit: pageSize,
+    sortBy: 'totalObligated',
+    sortOrder: 'desc',
+    filters: apiFilters,
+    enabled: true,
+  });
+
+  // Use favorites hook
+  const { favorites, isFavorite, toggleFavorite } = useContractorFavorites();
+
+  // Transform API profile data to UI format
+  const filteredContractors = useMemo(() => {
+    return transformContractorProfileArray(contractorProfiles);
+  }, [contractorProfiles]);
+
+  // Handle toggling favorite
+  const handleToggleFavorite = async (contractorId: string) => {
+    try {
+      await toggleFavorite(contractorId);
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
+
+  // Debounced search with page reset
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, query: searchQuery }));
+      setCurrentPage(1); // Reset to first page on search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [apiFilters]);
+
+  // Count active filters
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.location.length > 0) count += filters.location.length;
+    if (filters.states.length > 0) count += filters.states.length;
+    if (filters.sectors.length > 0) count += filters.sectors.length;
+    if (filters.lifecycleStage.length > 0) count += filters.lifecycleStage.length;
+    if (filters.businessMomentum.length > 0) count += filters.businessMomentum.length;
+    if (filters.ownershipType.length > 0) count += filters.ownershipType.length;
+    // Count contract value filter if any value is set
+    if (filters.contractValueMin !== undefined || filters.contractValueMax !== undefined) count++;
+    return count;
+  }, [filters]);
+
+  const handleExport = () => {
+    exportContractors(filteredContractors, 'csv');
+  };
+
+  const handleSaveSearch = () => {
+    // TODO: Implement save search functionality
+    console.log('Saving search with filters:', filters);
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      query: '',
+      location: [],
+      states: [],
+      sectors: [],
+      contractValueMin: undefined,
+      contractValueMax: undefined,
+      lifecycleStage: [],
+      businessMomentum: [],
+      ownershipType: [],
+    });
+    setSearchQuery('');
+    setCurrentPage(1);
+  };
+
+  const renderFilterContent = (filterId: string) => {
+    switch (filterId) {
+      case "keywords":
+        return (
+          <div className="p-4 bg-gray-900/80">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-orbitron text-gray-300 uppercase">Keywords Filter</span>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, keywords: [] }))}
+                className="text-xs px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-gray-300 hover:border-gray-500 transition-all font-mono uppercase"
+              >
+                Reset
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <SearchInput
+                  placeholder="Enter keywords..."
+                  className="flex-1 bg-black/50 border-cyan-500/30 text-white placeholder-gray-400 font-mono"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && e.target.value.trim()) {
+                      const keyword = e.target.value.trim();
+                      if (!filters.keywords?.includes(keyword)) {
+                        setFilters(prev => ({
+                          ...prev,
+                          keywords: [...(prev.keywords || []), keyword]
+                        }));
+                      }
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                <Button
+                  onClick={(e) => {
+                    const input = e.target.parentElement.querySelector('input');
+                    const keyword = input.value.trim();
+                    if (keyword && !filters.keywords?.includes(keyword)) {
+                      setFilters(prev => ({
+                        ...prev,
+                        keywords: [...(prev.keywords || []), keyword]
+                      }));
+                      input.value = '';
+                    }
+                  }}
+                  size="sm"
+                  className="bg-[#D2AC38]/20 hover:bg-[#D2AC38]/30 text-[#D2AC38] border border-[#D2AC38]/30 font-mono"
+                >
+                  Add
+                </Button>
+              </div>
+              
+              {filters.keywords && filters.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {filters.keywords.map((keyword, index) => (
+                    <span
+                      key={index}
+                      onClick={() => setFilters(prev => ({
+                        ...prev,
+                        keywords: prev.keywords?.filter(k => k !== keyword) || []
+                      }))}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-[#D2AC38]/20 text-[#D2AC38] rounded cursor-pointer hover:bg-[#D2AC38]/30 transition-all font-mono text-xs"
+                    >
+                      {keyword}
+                      <span className="text-xs">×</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      
+      case "location":
+        return (
+          <div className="p-4 bg-gray-900/80">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-orbitron text-gray-300 uppercase">Location Filter</span>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, states: [] }))}
+                className="text-xs px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-gray-300 hover:border-gray-500 transition-all font-mono uppercase"
+              >
+                Reset
+              </button>
+            </div>
+            <div className="p-3 rounded-lg bg-black/50">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs font-medium text-gray-300 font-orbitron uppercase">Select States</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const allStates = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC"];
+                      setFilters(prev => ({ ...prev, states: allStates }));
+                    }}
+                    className="text-xs px-2 py-1 rounded border border-[#D2AC38]/30 text-[#D2AC38] hover:bg-[#D2AC38]/10 transition-all font-mono"
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setFilters(prev => ({ ...prev, states: [] }))}
+                    className="text-xs px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-gray-300 transition-all font-mono"
+                  >
+                    None
+                  </button>
+                </div>
+              </div>
+              <div className="max-h-24 overflow-y-auto">
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { abbr: "AL", name: "Alabama" }, { abbr: "AK", name: "Alaska" }, { abbr: "AZ", name: "Arizona" },
+                    { abbr: "AR", name: "Arkansas" }, { abbr: "CA", name: "California" }, { abbr: "CO", name: "Colorado" },
+                    { abbr: "CT", name: "Connecticut" }, { abbr: "DE", name: "Delaware" }, { abbr: "FL", name: "Florida" },
+                    { abbr: "GA", name: "Georgia" }, { abbr: "HI", name: "Hawaii" }, { abbr: "ID", name: "Idaho" },
+                    { abbr: "IL", name: "Illinois" }, { abbr: "IN", name: "Indiana" }, { abbr: "IA", name: "Iowa" },
+                    { abbr: "KS", name: "Kansas" }, { abbr: "KY", name: "Kentucky" }, { abbr: "LA", name: "Louisiana" },
+                    { abbr: "ME", name: "Maine" }, { abbr: "MD", name: "Maryland" }, { abbr: "MA", name: "Massachusetts" },
+                    { abbr: "MI", name: "Michigan" }, { abbr: "MN", name: "Minnesota" }, { abbr: "MS", name: "Mississippi" },
+                    { abbr: "MO", name: "Missouri" }, { abbr: "MT", name: "Montana" }, { abbr: "NE", name: "Nebraska" },
+                    { abbr: "NV", name: "Nevada" }, { abbr: "NH", name: "New Hampshire" }, { abbr: "NJ", name: "New Jersey" },
+                    { abbr: "NM", name: "New Mexico" }, { abbr: "NY", name: "New York" }, { abbr: "NC", name: "North Carolina" },
+                    { abbr: "ND", name: "North Dakota" }, { abbr: "OH", name: "Ohio" }, { abbr: "OK", name: "Oklahoma" },
+                    { abbr: "OR", name: "Oregon" }, { abbr: "PA", name: "Pennsylvania" }, { abbr: "RI", name: "Rhode Island" },
+                    { abbr: "SC", name: "South Carolina" }, { abbr: "SD", name: "South Dakota" }, { abbr: "TN", name: "Tennessee" },
+                    { abbr: "TX", name: "Texas" }, { abbr: "UT", name: "Utah" }, { abbr: "VT", name: "Vermont" },
+                    { abbr: "VA", name: "Virginia" }, { abbr: "WA", name: "Washington" }, { abbr: "WV", name: "West Virginia" },
+                    { abbr: "WI", name: "Wisconsin" }, { abbr: "WY", name: "Wyoming" }, { abbr: "DC", name: "District of Columbia" }
+                  ].map((state) => (
+                    <label key={state.abbr} className="flex items-center gap-1 cursor-pointer group">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={filters.states?.includes(state.abbr) || false}
+                          onChange={() => {
+                            setFilters(prev => ({
+                              ...prev,
+                              states: prev.states?.includes(state.abbr) 
+                                ? prev.states.filter(s => s !== state.abbr)
+                                : [...(prev.states || []), state.abbr]
+                            }));
+                          }}
+                          className="sr-only"
+                        />
+                        <div className={cn(
+                          "w-4 h-4 rounded border-2 transition-all",
+                          filters.states?.includes(state.abbr)
+                            ? "bg-[#D2AC38] border-[#D2AC38]"
+                            : "border-gray-600 group-hover:border-[#D2AC38]"
+                        )}>
+                          {filters.states?.includes(state.abbr) && (
+                            <svg className="w-2.5 h-2.5 text-black absolute top-0.5 left-0.5" fill="currentColor">
+                              <path d="M8 .5l-4.5 4.5-2-2-1.5 1.5 3.5 3.5 6-6z" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-300 group-hover:text-white transition-colors font-mono">
+                        {state.abbr}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case "sector":
+        return (
+          <div className="p-4 bg-gray-900/80">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-orbitron text-gray-300 uppercase">Sector Filter</span>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, sectors: [] }))}
+                className="text-xs px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-gray-300 hover:border-gray-500 transition-all font-mono uppercase"
+              >
+                Reset
+              </button>
+            </div>
+            <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+              {[
+                "Agriculture, Forestry, Fishing and Hunting",
+                "Mining, Quarrying, and Oil and Gas Extraction",
+                "Utilities",
+                "Construction",
+                "Manufacturing",
+                "Wholesale Trade",
+                "Retail Trade",
+                "Transportation and Warehousing",
+                "Information",
+                "Finance and Insurance",
+                "Real Estate and Rental and Leasing",
+                "Professional, Scientific, and Technical Services",
+                "Management of Companies and Enterprises",
+                "Administrative and Support and Waste Management and Remediation Services",
+                "Educational Services",
+                "Health Care and Social Assistance",
+                "Arts, Entertainment, and Recreation",
+                "Accommodation and Food Services",
+                "Other Services (except Public Administration)",
+                "Public Administration",
+              ].map((sector) => (
+                <label key={sector} className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={filters.sectors?.includes(sector) || false}
+                      onChange={() => {
+                        setFilters(prev => ({
+                          ...prev,
+                          sectors: prev.sectors?.includes(sector) 
+                            ? prev.sectors.filter(s => s !== sector)
+                            : [...(prev.sectors || []), sector]
+                        }));
+                      }}
+                      className="sr-only"
+                    />
+                    <div className={cn(
+                      "w-4 h-4 rounded border-2 transition-all",
+                      filters.sectors?.includes(sector)
+                        ? "bg-[#D2AC38] border-[#D2AC38]"
+                        : "border-gray-600 group-hover:border-[#D2AC38]"
+                    )}>
+                      {filters.sectors?.includes(sector) && (
+                        <svg className="w-2.5 h-2.5 text-black absolute top-0.5 left-0.5" fill="currentColor">
+                          <path d="M8 .5l-4.5 4.5-2-2-1.5 1.5 3.5 3.5 6-6z" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors font-mono">
+                    {sector}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "awards":
+        // Exponential scaling function: converts 0-100 slider position to contract values
+        const sliderToValue = (sliderPos: number): number => {
+          if (sliderPos === 0) return 0;
+          // Exponential curve: small values at start, large values at end
+          // 0-20: $0K-$1M (granular for small contracts, in K increments)
+          // 21-40: $1M-$10M (moderate granularity) 
+          // 41-60: $10M-$100M (medium steps)
+          // 61-80: $100M-$1B (larger steps)
+          // 81-100: $1B-$100B+ (broad strokes)
+          
+          if (sliderPos <= 20) {
+            // $0K to $1M: linear scaling in thousands for granularity
+            const thousands = Math.round((sliderPos / 20) * 1000); // 0 to 1000K
+            return thousands / 1000; // Convert back to millions (0 to 1M)
+          } else if (sliderPos <= 40) {
+            // $1M to $10M: exponential start
+            const normalized = (sliderPos - 20) / 20; // 0-1
+            return Math.round(1 + Math.pow(normalized, 1.5) * 9); // 1M to 10M
+          } else if (sliderPos <= 60) {
+            // $10M to $100M: moderate exponential
+            const normalized = (sliderPos - 40) / 20; // 0-1
+            return Math.round(10 + Math.pow(normalized, 1.8) * 90); // 10M to 100M
+          } else if (sliderPos <= 80) {
+            // $100M to $1B: steeper exponential
+            const normalized = (sliderPos - 60) / 20; // 0-1
+            return Math.round(100 + Math.pow(normalized, 2) * 900); // 100M to 1B
+          } else {
+            // $1B to $100B+: very steep exponential
+            const normalized = (sliderPos - 80) / 20; // 0-1
+            return Math.round(1000 + Math.pow(normalized, 2.5) * 99000); // 1B to 100B
+          }
+        };
+
+        // Inverse function: converts contract value back to slider position
+        const valueToSlider = (value: number): number => {
+          if (value === 0) return 0;
+          if (value <= 1) {
+            // Convert to thousands and map to slider position
+            const thousands = value * 1000;
+            return Math.round((thousands / 1000) * 20); // 0-20
+          } else if (value <= 10) {
+            const normalized = Math.pow((value - 1) / 9, 1/1.5); // inverse of 1.5 power
+            return Math.round(20 + normalized * 20); // 20-40
+          } else if (value <= 100) {
+            const normalized = Math.pow((value - 10) / 90, 1/1.8); // inverse of 1.8 power
+            return Math.round(40 + normalized * 20); // 40-60
+          } else if (value <= 1000) {
+            const normalized = Math.sqrt((value - 100) / 900); // inverse of 2 power
+            return Math.round(60 + normalized * 20); // 60-80
+          } else {
+            const normalized = Math.pow((value - 1000) / 99000, 1/2.5); // inverse of 2.5 power
+            return Math.round(80 + normalized * 20); // 80-100
+          }
+        };
+
+        // Format display value
+        const formatValue = (value: number): string => {
+          if (value === 0) return "$0";
+          if (value < 1) {
+            const kValue = Math.round(value * 1000);
+            return `$${kValue}K`;
+          }
+          if (value < 1000) return `$${Math.round(value)}M`;
+          if (value < 100000) return `$${(value / 1000).toFixed(1)}B`;
+          return "$100B+";
+        };
+
+        const minValue = sliderToValue(filters.contractValueMinSlider || 0);
+        const maxValue = sliderToValue(filters.contractValueMaxSlider || 100);
+
+        return (
+          <div className="p-4 bg-gray-900/80">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-orbitron text-gray-300 uppercase">Awards Filter</span>
+              <button
+                onClick={() => setFilters(prev => ({ 
+                  ...prev, 
+                  contractValueMinSlider: 0,
+                  contractValueMaxSlider: 100,
+                  awardType: 'Active'
+                }))}
+                className="text-xs px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-gray-300 hover:border-gray-500 transition-all font-mono uppercase"
+              >
+                Reset
+              </button>
+            </div>
+            <div className="space-y-4">
+              {/* Award Type Toggle */}
+              <div className="flex items-center justify-center mb-4">
+                <div className="flex items-center rounded-lg overflow-hidden bg-black/50">
+                  <button
+                    onClick={() => setFilters(prev => ({ ...prev, awardType: "Active" }))}
+                    className={cn(
+                      "px-4 py-2 text-sm font-orbitron transition-all",
+                      filters.awardType === "Active"
+                        ? "text-black font-medium bg-[#D2AC38]"
+                        : "text-gray-400 hover:text-white"
+                    )}
+                  >
+                    Active
+                  </button>
+                  <button
+                    onClick={() => setFilters(prev => ({ ...prev, awardType: "Lifetime" }))}
+                    className={cn(
+                      "px-4 py-2 text-sm font-orbitron transition-all",
+                      filters.awardType === "Lifetime"
+                        ? "text-black font-medium bg-[#D2AC38]"
+                        : "text-gray-400 hover:text-white"
+                    )}
+                  >
+                    Lifetime
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="text-sm text-white font-orbitron text-center">
+                  {formatValue(minValue)} - {formatValue(maxValue)}
+                </div>
+                <div className="relative px-2 py-2" style={{ border: 'none', outline: 'none', boxShadow: 'none' }}>
+                  {/* Single Visual Rail */}
+                  <div className="relative h-2">
+                    {/* Background track */}
+                    <div className="h-2 rounded-full bg-gray-700 absolute w-full top-0"></div>
+                    
+                    {/* Active range highlight */}
+                    <div
+                      className="h-2 rounded-full absolute top-0 bg-[#D2AC38]"
+                      style={{
+                        left: `${filters.contractValueMinSlider || 0}%`,
+                        width: `${(filters.contractValueMaxSlider || 100) - (filters.contractValueMinSlider || 0)}%`,
+                      }}
+                    />
+                    
+                    {/* Max Range Slider - Higher z-index, rendered first */}
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={filters.contractValueMaxSlider || 100}
+                      onChange={(e) => {
+                        const sliderValue = parseInt(e.target.value);
+                        setFilters(prev => ({
+                          ...prev,
+                          contractValueMaxSlider: sliderValue <= (prev.contractValueMinSlider || 0) ? (prev.contractValueMinSlider || 0) + 1 : sliderValue,
+                          contractValueMax: sliderToValue(sliderValue <= (prev.contractValueMinSlider || 0) ? (prev.contractValueMinSlider || 0) + 1 : sliderValue)
+                        }));
+                      }}
+                      className="absolute w-full bg-transparent appearance-none cursor-pointer range-slider-max"
+                      style={{
+                        background: 'transparent',
+                        outline: 'none',
+                        border: 'none',
+                        boxShadow: 'none',
+                        zIndex: 2,
+                        height: '8px',
+                        top: '0px'
+                      }}
+                    />
+
+                    {/* Min Range Slider - Lower z-index, rendered second */}
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={filters.contractValueMinSlider || 0}
+                      onChange={(e) => {
+                        const sliderValue = parseInt(e.target.value);
+                        setFilters(prev => ({
+                          ...prev,
+                          contractValueMinSlider: sliderValue >= (prev.contractValueMaxSlider || 100) ? (prev.contractValueMaxSlider || 100) - 1 : sliderValue,
+                          contractValueMin: sliderToValue(sliderValue >= (prev.contractValueMaxSlider || 100) ? (prev.contractValueMaxSlider || 100) - 1 : sliderValue)
+                        }));
+                      }}
+                      className="absolute w-full bg-transparent appearance-none cursor-pointer range-slider-min"
+                      style={{
+                        background: 'transparent',
+                        outline: 'none',
+                        border: 'none',
+                        boxShadow: 'none',
+                        zIndex: 1,
+                        height: '8px',
+                        top: '0px'
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 font-mono px-2">
+                  <span>$0</span>
+                  <span>$100B+</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "activity":
+        const activityOptions = [
+          { name: "Hot", tooltip: "New award within ≤30d", color: "bg-red-500 border-red-500" },
+          { name: "Warm", tooltip: "New award within ≤365d", color: "bg-rose-400 border-rose-400" },
+          { name: "Cold", tooltip: ">365d since last award", color: "bg-blue-500 border-blue-500" }
+        ];
+        
+        return (
+          <div className="p-4 bg-gray-900/80">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-orbitron text-gray-300 uppercase">Activity Filter</span>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, lifecycleStage: [] }))}
+                className="text-xs px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-gray-300 hover:border-gray-500 transition-all font-mono uppercase"
+              >
+                Reset
+              </button>
+            </div>
+            <div className="space-y-2">
+              {activityOptions.map((activity, index) => (
+                <label key={activity.name} className="flex items-center cursor-pointer group relative">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={filters.lifecycleStage?.includes(activity.name) || false}
+                      onChange={() => {
+                        setFilters(prev => ({
+                          ...prev,
+                          lifecycleStage: prev.lifecycleStage?.includes(activity.name)
+                            ? prev.lifecycleStage.filter(s => s !== activity.name)
+                            : [...(prev.lifecycleStage || []), activity.name]
+                        }));
+                      }}
+                      className="sr-only"
+                    />
+                    <div className={cn(
+                      "w-4 h-4 rounded border-2 transition-all",
+                      filters.lifecycleStage?.includes(activity.name)
+                        ? activity.color
+                        : "border-gray-600 group-hover:border-[#D2AC38]"
+                    )}>
+                      {filters.lifecycleStage?.includes(activity.name) && (
+                        <svg className="w-2.5 h-2.5 text-black absolute top-0.5 left-0.5" fill="currentColor">
+                          <path d="M8 .5l-4.5 4.5-2-2-1.5 1.5 3.5 3.5 6-6z" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center ml-2">
+                    <span className="text-sm text-gray-300 group-hover:text-white transition-colors font-mono">
+                      {activity.name}
+                    </span>
+                    <div className="relative ml-1 group/tooltip">
+                      <svg className="w-3 h-3 text-gray-500 hover:text-gray-300 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                      </svg>
+                      <div className={cn(
+                        "absolute left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50",
+                        index === activityOptions.length - 1 ? 'bottom-full mb-2' : 'top-full mt-2'
+                      )}>
+                        {activity.tooltip}
+                      </div>
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "performance":
+        return (
+          <div className="p-4 bg-gray-900/80">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-orbitron text-gray-300 uppercase">Performance Filter</span>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, businessMomentum: [] }))}
+                className="text-xs px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-gray-300 hover:border-gray-500 transition-all font-mono uppercase"
+              >
+                Reset
+              </button>
+            </div>
+            <div className="space-y-2">
+              {["Elite", "Strong", "Stable", "Emerging"].map((momentum) => (
+                <label key={momentum} className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={filters.businessMomentum?.includes(momentum) || false}
+                      onChange={() => {
+                        setFilters(prev => ({
+                          ...prev,
+                          businessMomentum: prev.businessMomentum?.includes(momentum)
+                            ? prev.businessMomentum.filter(m => m !== momentum)
+                            : [...(prev.businessMomentum || []), momentum]
+                        }));
+                      }}
+                      className="sr-only"
+                    />
+                    <div className={cn(
+                      "w-4 h-4 rounded border-2 transition-all",
+                      filters.businessMomentum?.includes(momentum)
+                        ? momentum === "Elite"
+                          ? "bg-green-500 border-green-500"
+                          : momentum === "Strong"
+                            ? "bg-blue-500 border-blue-500"
+                            : momentum === "Stable"
+                              ? "bg-[#D2AC38] border-[#D2AC38]"
+                              : "bg-red-500 border-red-500"
+                        : "border-gray-600 group-hover:border-[#D2AC38]"
+                    )}>
+                      {filters.businessMomentum?.includes(momentum) && (
+                        <svg className="w-2.5 h-2.5 text-black absolute top-0.5 left-0.5" fill="currentColor">
+                          <path d="M8 .5l-4.5 4.5-2-2-1.5 1.5 3.5 3.5 6-6z" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors font-mono">
+                    {momentum}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "prime":
+        return (
+          <div className="p-4 bg-gray-900/80">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-orbitron text-gray-300 uppercase">Prime Status Filter</span>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, ownershipType: [] }))}
+                className="text-xs px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-gray-300 hover:border-gray-500 transition-all font-mono uppercase"
+              >
+                Reset
+              </button>
+            </div>
+            <div className="space-y-2">
+              {["Prime Awardee", "Indirect Sub"].map((ownership) => (
+                <label key={ownership} className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={filters.ownershipType?.includes(ownership) || false}
+                      onChange={() => {
+                        setFilters(prev => ({
+                          ...prev,
+                          ownershipType: prev.ownershipType?.includes(ownership)
+                            ? prev.ownershipType.filter(o => o !== ownership)
+                            : [...(prev.ownershipType || []), ownership]
+                        }));
+                      }}
+                      className="sr-only"
+                    />
+                    <div className={cn(
+                      "w-4 h-4 rounded border-2 transition-all",
+                      filters.ownershipType?.includes(ownership)
+                        ? "bg-[#D2AC38] border-[#D2AC38]"
+                        : "border-gray-600 group-hover:border-[#D2AC38]"
+                    )}>
+                      {filters.ownershipType?.includes(ownership) && (
+                        <svg className="w-2.5 h-2.5 text-black absolute top-0.5 left-0.5" fill="currentColor">
+                          <path d="M8 .5l-4.5 4.5-2-2-1.5 1.5 3.5 3.5 6-6z" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-300 group-hover:text-white transition-colors font-mono">
+                    {ownership}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="w-full bg-black/50 backdrop-blur-sm border border-cyan-500/30 rounded-lg">
+      {/* Command Header */}
+      <div className="p-4 border-b border-cyan-500/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#D2AC38]/10 border border-[#D2AC38]/30 rounded-lg">
+              <Crosshair className="w-5 h-5 text-[#D2AC38]" />
+            </div>
+            <div>
+              <h1 className="text-xl font-orbitron font-bold text-[#D2AC38] uppercase tracking-wider">
+                Entity Identification System
+              </h1>
+              <p className="text-xs text-white font-mono mt-1">
+                SCANNING GOLDENGATE DATABASE • {pagination?.total?.toLocaleString() || '0'} ENTITIES IDENTIFIED
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            <span className="text-xs text-gray-400 font-mono uppercase">ONLINE</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-0">
+        <div className="px-6 py-4 border-b border-cyan-500/20">
+          {/* Controls Row */}
+          <div className="flex items-center justify-between mb-4">
+
+          </div>
+
+          {/* Search Bar - Military Style */}
+          <div className="mt-4 pt-4 border-t border-cyan-500/10">
+            <div className="flex gap-3 mb-4">
+              <div className="flex-1 relative">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Enter target designation, UEI, or codename..."
+                  className="w-full bg-black/50 border-cyan-500/30 text-cyan-400 placeholder-gray-500 font-mono text-sm"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-mono">
+                  QUERY
+                </div>
+              </div>
+            </div>
+            
+            {/* Horizontal Filter Bar */}
+            <div className="space-y-2">
+              <div className="flex gap-1 overflow-x-auto">
+                {[
+                  { id: "keywords", label: "Keywords", icon: Search, hasActive: filters.keywords?.length > 0, activeCount: filters.keywords?.length || 0 },
+                  { id: "location", label: "Location", icon: Globe, hasActive: filters.states?.length > 0, activeCount: filters.states?.length || 0 },
+                  { id: "sector", label: "Sector", icon: BarChart3, hasActive: filters.sectors?.length > 0, activeCount: filters.sectors?.length || 0 },
+                  { id: "awards", label: "Awards", icon: BarChart3, hasActive: filters.contractValueMin > 0 || filters.contractValueMax < 100 || filters.awardType !== "Active", activeCount: (filters.contractValueMin > 0 || filters.contractValueMax < 100 || filters.awardType !== "Active") ? 1 : 0 },
+                  { id: "activity", label: "Activity", icon: TrendingUp, hasActive: filters.lifecycleStage?.length > 0, activeCount: filters.lifecycleStage?.length || 0 },
+                  { id: "performance", label: "Performance", icon: Activity, hasActive: filters.businessMomentum?.length > 0, activeCount: filters.businessMomentum?.length || 0 },
+                  { id: "prime", label: "Prime Status", icon: Shield, hasActive: filters.ownershipType?.length > 0, activeCount: filters.ownershipType?.length || 0 }
+                ].map((filter) => (
+                  <button
+                    key={filter.id}
+                    onClick={() => setOpenFilter(openFilter === filter.id ? null : filter.id)}
+                    className={cn(
+                      "flex items-center justify-center gap-2 px-6 py-2 rounded-lg border transition-all whitespace-nowrap font-orbitron flex-1 min-w-0",
+                      openFilter === filter.id
+                        ? "border-[#D2AC38]/50 bg-[#D2AC38]/10 text-[#D2AC38]"
+                        : filter.hasActive
+                          ? "border-[#D2AC38]/30 bg-[#D2AC38]/5 text-[#D2AC38]"
+                          : "border-cyan-500/30 text-gray-400 hover:border-cyan-500/50 hover:text-cyan-300"
+                    )}
+                  >
+                    <filter.icon className="w-3 h-3" />
+                    <span className="text-sm font-bold uppercase">{filter.label}</span>
+                    {filter.hasActive && (
+                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#D2AC38]/30 text-[#D2AC38] font-mono">
+                        {filter.activeCount}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Filter Content Panel */}
+              {openFilter && (
+                <div className="rounded-lg border border-cyan-500/30 bg-gray-900/80 backdrop-blur-sm overflow-hidden">
+                  {renderFilterContent(openFilter)}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Active Filters Bar */}
+          {activeFilterCount > 0 && (
+            <div className="mt-3">
+              <ActiveFilters
+                filters={filters}
+                onRemoveFilter={(type, value) => {
+                  setFilters(prev => {
+                    const updated = { ...prev };
+                    if (type === 'contractValue') {
+                      updated.contractValueMin = undefined;
+                      updated.contractValueMax = undefined;
+                    } else if (Array.isArray(updated[type as keyof SearchFilters])) {
+                      (updated[type as keyof SearchFilters] as any[]) = 
+                        (updated[type as keyof SearchFilters] as any[]).filter((v: any) => v !== value);
+                    }
+                    return updated;
+                  });
+                  setCurrentPage(1);
+                }}
+                onClearAll={clearAllFilters}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Content Area - Tactical Display */}
+        <div className="p-6">
+          {/* Status Bar */}
+          <div className="mb-4 px-4 py-2 bg-black/50 border border-cyan-500/20 rounded backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-xs text-gray-400 font-mono uppercase">Status:</span>
+                  <span className="text-xs text-green-400 font-mono uppercase font-bold">
+                    {isLoading ? 'SCANNING...' : 
+                     error ? 'ERROR' :
+                     'ACTIVE'
+                    }
+                  </span>
+                </div>
+                {pagination && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400 font-mono uppercase">Targets:</span>
+                    <span className="text-xs text-cyan-400 font-mono font-bold">
+                      {pagination.total.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {aggregations && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400 font-mono uppercase">Value:</span>
+                    <span className="text-xs text-[#D2AC38] font-mono font-bold">
+                      {formatCurrency(aggregations.totalObligated)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1 || isLoading}
+                    className="text-gray-400 hover:text-[#D2AC38]"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="font-aptos">
+                    Page {currentPage} of {pagination.totalPages}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                    disabled={currentPage >= pagination.totalPages || isLoading}
+                    className="text-gray-400 hover:text-[#D2AC38]"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {error ? (
+            <div className="text-center py-12">
+              <p className="text-red-400 mb-4">{error}</p>
+              <Button onClick={refetch} variant="outline">
+                Try Again
+              </Button>
+            </div>
+          ) : isLoading ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: pageSize }).map((_, i) => (
+                <ContractorCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : filteredContractors.length === 0 ? (
+            <EmptyState
+              title="No contractors found"
+              description="Try adjusting your filters or search query"
+              action={
+                <Button onClick={clearAllFilters} variant="outline">
+                  Clear Filters
+                </Button>
+              }
+            />
+          ) : viewMode === 'cards' ? (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredContractors.map(contractor => (
+                  <HudContractorCard
+                    key={contractor.id}
+                    contractor={contractor}
+                    isFavorite={isFavorite(contractor.id)}
+                    onToggleFavorite={handleToggleFavorite}
+                    onClick={() => setSelectedContractor(contractor)}
+                  />
+                ))}
+              </div>
+              {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-[#D2AC38]/10">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1 || isLoading}
+                    className="border-[#D2AC38]/20 text-gray-300 hover:text-[#D2AC38] hover:border-[#D2AC38]/40"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      const pageNum = currentPage <= 3 ? i + 1 : 
+                                     currentPage >= pagination.totalPages - 2 ? pagination.totalPages - 4 + i :
+                                     currentPage - 2 + i;
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={pageNum === currentPage ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          disabled={isLoading}
+                          className={pageNum === currentPage ? 
+                            'bg-[#D2AC38] text-black' : 
+                            'text-gray-400 hover:text-[#D2AC38]'
+                          }
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                    disabled={currentPage >= pagination.totalPages || isLoading}
+                    className="border-[#D2AC38]/20 text-gray-300 hover:text-[#D2AC38] hover:border-[#D2AC38]/40"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <ContractorTable
+                contractors={filteredContractors}
+                onRowClick={(contractor) => setSelectedContractor(contractor)}
+              />
+              {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-[#D2AC38]/10">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1 || isLoading}
+                    className="border-[#D2AC38]/20 text-gray-300 hover:text-[#D2AC38] hover:border-[#D2AC38]/40"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      const pageNum = currentPage <= 3 ? i + 1 : 
+                                     currentPage >= pagination.totalPages - 2 ? pagination.totalPages - 4 + i :
+                                     currentPage - 2 + i;
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={pageNum === currentPage ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          disabled={isLoading}
+                          className={pageNum === currentPage ? 
+                            'bg-[#D2AC38] text-black' : 
+                            'text-gray-400 hover:text-[#D2AC38]'
+                          }
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                    disabled={currentPage >= pagination.totalPages || isLoading}
+                    className="border-[#D2AC38]/20 text-gray-300 hover:text-[#D2AC38] hover:border-[#D2AC38]/40"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Filter Sidebar */}
+      <Sheet
+        open={isFilterOpen}
+        onOpenChange={setIsFilterOpen}
+        side="right"
+      >
+        <FilterSidebar
+          filters={filters}
+          onFiltersChange={setFilters}
+          onClose={() => setIsFilterOpen(false)}
+        />
+      </Sheet>
+
+      {/* Contractor Detail Modal */}
+      <HudContractorModal
+        contractor={selectedContractor}
+        isOpen={!!selectedContractor}
+        onClose={() => setSelectedContractor(null)}
+        onAddToPortfolio={(contractor) => {
+          console.log('Adding to portfolio:', contractor);
+          // TODO: Implement portfolio add functionality
+        }}
+      />
+    </div>
+  );
+}

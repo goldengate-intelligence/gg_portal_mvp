@@ -1,0 +1,162 @@
+name: Build and Deploy to AWS ECR
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feat/docker-cicd-setup  # Test branch
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_API: gg-mvp-api
+  ECR_REPOSITORY_UI: gg-mvp-ui
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # Build and push API image
+      - name: Build and push API Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api
+          file: ./apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_API }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_API }}:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          platforms: linux/amd64
+
+      # Build and push UI image
+      - name: Build and push UI Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/ui
+          file: ./apps/ui/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_UI }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_UI }}:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          platforms: linux/amd64
+          build-args: |
+            VITE_API_URL=/api/v1
+            VITE_APP_ENV=${{ github.event.inputs.environment || 'production' }}
+
+      # Move cache
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Image digest
+        run: |
+          echo "API Image pushed with tags: latest, ${{ github.sha }}"
+          echo "UI Image pushed with tags: latest, ${{ github.sha }}"
+
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    # Deploy on main or feat/docker-cicd-setup branch push (for testing)
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/docker-cicd-setup') && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get EC2 Instance ID
+        id: get-instance
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=gg-mvp-app-server" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text)
+          echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+          echo "Found EC2 instance: $INSTANCE_ID"
+
+      - name: Deploy to EC2 via SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids ${{ steps.get-instance.outputs.instance_id }} \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "cd /opt/goldengate",
+              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
+              "docker-compose pull",
+              "docker-compose down",
+              "docker-compose up -d",
+              "docker system prune -f"
+            ]' \
+            --output text
+
+      - name: Health Check
+        run: |
+          echo "Waiting for application to be healthy..."
+          sleep 30
+          
+          # Get instance public IP
+          PUBLIC_IP=$(aws ec2 describe-instances \
+            --instance-ids ${{ steps.get-instance.outputs.instance_id }} \
+            --query "Reservations[0].Instances[0].PublicIpAddress" \
+            --output text)
+          
+          # Check health endpoint
+          curl -f http://$PUBLIC_IP/health || echo "Health check failed"
+          
+          echo "Deployment complete! Application available at http://$PUBLIC_IP"

@@ -1,0 +1,2 @@
+ALTER TABLE "contractor_metrics_monthly" ALTER COLUMN "monthly_awards" SET DATA TYPE numeric(20, 2);--> statement-breakpoint
+ALTER TABLE "contractor_metrics_monthly" ALTER COLUMN "monthly_awards" SET DEFAULT '0';

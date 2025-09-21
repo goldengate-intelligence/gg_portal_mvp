@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    image: gg-mvp-api:latest
+    container_name: gg-mvp-api
+    ports:
+      - "4001:4001"
+    environment:
+      - NODE_ENV=production
+      - PORT=4001
+      - DATABASE_HOST=host.docker.internal  # For local testing
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=goldengate
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - JWT_SECRET=your-secret-key-min-32-chars-long!!!
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - gg-mvp-network
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: ./apps/ui
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_APP_ENV: production
+    image: gg-mvp-ui:latest
+    container_name: gg-mvp-ui
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - gg-mvp-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: gg-mvp-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - gg-mvp-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: gg-mvp-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - ui
+    networks:
+      - gg-mvp-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  gg-mvp-network:
+    driver: bridge
