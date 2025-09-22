@@ -182,7 +182,7 @@ export function IntegrationTab() {
                             accept=".pptx,.ppt,.xlsx,.xls,.csv,.docx,.doc,.pdf"
                           />
 
-                          <Button asChild className="bg-[#8B8EFF] hover:bg-[#8B8EFF]/80 text-white mb-3 w-full">
+                          <Button asChild className="bg-[#8B8EFF] hover:bg-[#8B8EFF]/80 text-white mb-2 w-full">
                             <label htmlFor="file-upload" className="cursor-pointer">
                               <Upload className="w-4 h-4 mr-2" />
                               Choose Local Files
@@ -190,7 +190,7 @@ export function IntegrationTab() {
                           </Button>
 
                           {/* Cloud Storage Options - Under Choose Local Files */}
-                          <div className="flex gap-2 mb-4">
+                          <div className="flex gap-2 mb-2">
                             <Button className="flex-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/40">
                               <Cloud className="w-4 h-4 mr-2" />
                               Google Drive
@@ -202,7 +202,7 @@ export function IntegrationTab() {
                           </div>
 
                           {/* Supported File Types - Under Cloud Storage */}
-                          <div className="flex flex-wrap gap-1 text-xs">
+                          <div className="flex flex-wrap gap-1 text-xs mb-2">
                             {supportedFileTypes.map(type => (
                               <div key={type.type} className="flex items-center gap-1 text-gray-500">
                                 <type.icon className="w-3 h-3" style={{ color: type.color }} />
@@ -224,7 +224,7 @@ export function IntegrationTab() {
                           </p>
 
                           {/* Custom Instructions Input - Moved up to replace button */}
-                          <div className="w-full mb-4">
+                          <div className="w-full mb-0">
                             <textarea
                               value={customInstructions}
                               onChange={(e) => setCustomInstructions(e.target.value)}

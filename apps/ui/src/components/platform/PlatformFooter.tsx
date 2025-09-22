@@ -14,7 +14,7 @@ import { AgentChat } from './AgentChat';
 import { QueryHistory } from './QueryHistory';
 import { useAuth } from '../../contexts/auth-context';
 import { useLocation } from '@tanstack/react-router';
-import { CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 
 interface PlatformFooterProps {
   mode?: string;

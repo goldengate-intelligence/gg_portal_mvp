@@ -12,7 +12,7 @@ import {
   FolderOpen,
   Folder
 } from 'lucide-react';
-import { CONTRACTOR_DETAIL_COLORS } from '../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../logic/utils';
 
 function PlatformComponent() {
 

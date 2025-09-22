@@ -1,12 +1,12 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { 
-  GoldengateDoughnutChart, 
-  GoldengateBarChart, 
+import {
+  GoldengateDoughnutChart,
+  GoldengateBarChart,
   GoldengateScatterChart,
-  GoldengateBubbleChart 
-} from '../../lib/charts';
-import { formatCurrency } from '../../utils/contractor-profile-transform';
+  GoldengateBubbleChart
+} from '../../ui/charts/components';
+import { formatCurrency } from './services/contractor-profile-transform';
 
 interface IcebergOpportunity {
   id: string;

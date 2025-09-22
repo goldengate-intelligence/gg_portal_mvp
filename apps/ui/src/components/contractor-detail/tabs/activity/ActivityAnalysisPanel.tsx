@@ -1,5 +1,5 @@
 import React from 'react';
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 import { Building2, Users, AlertTriangle, Star, TrendingUp, TrendingDown, Eye, Target } from 'lucide-react';
 
 interface ActivityAnalysisPanelProps {

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { X, Upload, File, FileText, Image, FileSpreadsheet, Video, Music, Archive, Paperclip, Check, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
-import { CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 
 interface FileUploadModalProps {
   isOpen: boolean;

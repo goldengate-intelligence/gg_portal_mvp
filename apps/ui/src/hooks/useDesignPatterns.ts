@@ -1,4 +1,4 @@
-import { CONTRACTOR_DETAIL_COLORS } from '../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../logic/utils';
 
 /**
  * Design patterns hook for consistent styling across contractor detail components

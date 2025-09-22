@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '../../lib/utils';
+import { cn } from '../../logic/utils';
 import { Target, Eye, BarChart3, Presentation } from 'lucide-react';
 
 interface PortfolioTabsProps {

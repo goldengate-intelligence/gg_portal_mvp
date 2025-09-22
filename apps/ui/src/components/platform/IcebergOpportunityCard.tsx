@@ -11,7 +11,7 @@ import {
   Building,
   Users
 } from 'lucide-react';
-import { formatCurrency } from '../../utils/contractor-profile-transform';
+import { formatCurrency } from './services/contractor-profile-transform';
 
 export interface IcebergOpportunity {
   id: string;

@@ -16,7 +16,7 @@ import { Button } from '../ui/button';
 import { HudCard } from '../ui/hud-card';
 import { Badge } from '../ui/badge';
 import { Textarea } from '../ui/input';
-import { CONTRACTOR_DETAIL_COLORS, cn } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS, cn } from '../../logic/utils';
 import type { Contractor, Opportunity } from '../../types';
 
 interface AISummaryPanelProps {

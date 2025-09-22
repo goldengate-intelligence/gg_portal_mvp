@@ -3,7 +3,7 @@ import { X, ExternalLink, Target, Database } from 'lucide-react';
 import { Modal, ModalContent } from '../ui/modal';
 import { TargetReticle } from '../ui/hud-card';
 import { ContractorDetail } from '../contractor-detail/ContractorDetail_Orchestrator';
-import { cn } from '../../lib/utils';
+import { cn } from '../../logic/utils';
 import type { Contractor } from '../../types';
 
 interface HudContractorModalProps {

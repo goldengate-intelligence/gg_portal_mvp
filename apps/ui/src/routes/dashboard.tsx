@@ -2,7 +2,7 @@ import { createRoute, Link } from '@tanstack/react-router';
 import { ProtectedRoute } from '../components/protected-route';
 import { useAuth } from '../contexts/auth-context';
 import { Button } from '../components/ui/button';
-import { CONTRACTOR_DETAIL_COLORS } from '../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../logic/utils';
 import { User, UserCircle, Settings, Shield, Bell, HelpCircle, Bot, BarChart3 } from 'lucide-react';
 
 function DashboardComponent() {

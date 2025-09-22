@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from "../../../ui/card";
 import { useDesignPatterns } from '../../../../hooks/useDesignPatterns';
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 
 // Simple display component to replace SimpleDisplay
 function SimpleDisplay({ label, value }: { label: string; value: string | number }) {

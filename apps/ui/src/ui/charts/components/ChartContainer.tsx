@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ChartContainerProps } from '../types';
-import { CONTRACTOR_DETAIL_COLORS } from '../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../logic/utils';
 
 export function ChartContainer({
   title,

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react"
-import { cn } from "../../lib/utils"
+import { cn } from "../../logic/utils"
 
 const Table = React.forwardRef<
   HTMLTableElement,

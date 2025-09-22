@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card } from "../../../ui/card";
-import { GoldengateBarChart } from '../../../../lib/charts';
+import { GoldengateBarChart } from '../../../../ui/charts/components';
 import { useDesignPatterns } from '../../../../hooks/useDesignPatterns';
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 
 interface AwardsAndRevenueHistoryPanelProps {
   revenueTimeAggregation: string;

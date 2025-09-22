@@ -1,4 +1,4 @@
-import type { ContractorProfile } from '../lib/api-client';
+import type { ContractorProfile } from '../services/api-client';
 import type { Contractor } from '../types';
 
 /**

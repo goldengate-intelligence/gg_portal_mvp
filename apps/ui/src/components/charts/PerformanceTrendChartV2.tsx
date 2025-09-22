@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui
 import { Badge } from '../ui/badge';
 import { TrendingUp, TrendingDown, Minus, Activity, DollarSign, FileText } from 'lucide-react';
 import { formatCurrency } from '../../utils/contractor-profile-transform';
-import { GoldengateLineChart, GoldengateBarChart, GoldengateMixedChart } from '../../lib/charts';
+import { GoldengateLineChart, GoldengateBarChart, GoldengateMixedChart } from '../../ui/charts/components';
 
 interface PerformanceDataPoint {
   monthYear: string;

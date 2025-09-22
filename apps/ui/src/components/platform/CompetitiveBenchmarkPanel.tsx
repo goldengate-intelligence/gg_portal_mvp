@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui
 import { Badge } from '../ui/badge';
 import { Trophy, Target, Users, TrendingUp, Award, AlertCircle } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
-import { formatCurrency } from '../../utils/contractor-profile-transform';
+import { formatCurrency } from './services/contractor-profile-transform';
 
 interface PeerComparisonData {
   currentPercentiles: {

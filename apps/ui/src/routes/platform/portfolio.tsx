@@ -76,6 +76,46 @@ export function ViewPortfolio() {
       marketType: 'civilian' as const,
       uei: 'ACI789123456',
       activeAwards: { value: '$180M' }
+    },
+    {
+      id: 'MSF456789012',
+      companyName: 'MedStar Federal',
+      naicsDescription: 'Health Care and Social Assistance',
+      marketType: 'civilian' as const,
+      uei: 'MSF456789012',
+      activeAwards: { value: '$350M' }
+    },
+    {
+      id: 'ITC234567890',
+      companyName: 'InfoTech Consulting Group',
+      naicsDescription: 'Professional, Scientific, and Technical Services',
+      marketType: 'civilian' as const,
+      uei: 'ITC234567890',
+      activeAwards: { value: '$85M' }
+    },
+    {
+      id: 'GCE567890123',
+      companyName: 'GreenPoint Construction & Engineering',
+      naicsDescription: 'Construction of Buildings',
+      marketType: 'civilian' as const,
+      uei: 'GCE567890123',
+      activeAwards: { value: '$220M' }
+    },
+    {
+      id: 'QSL890123456',
+      companyName: 'QuantumShield Logistics',
+      naicsDescription: 'Transportation and Warehousing',
+      marketType: 'defense' as const,
+      uei: 'QSL890123456',
+      activeAwards: { value: '$95M' }
+    },
+    {
+      id: 'NGE123456780',
+      companyName: 'NextGen Environmental Solutions',
+      naicsDescription: 'Administrative and Support and Waste Management and Remediation Services',
+      marketType: 'civilian' as const,
+      uei: 'NGE123456780',
+      activeAwards: { value: '$65M' }
     }
   ]);
 

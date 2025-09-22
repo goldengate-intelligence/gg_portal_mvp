@@ -3,7 +3,7 @@ import { AssetCardNew } from '../../AssetCardNew';
 import { GroupNamingModal } from '../../GroupNamingModal';
 import { GroupDetailView } from '../../GroupDetailView';
 import { Trash2 } from 'lucide-react';
-import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from '../../../../services/contractorMetrics';
+import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from '../../services/contractorMetrics';
 
 // Design Framework Components - Indigo Theme
 const ExternalPanelContainer = ({ children }: { children: React.ReactNode }) => (
@@ -94,6 +94,7 @@ interface AssetsTabProps {
 export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
   const [pinnedAssets, setPinnedAssets] = useState<Set<string>>(new Set());
   const [pinOrder, setPinOrder] = useState<string[]>([]); // Track order of pinning
+  const [expandedAssets, setExpandedAssets] = useState<Set<string>>(new Set()); // Track expanded cards
 
   // Helper function to get consistent identifier for any asset
   const getAssetIdentifier = (asset: Asset | GroupAsset): string => {
@@ -551,6 +552,18 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
     console.log('=== PIN OPERATION END ===');
   };
 
+  const handleToggleExpanded = (assetId: string) => {
+    setExpandedAssets(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(assetId)) {
+        newSet.delete(assetId);
+      } else {
+        newSet.add(assetId);
+      }
+      return newSet;
+    });
+  };
+
   // Sort assets: most recently pinned first, then other pinned, then unpinned
   const sortedAssets = [...assets].sort((a, b) => {
     const aIdentifier = getAssetIdentifier(a);
@@ -661,6 +674,8 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
                           isPinned={pinnedAssets.has(getAssetIdentifier(asset))}
                           onPin={handlePin}
                           aggregatedMetrics={'type' in asset && asset.type === 'group' ? (asset as GroupAsset).aggregatedMetrics : undefined}
+                          isExpanded={expandedAssets.has(getAssetIdentifier(asset))}
+                          onToggleExpanded={() => handleToggleExpanded(getAssetIdentifier(asset))}
                           onClick={() => {
                             if ('type' in asset && asset.type === 'group') {
                               handleGroupClick(asset);

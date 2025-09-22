@@ -6,7 +6,7 @@ import {
   FileText,
   Users
 } from 'lucide-react';
-import { cn, CONTRACTOR_DETAIL_COLORS } from '../../../lib/utils';
+import { cn, CONTRACTOR_DETAIL_COLORS } from '../../../logic/utils';
 
 interface TabBannerProps {
   activeTab: string;

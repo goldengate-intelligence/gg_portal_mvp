@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Download, ChevronLeft, ChevronRight, ChevronDown, Database, Target, Activity, Filter, Globe, BarChart3, TrendingUp, Shield, X, Brain, Paperclip, Settings, History, MessageSquare, FileSpreadsheet } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
-import { cn, CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { cn, CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 import { useContractors, type ContractorFilters } from '../../hooks/useContractors';
-import { apiClient, type FilterOptions, type ContractorStatistics, type ContractorData } from '../../lib/api-client';
+import { apiClient, type FilterOptions, type ContractorStatistics, type ContractorData } from '../../services/api-client';
 import { ContractorDetailModal } from '../../components/platform/ContractorDetailModal';
 import { QueryResultsTable } from '../../components/platform/QueryResultsTable';
 import { Link } from '@tanstack/react-router';
@@ -998,7 +998,16 @@ export function Discovery() {
                     {/* Content */}
                     <div className="pt-8 space-y-6">
                       {/* Terminal */}
-                      <div className="bg-black border border-gray-700 rounded-lg h-80 overflow-hidden font-mono text-sm tracking-tighter">
+                      <div
+                        className="bg-black border border-gray-700 rounded-lg h-80 overflow-hidden font-mono text-sm tracking-tighter cursor-text"
+                        onClick={(e) => {
+                          // Focus the textarea when clicking anywhere in the terminal
+                          const textarea = e.currentTarget.querySelector('textarea');
+                          if (textarea) {
+                            textarea.focus();
+                          }
+                        }}
+                      >
                         <div className="h-full overflow-y-auto p-4">
                           {/* Initialization Animation */}
                           {!terminalInitialized && conversation.length === 0 && (
@@ -1134,11 +1143,11 @@ export function Discovery() {
                 {/* Top Tabs */}
                 <div className="flex items-center border-b border-gray-700 bg-gray-800">
                   <div className="flex">
-                    <button className="px-6 py-3 text-sm font-medium text-blue-400 bg-blue-500/10 border-b-2 border-blue-400 flex items-center gap-2">
+                    <button className="px-6 py-3 text-sm font-medium text-blue-400 bg-blue-500/10 border-b-2 border-blue-400 flex items-center gap-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                       <FileSpreadsheet className="w-4 h-4" />
                       Results
                     </button>
-                    <button className="px-6 py-3 text-sm font-medium text-gray-400 hover:text-gray-300 flex items-center gap-2">
+                    <button className="px-6 py-3 text-sm font-medium text-gray-400 hover:text-gray-300 flex items-center gap-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                       <BarChart3 className="w-4 h-4" />
                       Chart
                     </button>
@@ -1180,7 +1189,7 @@ export function Discovery() {
                 {/* Query Details Panel */}
                 <div className="p-4 border-b border-gray-700">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-gray-200">Query Details</h3>
+                    <h3 className="text-sm font-medium text-gray-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Query Details</h3>
                     <button className="text-gray-500 hover:text-gray-400">
                       <Settings className="w-4 h-4" />
                     </button>
@@ -1188,21 +1197,21 @@ export function Discovery() {
 
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">Query duration</span>
-                      <span className="text-sm text-gray-200">67ms</span>
+                      <span className="text-sm text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Query duration</span>
+                      <span className="text-sm text-gray-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>67ms</span>
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-1">
                       <div className="bg-blue-500 h-1 rounded-full" style={{ width: '85%' }}></div>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">Rows</span>
-                      <span className="text-sm text-gray-200">{queryResults.length}</span>
+                      <span className="text-sm text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Rows</span>
+                      <span className="text-sm text-gray-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>{queryResults.length}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">Query ID</span>
-                      <span className="text-xs text-gray-400 font-mono">01bf2a54-0000-340f-0...</span>
+                      <span className="text-sm text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Query ID</span>
+                      <span className="text-xs text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>01bf2a54-0000-340f-0...</span>
                     </div>
                   </div>
                 </div>
@@ -1210,9 +1219,9 @@ export function Discovery() {
                 {/* Query History Panel */}
                 <div className="flex-1 p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-gray-200">3 Queries</h3>
+                    <h3 className="text-sm font-medium text-gray-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>3 Queries</h3>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">Status All</span>
+                      <span className="text-xs text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Status All</span>
                       <button className="text-gray-500 hover:text-gray-400">
                         <ChevronDown className="w-4 h-4" />
                       </button>
@@ -1223,32 +1232,32 @@ export function Discovery() {
                   </div>
 
                   <div className="space-y-1">
-                    <div className="text-xs text-gray-500 mb-2">Fri Sep 19 2025</div>
+                    <div className="text-xs text-gray-500 mb-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Fri Sep 19 2025</div>
 
                     <div className="p-2 bg-blue-500/10 border border-blue-500/30 rounded text-xs">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <span className="text-gray-300">7:48:59 PM</span>
-                        <span className="text-gray-400">67ms</span>
-                        <span className="text-gray-300 flex-1 truncate">DESCRIBE TABLE U...</span>
+                        <span className="text-gray-300" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>7:48:59 PM</span>
+                        <span className="text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>67ms</span>
+                        <span className="text-gray-300 flex-1 truncate" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>DESCRIBE TABLE U...</span>
                       </div>
                     </div>
 
                     <div className="p-2 hover:bg-gray-700/50 rounded text-xs cursor-pointer">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                        <span className="text-gray-300">7:48:51 PM</span>
-                        <span className="text-gray-400">49ms</span>
-                        <span className="text-gray-300 flex-1 truncate">Federal Subaward...</span>
+                        <span className="text-gray-300" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>7:48:51 PM</span>
+                        <span className="text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>49ms</span>
+                        <span className="text-gray-300 flex-1 truncate" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>Federal Subaward...</span>
                       </div>
                     </div>
 
                     <div className="p-2 hover:bg-gray-700/50 rounded text-xs cursor-pointer">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <span className="text-gray-300">7:45:49 PM</span>
-                        <span className="text-gray-400">66ms</span>
-                        <span className="text-gray-300 flex-1 truncate">DESCRIBE TABLE U...</span>
+                        <span className="text-gray-300" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>7:45:49 PM</span>
+                        <span className="text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>66ms</span>
+                        <span className="text-gray-300 flex-1 truncate" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>DESCRIBE TABLE U...</span>
                       </div>
                     </div>
                   </div>

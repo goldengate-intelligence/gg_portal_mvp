@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, X, Bot, User, Loader2, Minimize2, Maximize2, Cpu, Zap, MessageSquare } from 'lucide-react';
 import { Button } from '../ui/button';
-import { cn } from '../../utils/cn';
+import { cn } from '../../logic/utils';
 import { useAgentChat } from '../../hooks/useAgentChat';
 import { useAgentChatContext } from '../../contexts/agent-chat-context';
-import { CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 
 interface AgentChatProps {
   className?: string;

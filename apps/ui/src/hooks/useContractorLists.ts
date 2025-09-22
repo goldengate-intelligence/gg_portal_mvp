@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient, type ContractorList, type ContractorListItem } from '../lib/api-client';
+import { apiClient, type ContractorList, type ContractorListItem } from '../services/api-client';
 
 export function useContractorLists() {
   const [lists, setLists] = useState<ContractorList[]>([]);

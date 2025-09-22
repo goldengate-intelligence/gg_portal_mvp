@@ -6,8 +6,8 @@ import { PerformanceTab } from './tabs/performance';
 import { NetworkTab } from './tabs/relationships';
 import { ActivityTab } from './tabs/activity';
 import { ContactsTab } from './tabs/contacts';
-import { CONTRACTOR_DETAIL_COLORS, cn } from '../../lib/utils';
-import { getLocationCoordinates, coordinatesToMapPercentage, parsePlaceOfPerformance } from '../../lib/geocoding';
+import { CONTRACTOR_DETAIL_COLORS, cn } from '../../logic/utils';
+import { getLocationCoordinates, coordinatesToMapPercentage, parsePlaceOfPerformance } from './services/geocoding';
 import { Globe, BarChart3, Share2, Activity, Users } from 'lucide-react';
 import type { Contractor } from '../../types';
 

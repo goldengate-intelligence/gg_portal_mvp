@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '../../lib/utils';
+import { cn } from '../../logic/utils';
 import { HudCard, TacticalDisplay, TargetReticle } from './hud-card';
 import { 
   Heart, 

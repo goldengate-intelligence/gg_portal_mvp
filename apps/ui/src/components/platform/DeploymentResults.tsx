@@ -26,7 +26,7 @@ import { Button } from '../ui/button';
 import { HudCard } from '../ui/hud-card';
 import { Badge, RiskBadge } from '../ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
-import { CONTRACTOR_DETAIL_COLORS, cn } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS, cn } from '../../logic/utils';
 import type { AnalysisResult, Contractor } from '../../types';
 
 interface DeploymentResultsProps {

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, FolderOpen } from 'lucide-react';
 import { Button } from '../ui/button';
-import { CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 import type { Contractor } from '../../types';
 
 interface ContractorDetailHeaderProps {
@@ -62,7 +62,7 @@ export function ContractorDetailHeader({ contractor }: ContractorDetailHeaderPro
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate({ to: '/platform/identify' })}
+                  onClick={() => window.history.back()}
                   className="text-gray-400 hover:text-white border border-gray-800 hover:border-gray-700"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />

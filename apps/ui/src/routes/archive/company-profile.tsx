@@ -46,9 +46,9 @@ import {
   GoldengatePolarChart,
   GoldengateScatterChart,
   GoldengateMixedChart
-} from '../../lib/charts';
+} from '../../ui/charts/components';
 import { formatCurrency } from '../../utils/contractor-profile-transform';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '../../services/api-client';
 
 interface CompanyProfile {
   id: string;

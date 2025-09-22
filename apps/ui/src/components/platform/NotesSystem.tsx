@@ -20,7 +20,7 @@ import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { SearchInput, Textarea } from '../ui/input';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../ui/select';
-import { CONTRACTOR_DETAIL_COLORS, cn } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS, cn } from '../../logic/utils';
 
 interface Note {
   id: string;

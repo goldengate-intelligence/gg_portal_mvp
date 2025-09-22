@@ -1,7 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useAuth } from '../contexts/auth-context'
 import { Button } from './ui/button'
-import { CONTRACTOR_DETAIL_COLORS } from '../lib/utils'
+import { CONTRACTOR_DETAIL_COLORS } from '../logic/utils'
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth()

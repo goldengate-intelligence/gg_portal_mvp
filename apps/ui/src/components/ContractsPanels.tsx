@@ -1,6 +1,6 @@
 import React from 'react';
 import { HudCard } from './ui/hud-card';
-import { GoldengateDoughnutChart } from '../lib/charts';
+import { GoldengateDoughnutChart } from '../ui/charts/components';
 
 export const NaicsMixPanel = () => (
   <HudCard variant="default" priority="medium" isPanel={true} className="h-full border-gray-700/30 rounded-xl overflow-hidden shadow-2xl hover:border-gray-600/20 transition-all duration-500 group">

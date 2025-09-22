@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Card } from "../../../ui/card";
-import { CONTRACTOR_DETAIL_COLORS, cn } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS, cn } from '../../../../logic/utils';
 import { Activity, TrendingUp, TrendingDown, AlertCircle, Calendar, DollarSign, Hash } from 'lucide-react';
 import { AwardGrainPopup } from './AwardGrainPopup';
 import { EventsListPopup } from './EventsListPopup';
+import { EventsDetailView } from './EventsDetailView';
 
 interface ActivityDetailPanelProps {
   contractor: any;
@@ -17,6 +18,8 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
   const [isAwardGrainOpen, setIsAwardGrainOpen] = useState(false);
   const [isEventsPopupOpen, setIsEventsPopupOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [showEventsDetail, setShowEventsDetail] = useState(false);
+  const [eventsDetailRelationship, setEventsDetailRelationship] = useState<any>(null);
 
   // Mock contract data - in production this would come from props
   const contracts = [
@@ -231,6 +234,18 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
     setSelectedContract(null);
   };
 
+  // Events detail view handlers
+  const openEventsDetail = (relationship: any, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent toggle from firing
+    setEventsDetailRelationship(relationship);
+    setShowEventsDetail(true);
+  };
+
+  const closeEventsDetail = () => {
+    setShowEventsDetail(false);
+    setEventsDetailRelationship(null);
+  };
+
   const toggleAward = (awardId: string) => {
     const newExpanded = new Set(expandedContractAwards);
     if (newExpanded.has(awardId)) {
@@ -388,6 +403,16 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
     );
   };
 
+  // If showing events detail, render that view instead
+  if (showEventsDetail && eventsDetailRelationship) {
+    return (
+      <EventsDetailView
+        relationship={eventsDetailRelationship}
+        onBack={closeEventsDetail}
+      />
+    );
+  }
+
   return (
     <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
       <div className="p-4 relative z-10">
@@ -543,10 +568,10 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
                           })()}
                         </div>
 
-                        {/* Right Arrow - Opens Award Grain Popup */}
+                        {/* Right Arrow - Opens Events Detail View */}
                         <div
                           className="absolute right-[10px] top-1/2 transform -translate-y-1/2 cursor-pointer"
-                          onClick={(e) => openAwardGrain(relationship, e)}
+                          onClick={(e) => openEventsDetail(relationship, e)}
                         >
                           <div className="w-8 h-8 bg-gray-700/50 rounded-full flex items-center justify-center hover:bg-gray-600/60 transition-colors">
                             <svg className="w-4 h-4 text-gray-400 hover:text-gray-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">

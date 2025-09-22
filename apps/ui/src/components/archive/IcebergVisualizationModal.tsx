@@ -3,7 +3,7 @@ import { X, Target, Activity, Shield, TrendingUp } from 'lucide-react';
 import { Modal, ModalContent } from '../ui/modal';
 import { Button } from '../ui/button';
 import { IcebergVisualization } from './IcebergVisualization';
-import { cn } from '../../lib/utils';
+import { cn } from '../../logic/utils';
 import type { IcebergOpportunity } from './IcebergOpportunityCard';
 
 interface IcebergVisualizationModalProps {

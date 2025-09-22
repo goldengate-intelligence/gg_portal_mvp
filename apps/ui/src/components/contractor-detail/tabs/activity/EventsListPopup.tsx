@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Calendar, DollarSign, Building2, MapPin, Filter, ArrowUpDown } from 'lucide-react';
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 
 interface Event {
   event_type: 'PRIME' | 'SUBAWARD';

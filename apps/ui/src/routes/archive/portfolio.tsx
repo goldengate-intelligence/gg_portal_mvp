@@ -10,7 +10,7 @@ import { ContractorTable } from '../../components/ui/table';
 import { useContractorLists, useContractorListItems } from '../../hooks/useContractorLists';
 import { formatCurrency } from '../../utils/contractor-profile-transform';
 import { exportContractors } from '../../utils/export';
-import { cn } from '../../lib/utils';
+import { cn } from '../../logic/utils';
 import type { Contractor } from '../../types';
 
 export function ViewPortfolio() {

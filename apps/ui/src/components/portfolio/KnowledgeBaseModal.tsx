@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Folder, File, FileText, Image, FileSpreadsheet, Video, Music, Archive, Download, Trash2, Eye, Calendar, User, Search } from 'lucide-react';
 import { Button } from '../ui/button';
-import { CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 
 interface KnowledgeBaseModalProps {
   isOpen: boolean;

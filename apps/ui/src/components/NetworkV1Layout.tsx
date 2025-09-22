@@ -1,9 +1,9 @@
 import React from 'react';
 import { HudCard } from './ui/hud-card';
-import { GoldengateNetworkGraph } from '../lib/charts';
+import { GoldengateNetworkGraph } from '../ui/charts/components';
 import USAMap from 'react-usa-map';
-import { CONTRACTOR_DETAIL_COLORS } from '../lib/utils';
-import { USA_STATE_COORDINATES_PRECISE } from '../lib/map-coordinates.js';
+import { CONTRACTOR_DETAIL_COLORS } from '../logic/utils';
+import { USA_STATE_COORDINATES_PRECISE } from '../logic/map-coordinates.js';
 import * as d3 from 'd3-geo';
 
 interface NetworkV1LayoutProps {

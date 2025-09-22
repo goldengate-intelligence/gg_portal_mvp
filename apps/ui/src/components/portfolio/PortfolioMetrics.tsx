@@ -1,5 +1,5 @@
 import React from 'react';
-import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from '../../services/contractorMetrics';
+import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from './services/contractorMetrics';
 
 // Asset types
 interface Asset {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Mail, Phone, Linkedin, Briefcase, Building, ChevronDown, Search, RefreshCw, CreditCard, Filter } from 'lucide-react';
 import { HudCard } from './ui/hud-card';
 import { Button } from './ui/button';
-import { cn, CONTRACTOR_DETAIL_COLORS } from '../lib/utils';
+import { cn, CONTRACTOR_DETAIL_COLORS } from '../logic/utils';
 
 interface Person {
   id: string;

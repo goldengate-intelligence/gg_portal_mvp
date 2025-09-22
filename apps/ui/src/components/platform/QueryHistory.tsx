@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MessageSquare, X, Minimize2, Maximize2, Clock, Search, History } from 'lucide-react';
 import { Button } from '../ui/button';
-import { CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 
 interface QueryHistoryProps {
   className?: string;

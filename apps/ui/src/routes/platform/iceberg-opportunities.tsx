@@ -9,9 +9,9 @@ import { LoadingState, EmptyState } from '../../components/ui/skeleton';
 import { IcebergOpportunityCard, type IcebergOpportunity } from '../../components/platform/IcebergOpportunityCard';
 import { IcebergVisualizationModal } from '../../components/platform/IcebergVisualizationModal';
 import { IcebergDistributionCharts } from '../../components/platform/IcebergDistributionCharts';
-import { formatCurrency } from '../../utils/contractor-profile-transform';
-import { apiClient } from '../../lib/api-client';
-import { cn } from '../../lib/utils';
+import { formatCurrency } from '../../components/platform/services/contractor-profile-transform';
+import { apiClient } from '../../services/api-client';
+import { cn } from '../../logic/utils';
 
 export function IcebergOpportunities() {
   const [opportunities, setOpportunities] = useState<IcebergOpportunity[]>([]);

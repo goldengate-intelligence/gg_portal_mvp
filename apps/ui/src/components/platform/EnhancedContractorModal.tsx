@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { LoadingState } from '../ui/skeleton';
 import { PerformanceTrendChart } from '../charts/PerformanceTrendChart';
 import { CompetitiveBenchmarkPanel } from './CompetitiveBenchmarkPanel';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '../../services/api-client';
 import type { Contractor } from '../../types';
 
 interface EnhancedContractorModalProps {

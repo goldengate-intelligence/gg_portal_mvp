@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/auth-context';
 import { useRouter } from '@tanstack/react-router';
 import { Button } from '../ui/button';
-import { CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 
 export function RegisterForm() {
   const [formData, setFormData] = useState({

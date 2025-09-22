@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, FileText, Calendar, DollarSign, TrendingUp, AlertCircle, Building2, Users } from 'lucide-react';
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 import { EventsListPopup } from './EventsListPopup';
 
 interface AwardGrainPopupProps {

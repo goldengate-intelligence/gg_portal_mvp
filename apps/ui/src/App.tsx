@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { useAuth } from './contexts/auth-context'
 import { Button } from './components/ui/button'
 import { HeroText } from './components/HeroText'
-import { CONTRACTOR_DETAIL_COLORS } from './lib/utils'
+import { CONTRACTOR_DETAIL_COLORS } from './logic/utils'
 import { Building2, Bot, Shield } from 'lucide-react'
 
 function App() {

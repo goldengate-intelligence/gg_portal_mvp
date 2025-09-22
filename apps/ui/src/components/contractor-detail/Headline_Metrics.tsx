@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn, CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { cn, CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 
 interface MetricCardProps {
   title: string;

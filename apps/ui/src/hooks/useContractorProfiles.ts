@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient, type ContractorProfile, type ContractorProfileQueryResult } from '../lib/api-client';
+import { apiClient, type ContractorProfile, type ContractorProfileQueryResult } from '../services/api-client';
 
 export interface ContractorProfileFilters {
   search?: string;

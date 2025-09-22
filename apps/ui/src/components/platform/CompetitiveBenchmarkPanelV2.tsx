@@ -2,8 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Trophy, Target, TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
-import { formatCurrency } from '../../utils/contractor-profile-transform';
-import { GoldengateRadarChart, GoldengateBarChart } from '../../lib/charts';
+import { formatCurrency } from './services/contractor-profile-transform';
+import { GoldengateRadarChart, GoldengateBarChart } from '../../ui/charts/components';
 
 interface PeerComparison {
   currentPercentiles: {

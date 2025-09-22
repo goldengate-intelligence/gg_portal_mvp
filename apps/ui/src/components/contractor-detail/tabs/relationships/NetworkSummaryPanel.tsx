@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from "../../../ui/card";
-import { GoldengateNetworkGraph } from '../../../../lib/charts';
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { GoldengateNetworkGraph } from '../../../../ui/charts/components';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 
 interface NetworkSummaryPanelProps {
   contractor: any;

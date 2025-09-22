@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from "../../../ui/card";
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 import USAMap from 'react-usa-map';
 import * as d3 from 'd3-geo';
 

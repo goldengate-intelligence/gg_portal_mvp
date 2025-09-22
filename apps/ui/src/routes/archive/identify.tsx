@@ -14,7 +14,7 @@ import { useContractorProfiles } from '../../hooks/useContractorProfiles';
 import { useContractorFavorites } from '../../hooks/useContractorLists';
 import { transformContractorProfileArray, formatCurrency } from '../../utils/contractor-profile-transform';
 import { exportContractors } from '../../utils/export';
-import { cn } from '../../lib/utils';
+import { cn } from '../../logic/utils';
 import type { Contractor, SearchFilters, ViewMode } from '../../types';
 import type { ContractorProfileFilters } from '../../hooks/useContractorProfiles';
 

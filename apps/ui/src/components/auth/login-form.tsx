@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/auth-context';
 import { useRouter } from '@tanstack/react-router';
 import { Button } from '../ui/button';
-import { CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -96,7 +96,7 @@ export function LoginForm() {
 
           <div className="flex items-center justify-start mb-6">
             <div className="text-sm">
-              <a href="#" className="text-[#D2AC38] hover:text-[#D2AC38]/80 transition-colors duration-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              <a href="#" className="text-gray-300 hover:text-gray-300/80 transition-colors duration-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                 Forgot your password
               </a>
             </div>

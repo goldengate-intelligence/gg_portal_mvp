@@ -1,7 +1,7 @@
 import React from 'react';
 import { Users, Mail, Phone, Linkedin } from 'lucide-react';
 import { Card } from "../../../ui/card";
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 import { useDesignPatterns } from '../../../../hooks/useDesignPatterns';
 
 interface Person {

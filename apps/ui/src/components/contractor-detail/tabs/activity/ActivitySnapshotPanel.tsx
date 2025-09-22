@@ -1,5 +1,5 @@
 import React from 'react';
-import { CONTRACTOR_DETAIL_COLORS, cn } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS, cn } from '../../../../logic/utils';
 import { Activity, Package, Clock, Zap, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 
 interface ActivitySnapshotPanelProps {

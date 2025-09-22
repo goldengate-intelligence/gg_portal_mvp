@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
   Outlet,
@@ -59,14 +59,25 @@ import reportWebVitals from './reportWebVitals.ts'
 
 import App from './App.tsx'
 
-const rootRoute = createRootRoute({
-  component: () => (
+function RootComponent() {
+  const location = useLocation()
+
+  // Reset scroll position when route changes
+  React.useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
+
+  return (
     <>
       <ConditionalHeader />
       <Outlet />
       <ConditionalFooter />
     </>
-  ),
+  )
+}
+
+const rootRoute = createRootRoute({
+  component: RootComponent,
 })
 
 const indexRoute = createRoute({
@@ -99,7 +110,7 @@ const router = createRouter({
     ...TanStackQueryProviderContext,
   },
   defaultPreload: 'intent',
-  scrollRestoration: true,
+  scrollRestoration: false,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
 })

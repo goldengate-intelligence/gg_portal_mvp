@@ -3,7 +3,8 @@ import { Plane, Shield, Factory, Building, Truck, Zap, Pin } from 'lucide-react'
 import { useAgentChatContext } from '../../contexts/agent-chat-context';
 import { FileUploadModal } from './FileUploadModal';
 import { KnowledgeBaseModal } from './KnowledgeBaseModal';
-import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from '../../services/contractorMetrics';
+import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from './services/contractorMetrics';
+import { getIndustryImage, getIndustryTag } from './logic/industryClassification';
 
 interface AssetCardProps {
   companyName: string;
@@ -31,65 +32,11 @@ interface AssetCardProps {
     revenue: string;
     pipeline: string;
   };
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
-// Map NAICS descriptions to primary industry tags (2-digit NAICS groups)
-const getPrimaryIndustryTag = (naicsDescription: string, companyName: string) => {
-  const desc = naicsDescription.toLowerCase();
-  const company = companyName.toLowerCase();
-
-  if (company.includes('lockheed') || desc.includes('aerospace') || desc.includes('aircraft') || desc.includes('aviation')) {
-    return 'Defense & Aerospace';
-  }
-  if (desc.includes('manufacturing') || desc.includes('fabricat') || desc.includes('produc')) {
-    return 'Manufacturing';
-  }
-  if (desc.includes('construction') || desc.includes('building') || desc.includes('real estate')) {
-    return 'Construction';
-  }
-  if (desc.includes('transportation') || desc.includes('logistics') || desc.includes('shipping')) {
-    return 'Transportation';
-  }
-  if (desc.includes('energy') || desc.includes('power') || desc.includes('electric')) {
-    return 'Energy & Utilities';
-  }
-  if (desc.includes('professional') || desc.includes('technical') || desc.includes('computer') || desc.includes('service')) {
-    return 'Professional Services';
-  }
-  if (desc.includes('information') || desc.includes('technology') || desc.includes('software')) {
-    return 'Information Technology';
-  }
-
-  return 'Other Services';
-};
-
-// Map NAICS descriptions to industry images
-const getIndustryImage = (naicsDescription: string, companyName: string) => {
-  const desc = naicsDescription.toLowerCase();
-  const company = companyName.toLowerCase();
-
-  if (company.includes('lockheed') || desc.includes('aerospace') || desc.includes('aircraft') || desc.includes('aviation')) {
-    return '/gg_industry_images/1_defense.jpg';
-  }
-  if (desc.includes('manufacturing') || desc.includes('fabricat') || desc.includes('produc')) {
-    return '/gg_industry_images/6_manufacturing.jpg';
-  }
-  if (desc.includes('construction') || desc.includes('building') || desc.includes('real estate')) {
-    return '/gg_industry_images/3_construction.jpg';
-  }
-  if (desc.includes('transportation') || desc.includes('logistics') || desc.includes('shipping')) {
-    return '/gg_industry_images/9_transportation.jpg';
-  }
-  if (desc.includes('energy') || desc.includes('power') || desc.includes('electric')) {
-    return '/gg_industry_images/12_energy.jpg';
-  }
-  if (desc.includes('professional') || desc.includes('technical') || desc.includes('computer') || desc.includes('service')) {
-    return '/gg_industry_images/4_professionalservices.jpg';
-  }
-
-  // Default fallback
-  return '/gg_industry_images/16_other.jpg';
-};
+// Industry classification now handled by centralized service
 
 export function AssetCardNew({
   companyName,
@@ -110,14 +57,16 @@ export function AssetCardNew({
   isDraggedOver = false,
   isPinned = false,
   onPin,
-  aggregatedMetrics
+  aggregatedMetrics,
+  isExpanded = false,
+  onToggleExpanded
 }: AssetCardProps) {
   const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null);
   const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
   const [isKnowledgeBaseOpen, setIsKnowledgeBaseOpen] = useState(false);
   const { openWithContext } = useAgentChatContext();
-  const industryImageSrc = getIndustryImage(naicsDescription, companyName);
-  const primaryIndustryTag = getPrimaryIndustryTag(naicsDescription, companyName);
+  const industryImageSrc = getIndustryImage(companyName, naicsDescription);
+  const primaryIndustryTag = getIndustryTag(companyName, naicsDescription);
 
   // Generate dynamic company initials and colors
   const getCompanyInitials = (name: string) => {
@@ -125,6 +74,11 @@ export function AssetCardNew({
     if (name.includes('Raytheon')) return 'RTX';
     if (name.includes('BAE')) return 'BAE';
     if (name.includes('Applied')) return 'ACI';
+    if (name.includes('MedStar')) return 'MSF';
+    if (name.includes('InfoTech')) return 'ITC';
+    if (name.includes('GreenPoint')) return 'GCE';
+    if (name.includes('QuantumShield')) return 'QSL';
+    if (name.includes('NextGen')) return 'NGE';
     // For groups, create abbreviation from group name
     if (isGrouped) {
       return name.split(' ')
@@ -166,6 +120,31 @@ export function AssetCardNew({
       progress: 'from-emerald-500 to-teal-500',
       fill: '60%'
     };
+    if (name.includes('MedStar')) return {
+      accent: '#F59E0B',
+      progress: 'from-amber-500 to-orange-500',
+      fill: '80%'
+    };
+    if (name.includes('InfoTech')) return {
+      accent: '#8B5CF6',
+      progress: 'from-violet-500 to-purple-500',
+      fill: '65%'
+    };
+    if (name.includes('GreenPoint')) return {
+      accent: '#059669',
+      progress: 'from-emerald-600 to-green-500',
+      fill: '70%'
+    };
+    if (name.includes('QuantumShield')) return {
+      accent: '#DC2626',
+      progress: 'from-red-600 to-rose-500',
+      fill: '55%'
+    };
+    if (name.includes('NextGen')) return {
+      accent: '#0891B2',
+      progress: 'from-cyan-600 to-blue-500',
+      fill: '45%'
+    };
     return {
       accent: '#6B7280',
       progress: 'from-gray-500 to-slate-500',
@@ -198,18 +177,35 @@ export function AssetCardNew({
   const theme = getCardTheme(companyName);
   const metrics = aggregatedMetrics || getContractorFinancialMetrics(uei, companyName);
 
-  // Square card layout for all companies
+  // Check if this is a defense contractor by getting contractor details
+  const contractorMetrics = getContractorMetrics(uei) || getContractorMetricsByName(companyName);
+  const isDefenseContractor = contractorMetrics?.primaryAgency?.toLowerCase().includes('defense') ||
+                             contractorMetrics?.primaryAgency?.toLowerCase().includes('dod') ||
+                             contractorMetrics?.primaryAgency === 'Department of Defense';
+
+  // Dynamic card layout with collapsible content
   return (
     <div
-      className={`border rounded-xl transition-all duration-300 cursor-move overflow-hidden relative ${
+      className={`border ${isExpanded ? 'rounded-xl' : 'rounded-xl'} cursor-pointer overflow-visible relative ${
         isDraggedOver
-          ? 'bg-black/40 border-[#D2AC38] hover:border-[#D2AC38]/70'
+          ? 'bg-black/40 border-[#D2AC38] hover:border-[#D2AC38]/90'
           : isGrouped
-            ? 'bg-black/40 border-[#8B8EFF]/50 hover:border-[#8B8EFF]/70'
-            : 'bg-black/40 border-[#F97316]/40 hover:border-[#F97316]/60'
+            ? 'bg-black/40 border-[#8B8EFF]/50 hover:border-[#8B8EFF]/90'
+            : 'bg-black/40 border-[#F97316]/40 hover:border-[#F97316]/90'
       }`}
-      style={{ width: '100%', height: '220px' }}
+      style={{ 
+        width: '100%', 
+        height: isExpanded ? '220px' : '112px'
+      }}
       draggable={true}
+      onClick={(e) => {
+        // Only toggle if not clicking on action buttons or drag handles
+        if (!e.defaultPrevented && onToggleExpanded) {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleExpanded();
+        }
+      }}
       onDragStart={(e) => {
         e.dataTransfer.setData('text/plain', JSON.stringify({
           companyName,
@@ -253,11 +249,16 @@ export function AssetCardNew({
           if (onDrop) onDrop();
         }
       }}
-      onClick={onClick}
     >
 
       {/* Header Section */}
-      <div className="relative p-4 bg-gradient-to-br from-gray-900/90 via-gray-800/70 to-gray-900/50 h-28">
+      <div className={`relative h-28 ${
+        isExpanded ? 'rounded-t-xl' : 'rounded-xl'
+      }`}>
+        <div className={`absolute inset-0.5 bg-gradient-to-br from-gray-900/90 via-gray-800/70 to-gray-900/50 ${
+          isExpanded ? 'rounded-t-xl' : 'rounded-xl'
+        }`}></div>
+        <div className="relative z-10 p-4 h-full">
         {/* Company Logo & Info */}
         <div className="flex items-start justify-between h-full">
           <div className="flex items-start gap-4">
@@ -270,11 +271,11 @@ export function AssetCardNew({
             </div>
 
             {/* Company Info */}
-            <div className="flex flex-col justify-center h-20">
+            <div className="flex flex-col justify-start h-20">
               <div className="flex items-center gap-2 mb-0">
                 <h3
                   className="text-white leading-tight hover:text-[#D2AC38] transition-colors cursor-pointer uppercase mb-0"
-                  style={{ fontFamily: 'Genos, sans-serif', fontWeight: '900', fontSize: '24px' }}
+                  style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: '250', fontSize: '24px' }}
                   draggable={false}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -296,7 +297,7 @@ export function AssetCardNew({
                       if (onGroupToggle) onGroupToggle();
                     }}
                   >
-                    <svg className="w-3 h-3 text-[#8B8EFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-[#8B8EFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     <span className="text-[#8B8EFF] text-xs font-medium">
@@ -306,23 +307,41 @@ export function AssetCardNew({
                 )}
               </div>
 
-              {/* UEI Bubble */}
-              <span className="inline-block px-3 py-1 bg-gray-600/20 text-gray-300 text-xs rounded-full border border-gray-600/40 uppercase tracking-wide font-medium w-fit">
-                {isGrouped ? `${groupMembers.length} Entities` : uei}
+              {/* UEI and NAICS Text (no bubble) */}
+              <span className="text-gray-300 text-xs uppercase tracking-wide font-medium">
+                {isGrouped ? `${groupMembers.length} Entities` : `${uei} • ${naicsDescription}`}
               </span>
             </div>
           </div>
 
-          {/* Right Side - Industry Tag and Image */}
+          {/* Right Side - Action Icons and Image */}
           <div className="flex items-start gap-3">
-            {/* Industry Tag and Icons - mirror left side structure */}
-            <div className="flex flex-col justify-center h-20">
-              <span className="inline-block px-3 py-1 bg-[#D2AC38]/20 text-[#F4D03F] text-xs rounded-full border border-[#D2AC38]/40 uppercase tracking-wide font-medium mb-0 w-fit ml-auto">
-                {primaryIndustryTag}
-              </span>
-
+            {/* Action Icons - mirror left side structure */}
+            <div className="flex flex-col justify-start h-20">
               {/* Action Icons Row - unified bubble container */}
-              <div className="flex items-center px-1.5 py-0.5 bg-gray-600/20 border border-gray-600/40 rounded-full justify-between mt-1">
+              <div className="flex items-center px-3 py-1 bg-gray-600/20 border border-gray-600/40 rounded-full gap-2">
+                {/* Expand/Collapse Indicator */}
+                <div
+                  className={`p-0.5 hover:bg-[#D2AC38]/30 rounded transition-all cursor-pointer relative ${
+                    isExpanded ? 'rotate-180' : 'rotate-0'
+                  }`}
+                  onMouseEnter={() => setActiveTooltip('expand')}
+                  onMouseLeave={() => setActiveTooltip(null)}
+                >
+                  <svg 
+                    className="w-4 h-4 text-[#D2AC38] hover:text-[#D2AC38]/80" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                  {activeTooltip === 'expand' && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
+                      {isExpanded ? 'Collapse details' : 'Expand details'}
+                    </div>
+                  )}
+                </div>
                 {/* Notes Icon - First */}
                 <div
                   className="p-0.5 hover:bg-indigo-500/30 rounded transition-all cursor-pointer relative"
@@ -334,11 +353,11 @@ export function AssetCardNew({
                     openWithContext(uei, companyName, 'contractor');
                   }}
                 >
-                  <svg className="w-3 h-3 text-indigo-400 hover:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-indigo-400 hover:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   {activeTooltip === 'notes' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-50">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
                       Take quick notes on this entity
                     </div>
                   )}
@@ -355,11 +374,11 @@ export function AssetCardNew({
                     setIsFileUploadOpen(true);
                   }}
                 >
-                  <svg className="w-3 h-3 text-cyan-400 hover:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-cyan-400 hover:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                   {activeTooltip === 'attach' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-50">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
                       Attach documents for your knowledge base
                     </div>
                   )}
@@ -376,11 +395,11 @@ export function AssetCardNew({
                     setIsKnowledgeBaseOpen(true);
                   }}
                 >
-                  <svg className="w-3 h-3 text-teal-400 hover:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-teal-400 hover:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                   </svg>
                   {activeTooltip === 'folder' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-50">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
                       View contents of your knowledge base
                     </div>
                   )}
@@ -399,11 +418,11 @@ export function AssetCardNew({
                     if (onPin) onPin(uei);
                   }}
                 >
-                  <Pin className={`w-3 h-3 hover:text-orange-300 transition-colors ${
+                  <Pin className={`w-4 h-4 hover:text-orange-300 transition-colors ${
                     isPinned ? 'fill-orange-400/50' : ''
                   }`} />
                   {activeTooltip === 'pin' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-50">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
                       {isPinned ? 'Unpin this entity' : 'Pin this entity'}
                     </div>
                   )}
@@ -421,30 +440,33 @@ export function AssetCardNew({
             </div>
           </div>
         </div>
+        </div>
       </div>
 
-      {/* Content Section */}
-      <div className="p-4 relative z-10">
+      {/* Content Section - Collapsible */}
+      {isExpanded && (
+        <div className="relative z-10 p-4">
         {/* Financial Metrics Grid - NO ICONS */}
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-2">Lifetime Awards</span>
+            <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Lifetime Awards</span>
             <span className="font-bold text-xl block" style={{ color: '#F97316' }}>{metrics.lifetime}</span>
           </div>
           <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-2">Active Awards</span>
+            <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Active Awards</span>
             <span className="font-bold text-xl block" style={{ color: '#FFB84D' }}>{activeAwards.value}</span>
           </div>
           <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-2">Revenue (TTM)</span>
+            <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Revenue (TTM)</span>
             <span className="font-bold text-xl block" style={{ color: '#42D4F4' }}>{metrics.revenue}</span>
           </div>
           <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-2">Pipeline</span>
+            <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Pipeline</span>
             <span className="font-bold text-xl block" style={{ color: '#8B8EFF' }}>{metrics.pipeline}</span>
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* File Upload Modal */}
       <FileUploadModal

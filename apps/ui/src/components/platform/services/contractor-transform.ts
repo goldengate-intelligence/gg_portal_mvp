@@ -1,4 +1,4 @@
-import type { ContractorData } from '../lib/api-client';
+import type { ContractorData } from '../services/api-client';
 import type { Contractor } from '../types';
 
 // Industry cluster mapping to UI categories

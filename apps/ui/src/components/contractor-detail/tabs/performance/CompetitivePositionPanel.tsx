@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from "../../../ui/card";
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
-import { GoldengateBubbleChart } from '../../../../lib/charts';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
+import { GoldengateBubbleChart } from '../../../../ui/charts/components';
 
 interface CompetitivePositionPanelProps {
   benchmarkData: any;

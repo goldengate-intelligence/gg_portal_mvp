@@ -23,7 +23,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import { DeploymentModal } from '../../components/platform/DeploymentModal';
 import { DeploymentResults } from '../../components/platform/DeploymentResults';
 import { mockContractors, mockAnalysisResults } from '../../data/mock-data';
-import { cn } from '../../lib/utils';
+import { cn } from '../../logic/utils';
 import type { Contractor, AnalysisType, AnalysisResult } from '../../types';
 
 export function AnalysisMode() {

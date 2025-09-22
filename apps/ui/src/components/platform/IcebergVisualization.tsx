@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency } from '../../utils/contractor-profile-transform';
+import { formatCurrency } from './services/contractor-profile-transform';
 
 interface IcebergVisualizationProps {
   contractorName: string;

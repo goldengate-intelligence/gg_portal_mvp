@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from "../../../ui/card";
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 
 interface PerformanceSummaryPanelProps {
   performanceData: any;

@@ -3,7 +3,7 @@ import { ActivitySnapshotPanel } from './ActivitySnapshotPanel';
 import { ActivityAnalysisPanel } from './ActivityAnalysisPanel';
 import { ActivityDetailPanel } from './ActivityDetailPanel';
 import { Card } from "../../../ui/card";
-import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
+import { CONTRACTOR_DETAIL_COLORS } from '../../../../logic/utils';
 
 interface ActivityTabProps {
   contractor: any;

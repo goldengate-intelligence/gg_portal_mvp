@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { cn } from '../../utils/cn';
+import { cn } from '../../logic/utils';
 
 interface TabsContextValue {
   value: string;
