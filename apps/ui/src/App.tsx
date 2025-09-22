@@ -9,7 +9,7 @@ function App() {
   const { isAuthenticated, user } = useAuth()
 
   return (
-    <div className="min-h-screen w-full text-white overflow-hidden pt-32 bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90">
+    <div className="min-h-screen w-full text-white overflow-hidden pt-32 pb-6 bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90">
       <div className="h-full flex items-center justify-center">
         <div className="container mx-auto px-6 max-w-4xl">
         <div className="text-center">
@@ -80,7 +80,7 @@ function App() {
           </div>
         </div>
 
-        <div className="mt-14 text-center mb-6">
+        <div className="mt-14 text-center mb-32">
           <p className="uppercase tracking-wider" style={{ fontFamily: 'sans-serif', fontSize: '12px', color: '#D2AC38' }}>
             © 2025 GOLDENGATE INTELLIGENCE. ALL RIGHTS RESERVED.
           </p>

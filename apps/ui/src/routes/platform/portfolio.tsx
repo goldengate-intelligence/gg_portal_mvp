@@ -169,7 +169,7 @@ export function ViewPortfolio() {
         </div>
 
         {/* Footer Copyright */}
-        <div className="mt-16 text-center">
+        <div className="mt-16 mb-12 text-center">
           <p className="uppercase tracking-wider" style={{ fontFamily: 'sans-serif', fontSize: '12px', color: '#D2AC38' }}>
             © 2025 GOLDENGATE INTELLIGENCE. ALL RIGHTS RESERVED.
           </p>

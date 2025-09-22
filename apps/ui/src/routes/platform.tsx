@@ -54,7 +54,7 @@ function PlatformComponent() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen w-full text-white bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90">
-        <div className="container mx-auto px-6 pt-24 pb-32 max-w-7xl">
+        <div className="container mx-auto px-6 pt-24 pb-20 max-w-7xl">
 
             {/* Hero Header */}
             <div className="text-center mb-12 mt-8">
@@ -80,9 +80,9 @@ function PlatformComponent() {
                     backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor
                   }}
                 >
-                  <div className="p-8">
+                  <div className="p-6">
                     {/* Monolithic Header */}
-                    <div className="mb-8">
+                    <div className="mb-6">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="mb-2">
@@ -110,7 +110,7 @@ function PlatformComponent() {
                       </div>
 
                       {/* Minimalist Icon */}
-                      <div className="flex items-center gap-6 mb-6">
+                      <div className="flex items-center gap-6 mb-4">
                         <div className="p-3 rounded-xl" style={{ backgroundColor: `${mode.accentColor}15` }}>
                           <Icon className="w-6 h-6" style={{ color: mode.accentColor }} />
                         </div>
@@ -129,7 +129,7 @@ function PlatformComponent() {
                     {/* Capability Grid */}
                     <div className="grid grid-cols-1 gap-1">
                       {mode.capabilities.map((capability, index) => (
-                        <div key={index} className="flex items-center gap-4 py-2">
+                        <div key={index} className="flex items-center gap-4 py-1">
                           <capability.icon className="w-4 h-4 opacity-70" style={{ color: mode.accentColor }} />
                           <span
                             className="text-sm font-medium text-gray-200"
@@ -147,7 +147,7 @@ function PlatformComponent() {
           </div>
 
           {/* Footer */}
-          <div className="mt-16 text-center">
+          <div className="mt-16 mb-12 text-center">
             <p className="uppercase tracking-wider" style={{ fontFamily: 'sans-serif', fontSize: '12px', color: '#D2AC38' }}>
               © 2025 GOLDENGATE INTELLIGENCE. ALL RIGHTS RESERVED.
             </p>

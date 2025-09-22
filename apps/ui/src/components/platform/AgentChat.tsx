@@ -232,12 +232,9 @@ export function AgentChat({ className, forceOpen = false, isEmbedded = false, on
         {/* Minimized Chat Bar in Footer */}
         <div
           onClick={() => setIsMinimized(false)}
-          className="flex items-center gap-2 h-10 px-3 rounded-lg border border-[#D2AC38]/40 cursor-pointer hover:bg-gray-800/50 transition-all duration-200 relative overflow-hidden"
+          className="flex items-center gap-2 h-10 px-3 rounded-lg border border-[#D2AC38] cursor-pointer hover:bg-gray-800/50 transition-all duration-200 relative overflow-hidden"
           style={{
-            backgroundColor: CONTRACTOR_DETAIL_COLORS.panelColor,
-            background: `linear-gradient(90deg, transparent, rgba(210, 172, 56, 0.02), transparent), ${CONTRACTOR_DETAIL_COLORS.panelColor}`,
-            backgroundSize: '300% 100%',
-            animation: 'shimmer 8s ease-in-out infinite'
+            backgroundColor: '#000000'
           }}
         >
           <style jsx>{`

@@ -20,7 +20,7 @@ export default function Header() {
       return '#000000' // Pure black for login and register pages
     }
     if (pathname === '/') {
-      return 'transparent' // Transparent for homepage only
+      return '#000000' // Pure black for homepage
     }
     if (pathname === '/dashboard') {
       return '#000000' // Pure black for dashboard

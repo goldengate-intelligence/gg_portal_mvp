@@ -35,7 +35,7 @@ function DashboardComponent() {
             backgroundSize: '15px 15px'
           }} />
         </div>
-        <div className="container mx-auto px-6 pt-20 pb-20 relative z-10">
+        <div className="container mx-auto px-6 pt-24 pb-20 relative z-10">
           {/* Dashboard Header */}
           <div className="mb-8 mt-8">
             <div className="flex items-center gap-4 mb-4">

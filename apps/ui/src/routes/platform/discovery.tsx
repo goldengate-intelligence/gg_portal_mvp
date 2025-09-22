@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, Download, ChevronLeft, ChevronRight, Database, Target, Activity, Filter, Globe, BarChart3, TrendingUp, Shield, X, Brain, Paperclip, Settings, History, MessageSquare, FileSpreadsheet } from 'lucide-react';
+import { Search, Download, ChevronLeft, ChevronRight, ChevronDown, Database, Target, Activity, Filter, Globe, BarChart3, TrendingUp, Shield, X, Brain, Paperclip, Settings, History, MessageSquare, FileSpreadsheet } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { cn, CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
@@ -1109,22 +1109,49 @@ export function Discovery() {
           </div>
         </div>
 
-        {/* Fullscreen Results Modal */}
+        {/* Fullscreen Results Modal - Snowflake Style */}
         {showFullscreenResults && (
-          <div className="fixed z-[70] bg-black/90 backdrop-blur-sm" style={{ top: '80px', left: '0', right: '0', bottom: '80px' }}>
-            <div className="w-full h-full p-4">
-              <div className="bg-gray-900 border border-[#F97316]/30 rounded-xl w-full h-full overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-700">
-                  <h3 className="text-xl font-medium text-gray-200">Query Results</h3>
-                  <div className="flex items-center gap-3">
+          <div
+            className="fixed z-[70] bg-black/90 backdrop-blur-sm"
+            style={{ top: '80px', left: '0', right: '0', bottom: '80px' }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowFullscreenResults(false);
+                setShowResultsNotification(false);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setShowFullscreenResults(false);
+                setShowResultsNotification(false);
+              }
+            }}
+            tabIndex={0}
+          >
+            <div className="w-full h-full flex">
+              {/* Main Results Panel */}
+              <div className="flex-1 bg-gray-900 border-r border-gray-700 overflow-hidden flex flex-col">
+                {/* Top Tabs */}
+                <div className="flex items-center border-b border-gray-700 bg-gray-800">
+                  <div className="flex">
+                    <button className="px-6 py-3 text-sm font-medium text-blue-400 bg-blue-500/10 border-b-2 border-blue-400 flex items-center gap-2">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      Results
+                    </button>
+                    <button className="px-6 py-3 text-sm font-medium text-gray-400 hover:text-gray-300 flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
+                      Chart
+                    </button>
+                  </div>
+                  <div className="flex-1" />
+                  <div className="flex items-center gap-3 px-6">
                     <button
                       className="px-3 py-1.5 text-sm bg-[#F97316]/20 hover:bg-[#F97316]/30 text-[#F97316] border border-[#F97316]/40 hover:border-[#F97316]/60 transition-all duration-200 rounded flex items-center gap-1.5"
                       onClick={handleExport}
                       disabled={queryResults.length === 0}
                     >
                       <Download className="w-3 h-3" />
-                      Export Results
+                      Export
                     </button>
                     <button
                       onClick={() => {
@@ -1138,13 +1165,93 @@ export function Discovery() {
                   </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-6 h-[calc(100%-80px)] overflow-auto">
+                {/* Results Content */}
+                <div className="flex-1 overflow-auto">
                   <QueryResultsTable
                     data={queryResults}
                     columns={queryColumns}
                     isLoading={isLoadingResults}
                   />
+                </div>
+              </div>
+
+              {/* Right Side Panel */}
+              <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col">
+                {/* Query Details Panel */}
+                <div className="p-4 border-b border-gray-700">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-gray-200">Query Details</h3>
+                    <button className="text-gray-500 hover:text-gray-400">
+                      <Settings className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Query duration</span>
+                      <span className="text-sm text-gray-200">67ms</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-1">
+                      <div className="bg-blue-500 h-1 rounded-full" style={{ width: '85%' }}></div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Rows</span>
+                      <span className="text-sm text-gray-200">{queryResults.length}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Query ID</span>
+                      <span className="text-xs text-gray-400 font-mono">01bf2a54-0000-340f-0...</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Query History Panel */}
+                <div className="flex-1 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-gray-200">3 Queries</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">Status All</span>
+                      <button className="text-gray-500 hover:text-gray-400">
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                      <button className="text-gray-500 hover:text-gray-400">
+                        <History className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="text-xs text-gray-500 mb-2">Fri Sep 19 2025</div>
+
+                    <div className="p-2 bg-blue-500/10 border border-blue-500/30 rounded text-xs">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span className="text-gray-300">7:48:59 PM</span>
+                        <span className="text-gray-400">67ms</span>
+                        <span className="text-gray-300 flex-1 truncate">DESCRIBE TABLE U...</span>
+                      </div>
+                    </div>
+
+                    <div className="p-2 hover:bg-gray-700/50 rounded text-xs cursor-pointer">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                        <span className="text-gray-300">7:48:51 PM</span>
+                        <span className="text-gray-400">49ms</span>
+                        <span className="text-gray-300 flex-1 truncate">Federal Subaward...</span>
+                      </div>
+                    </div>
+
+                    <div className="p-2 hover:bg-gray-700/50 rounded text-xs cursor-pointer">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span className="text-gray-300">7:45:49 PM</span>
+                        <span className="text-gray-400">66ms</span>
+                        <span className="text-gray-300 flex-1 truncate">DESCRIBE TABLE U...</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1447,7 +1554,7 @@ export function Discovery() {
         )}
 
         {/* Footer Copyright */}
-        <div className="mt-16 text-center" style={{ marginTop: '82px' }}>
+        <div className="mt-16 mb-12 text-center">
           <p className="uppercase tracking-wider" style={{ fontFamily: 'sans-serif', fontSize: '12px', color: '#D2AC38' }}>
             © 2025 GOLDENGATE INTELLIGENCE. ALL RIGHTS RESERVED.
           </p>

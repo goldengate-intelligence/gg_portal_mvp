@@ -347,10 +347,10 @@ export function ContractorDetail({ contractorId, onActiveTabChange }: Contractor
             {renderTabContent()}
 
             {/* Copyright Footer */}
-            <div className="text-center py-6 mt-8 border-t border-gray-800/50">
-              <div className="text-xs" style={{ color: '#D2AC38' }}>
+            <div className="mt-16 mb-12 text-center">
+              <p className="uppercase tracking-wider" style={{ fontFamily: 'sans-serif', fontSize: '12px', color: '#D2AC38' }}>
                 © 2025 GOLDENGATE INTELLIGENCE. ALL RIGHTS RESERVED.
-              </div>
+              </p>
             </div>
           </div>
         </div>

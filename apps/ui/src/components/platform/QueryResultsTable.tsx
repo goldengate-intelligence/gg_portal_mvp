@@ -73,7 +73,7 @@ export function QueryResultsTable({ data, columns, isLoading }: QueryResultsTabl
       <div className="overflow-x-auto max-w-full">
         <table className="w-full bg-[#223040] border-collapse min-w-full">
         <thead>
-          <tr className="bg-black">
+          <tr className="bg-black border-b border-gray-600">
             {columns.map((column, index) => (
               <th
                 key={index}
@@ -105,7 +105,7 @@ export function QueryResultsTable({ data, columns, isLoading }: QueryResultsTabl
         </thead>
         <tbody>
           {sortedData.map((row, rowIndex) => (
-            <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-black/40' : 'bg-[#223040]'}>
+            <tr key={rowIndex} className={`border-b border-gray-600 ${rowIndex % 2 === 0 ? 'bg-black/40' : 'bg-[#223040]'}`}>
               {columns.map((column, colIndex) => (
                 <td
                   key={colIndex}
