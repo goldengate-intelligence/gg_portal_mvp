@@ -1,6 +1,5 @@
 export { PortfolioMetrics } from './PortfolioMetrics';
 export { PortfolioTabs } from './PortfolioTabs';
-export { ManagementTab } from './tabs/management/ManagementTab';
+export { AssetsTab } from './tabs/assets/AssetsTab';
 export { RiskTab } from './tabs/risk/RiskTab';
-export { ReportingTab } from './tabs/reporting/ReportingTab';
-export { NewsTab } from './tabs/news/NewsTab';
+export { IntegrationTab } from './tabs/integration/IntegrationTab';

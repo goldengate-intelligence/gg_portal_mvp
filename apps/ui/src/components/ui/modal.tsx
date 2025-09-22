@@ -183,7 +183,8 @@ const ModalTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h2
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight text-yellow-500 font-aptos", className)}
+    className={cn("text-lg leading-none tracking-tight text-yellow-500 font-aptos", className)}
+    style={{ fontWeight: '250' }}
     {...props}
   />
 ))

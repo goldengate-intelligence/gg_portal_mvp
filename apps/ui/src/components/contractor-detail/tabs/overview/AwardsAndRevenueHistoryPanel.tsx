@@ -32,31 +32,15 @@ export function AwardsAndRevenueHistoryPanel({
   };
 
   return (
-    <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
-      {/* Animated background grid */}
-      <div className="absolute inset-0 opacity-5 z-0">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, #F97316 1px, transparent 1px),
-            linear-gradient(180deg, #F97316 1px, transparent 1px)
-          `,
-          backgroundSize: '15px 15px'
-        }} />
-      </div>
-
-      {/* Glow effect on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #F9731620, transparent)' }} />
+    <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
       <div className="p-4 h-full flex flex-col relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <h3
-            className={Typography.panelTitle}
-            style={Typography.panelTitleFont}
-          >
+          <h3 className="font-bold tracking-wide text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
             AWARDS & REVENUE HISTORY ({revenueTimePeriod}Y)
           </h3>
           <div className="flex items-center gap-2">
             <select
-              className="bg-black/60 border border-[#F97316] text-white text-xs px-2 py-1 rounded font-light focus:border-[#F97316] focus:outline-none"
+              className="bg-black/60 border border-[#D2AC38] text-white text-xs px-2 py-1 rounded font-light focus:border-[#D2AC38] focus:outline-none"
               style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
               value={revenueTimeAggregation}
               onChange={(e) => onRevenueTimeAggregationChange(e.target.value)}
@@ -66,7 +50,7 @@ export function AwardsAndRevenueHistoryPanel({
               <option value="Y">Year</option>
             </select>
             <select
-              className="bg-black/60 border border-[#F97316] text-white text-xs px-2 py-1 rounded font-light focus:border-[#F97316] focus:outline-none"
+              className="bg-black/60 border border-[#D2AC38] text-white text-xs px-2 py-1 rounded font-light focus:border-[#D2AC38] focus:outline-none"
               style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
               value={revenueTimePeriod}
               onChange={(e) => onRevenueTimePeriodChange(e.target.value)}

@@ -271,7 +271,7 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
     };
 
     return (
-      <div key={contract.id} className="ml-6 mb-2 relative bg-black/40 border border-gray-700/30 rounded-lg overflow-hidden">
+      <div key={contract.id} className="ml-6 mb-2 relative border border-gray-700/30 rounded-lg overflow-hidden bg-gray-900/40">
         {/* Contract Status Banner */}
         <div className={`h-6 flex items-center px-3 ${
           contract.role === 'prime'
@@ -389,23 +389,10 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
   };
 
   return (
-    <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
-      {/* Animated background grid */}
-      <div className="absolute inset-0 opacity-5 z-0">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, #F97316 1px, transparent 1px),
-            linear-gradient(180deg, #F97316 1px, transparent 1px)
-          `,
-          backgroundSize: '15px 15px'
-        }} />
-      </div>
-
-      {/* Glow effect on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #F9731620, transparent)' }} />
+    <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
       <div className="p-4 relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-gray-200 font-normal uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px', letterSpacing: '0.0125em' }}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold tracking-wide text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
             Activity Rollups
           </h3>
         </div>
@@ -413,118 +400,20 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
         {/* Stacked Inner Containers */}
         <div className="space-y-4">
           {/* Contract Inflows Container - Enhanced */}
-          <div className="flex-1 overflow-auto rounded-xl border border-gray-700"
-               style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
+          <div className="flex-1 overflow-auto rounded-xl border border-gray-700" style={{ backgroundColor: '#223040' }}>
             <div className="p-4">
 
-              {/* Financial Totals Bar - Matching Individual Row Format */}
-              <div className="border border-gray-700/50 rounded-lg overflow-hidden mb-3 relative" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor }}>
-                <div className="absolute left-0 top-0 bottom-0 w-[2px]" style={{ backgroundColor: '#22c55e' }} />
-                <div className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h5 className="text-sm font-semibold text-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                        Inflows Summary • {inflowRelationships.length}
-                      </h5>
-                    </div>
-                    <div className="flex items-center mr-15">
-                      {(() => {
-                        // Calculate correct totals using same logic as individual cards
-                        const totalLifetime = inflowRelationships.reduce((sum, r) => sum + r.totalValue, 0); // 590M
-
-                        // Active = totalValue * 0.85 for each relationship
-                        // DOD: 165M * 0.85 = 140.25M
-                        // MegaCorp: 280M * 0.85 = 238M
-                        // Global Defense: 145M * 0.85 = 123.25M
-                        // Total: 501.5M ≈ 502M
-                        const totalActive = inflowRelationships.reduce((sum, r) => {
-                          return sum + (r.totalValue * 0.85);
-                        }, 0);
-
-                        // Obligated = awardedAmount * (avgUtilization / 100)
-                        // DOD: 140.25M * (28/100) = 39.27M
-                        // MegaCorp: 238M * (85/100) = 202.3M
-                        // Global Defense: 123.25M * (35/100) = 43.14M
-                        // Total: 284.71M ≈ 285M
-                        const totalObligated = inflowRelationships.reduce((sum, r) => {
-                          const awardedAmount = r.totalValue * 0.85;
-                          const avgUtilization = r.contracts.reduce((uSum: number, c: any) => uSum + c.utilization, 0) / r.contracts.length;
-                          return sum + (awardedAmount * (avgUtilization / 100));
-                        }, 0);
-
-                        const weightedUtilization = totalActive > 0 ? (totalObligated / totalActive) * 100 : 0;
-
-                        const getObligationColor = () => {
-                          if (weightedUtilization <= 25) return '#15803d';
-                          if (weightedUtilization <= 50) return '#84cc16';
-                          if (weightedUtilization <= 75) return '#eab308';
-                          return '#dc2626';
-                        };
-
-                        return (
-                          <>
-                            {/* Lifetime */}
-                            <div className="text-center" style={{ width: '65px' }}>
-                              <div className="text-lg font-medium text-gray-500 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                ${(totalLifetime / 1000000).toFixed(0)}M
-                              </div>
-                              <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                Lifetime
-                              </div>
-                            </div>
-
-                            {/* Subtle Separator */}
-                            <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-                            {/* Active */}
-                            <div className="text-center" style={{ width: '65px' }}>
-                              <div className="text-xl font-bold text-white leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                ${(totalActive / 1000000).toFixed(0)}M
-                              </div>
-                              <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                Active
-                              </div>
-                            </div>
-
-                            {/* Subtle Separator */}
-                            <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-                            {/* Obligated */}
-                            <div className="text-center" style={{ width: '65px' }}>
-                              <div className="text-lg font-semibold text-gray-300 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                ${(totalObligated / 1000000).toFixed(0)}M
-                              </div>
-                              <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                Obligated
-                              </div>
-                            </div>
-
-                            {/* Subtle Separator */}
-                            <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-                            {/* Utilization Percentage */}
-                            <div className="text-center" style={{ width: '65px' }}>
-                              <div className="text-lg font-bold leading-none" style={{ color: getObligationColor(), fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                {Math.round(weightedUtilization)}%
-                              </div>
-                              <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                Utilization
-                              </div>
-                            </div>
-                          </>
-                        );
-                      })()
-                      }
-                    </div>
-                  </div>
-                </div>
+              <div className="mb-3">
+                <h5 className="text-sm font-semibold text-gray-400 uppercase tracking-wider" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                  INFLOWS • {inflowRelationships.length}
+                </h5>
               </div>
 
               <div className="space-y-2">
                 {/* Agencies Section */}
                 {sortedInflowRelationships.agencies.map((relationship) => (
                   <div key={relationship.name}
-                       className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group relative bg-gray-900/60">
+                       style={{ backgroundColor: '#03070F' }} className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group relative">
                     {/* Color accent bar like metric cards */}
                     <div className="absolute left-0 top-0 bottom-0 w-[2px]"
                          style={{ backgroundColor: '#22c55e' }} />
@@ -600,18 +489,6 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
                                     {/* Subtle Separator */}
                                     <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
 
-                                    {/* Obligated */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-sm font-semibold text-gray-300 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        ${(obligatedAmount / 1000000).toFixed(0)}M
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Obligated
-                                      </div>
-                                    </div>
-
-                                    {/* Subtle Separator */}
-                                    <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
 
                                     {/* Utilization Percentage */}
                                     <div className="text-center" style={{ width: '65px' }}>
@@ -691,7 +568,7 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
                 {/* Prime Contractors Section */}
                 {sortedInflowRelationships.primes.map((relationship) => (
                   <div key={relationship.name}
-                       className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group relative bg-gray-900/60">
+                       style={{ backgroundColor: '#03070F' }} className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group relative">
                     {/* Color accent bar like metric cards */}
                     <div className="absolute left-0 top-0 bottom-0 w-[2px]"
                          style={{ backgroundColor: '#22c55e' }} />
@@ -767,18 +644,6 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
                                     {/* Subtle Separator */}
                                     <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
 
-                                    {/* Obligated */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-sm font-semibold text-gray-300 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        ${(obligatedAmount / 1000000).toFixed(0)}M
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Obligated
-                                      </div>
-                                    </div>
-
-                                    {/* Subtle Separator */}
-                                    <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
 
                                     {/* Utilization Percentage */}
                                     <div className="text-center" style={{ width: '65px' }}>
@@ -858,117 +723,19 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
           </div>
 
           {/* Contract Outflows Container - Enhanced */}
-          <div className="flex-1 overflow-auto rounded-xl border border-gray-700"
-               style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
+          <div className="flex-1 overflow-auto rounded-xl border border-gray-700" style={{ backgroundColor: '#223040' }}>
             <div className="p-4">
 
-              {/* Financial Totals Bar - Matching Individual Row Format */}
-              <div className="border border-gray-700/50 rounded-lg overflow-hidden mb-3 relative" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor }}>
-                <div className="absolute left-0 top-0 bottom-0 w-[2px]" style={{ backgroundColor: '#FF4C4C' }} />
-                <div className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h5 className="text-sm font-semibold text-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                        Outflows Summary • {outflowRelationships.length}
-                      </h5>
-                    </div>
-                    <div className="flex items-center mr-15">
-                      {(() => {
-                        // Calculate correct totals using same logic as individual cards
-                        const totalLifetime = outflowRelationships.reduce((sum, r) => sum + r.totalValue, 0); // 160M
-
-                        // Active = totalValue * 0.85 for each relationship
-                        // Alpha: 75M * 0.85 = 63.75M
-                        // Beta: 50M * 0.85 = 42.5M
-                        // Gamma: 35M * 0.85 = 29.75M
-                        // Total: 136M
-                        const totalActive = outflowRelationships.reduce((sum, r) => {
-                          return sum + (r.totalValue * 0.85);
-                        }, 0);
-
-                        // Obligated = awardedAmount * (avgUtilization / 100)
-                        // Alpha: 63.75M * (32/100) = 20.4M
-                        // Beta: 42.5M * (28/100) = 11.9M
-                        // Gamma: 29.75M * (35/100) = 10.41M
-                        // Total: 42.71M ≈ 43M
-                        const totalObligated = outflowRelationships.reduce((sum, r) => {
-                          const awardedAmount = r.totalValue * 0.85;
-                          const avgUtilization = r.contracts.reduce((uSum: number, c: any) => uSum + c.utilization, 0) / r.contracts.length;
-                          return sum + (awardedAmount * (avgUtilization / 100));
-                        }, 0);
-
-                        const weightedUtilization = totalActive > 0 ? (totalObligated / totalActive) * 100 : 0;
-
-                        const getObligationColor = () => {
-                          if (weightedUtilization <= 25) return '#15803d';
-                          if (weightedUtilization <= 50) return '#84cc16';
-                          if (weightedUtilization <= 75) return '#eab308';
-                          return '#dc2626';
-                        };
-
-                        return (
-                          <>
-                            {/* Lifetime */}
-                            <div className="text-center" style={{ width: '65px' }}>
-                              <div className="text-lg font-medium text-gray-500 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                ${(totalLifetime / 1000000).toFixed(0)}M
-                              </div>
-                              <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                Lifetime
-                              </div>
-                            </div>
-
-                            {/* Subtle Separator */}
-                            <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-                            {/* Active */}
-                            <div className="text-center" style={{ width: '65px' }}>
-                              <div className="text-xl font-bold text-white leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                ${(totalActive / 1000000).toFixed(0)}M
-                              </div>
-                              <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                Active
-                              </div>
-                            </div>
-
-                            {/* Subtle Separator */}
-                            <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-                            {/* Obligated */}
-                            <div className="text-center" style={{ width: '65px' }}>
-                              <div className="text-lg font-semibold text-gray-300 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                ${(totalObligated / 1000000).toFixed(0)}M
-                              </div>
-                              <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                Obligated
-                              </div>
-                            </div>
-
-                            {/* Subtle Separator */}
-                            <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-                            {/* Utilization Percentage */}
-                            <div className="text-center" style={{ width: '65px' }}>
-                              <div className="text-lg font-bold leading-none" style={{ color: getObligationColor(), fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                {Math.round(weightedUtilization)}%
-                              </div>
-                              <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                Utilization
-                              </div>
-                            </div>
-                          </>
-                        );
-                      })()
-                      }
-                    </div>
-                  </div>
-                </div>
+              <div className="mb-3">
+                <h5 className="text-sm font-semibold text-gray-400 uppercase tracking-wider" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                  OUTFLOWS • {outflowRelationships.length}
+                </h5>
               </div>
 
               <div className="space-y-2">
                 {outflowRelationships.map((relationship) => (
                   <div key={relationship.name}
-                       className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group relative bg-gray-900/60">
+                       style={{ backgroundColor: '#03070F' }} className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group relative">
                     {/* Color accent bar like metric cards */}
                     <div className="absolute left-0 top-0 bottom-0 w-[2px]" style={{ backgroundColor: '#FF4C4C' }} />
 
@@ -1039,18 +806,6 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
                                     {/* Subtle Separator */}
                                     <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
 
-                                    {/* Obligated */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-sm font-semibold text-gray-300 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        ${(obligatedAmount / 1000000).toFixed(0)}M
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Obligated
-                                      </div>
-                                    </div>
-
-                                    {/* Subtle Separator */}
-                                    <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
 
                                     {/* Utilization Percentage */}
                                     <div className="text-center" style={{ width: '65px' }}>

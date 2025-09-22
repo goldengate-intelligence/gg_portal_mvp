@@ -89,30 +89,17 @@ export function CompetitivePositionPanel({
     <div className="min-h-[55vh]">
       {/* Cross-Sectional Performance - Full Width */}
       <div className="w-full">
-        <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
-          {/* Animated background grid */}
-          <div className="absolute inset-0 opacity-5 z-0">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `
-                linear-gradient(90deg, #F97316 1px, transparent 1px),
-                linear-gradient(180deg, #F97316 1px, transparent 1px)
-              `,
-              backgroundSize: '15px 15px'
-            }} />
-          </div>
-
-          {/* Glow effect on hover */}
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #F9731620, transparent)' }} />
+        <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
           <div className="p-4 h-full flex flex-col relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-gray-200 font-normal tracking-wider uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
+              <h3 className="font-bold tracking-wide mb-3 text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
                 COMPETITIVE POSITION
               </h3>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <span className="text-sm text-gray-400">Y-Axis:</span>
                   <select
-                    className="bg-black/60 border border-[#F97316] text-white text-xs px-2 py-1 rounded font-light focus:border-[#F97316] focus:outline-none"
+                    className="bg-black/60 border border-[#D2AC38] text-white text-xs px-2 py-1 rounded font-light focus:border-[#D2AC38] focus:outline-none"
                     style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
                     value={yAxisMetric}
                     onChange={(e) => onYAxisMetricChange(e.target.value)}
@@ -129,7 +116,7 @@ export function CompetitivePositionPanel({
                 <div className="flex items-center gap-1">
                   <span className="text-sm text-gray-400">X-Axis:</span>
                   <select
-                    className="bg-black/60 border border-[#F97316] text-white text-xs px-2 py-1 rounded font-light focus:border-[#F97316] focus:outline-none"
+                    className="bg-black/60 border border-[#D2AC38] text-white text-xs px-2 py-1 rounded font-light focus:border-[#D2AC38] focus:outline-none"
                     style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
                     value={xAxisMetric}
                     onChange={(e) => onXAxisMetricChange(e.target.value)}
@@ -261,10 +248,10 @@ export function CompetitivePositionPanel({
 
                           tooltipEl.innerHTML = `
                             <div style="font-weight: bold; margin-bottom: 6px; color: #D2AC38;">${entityName}</div>
-                            <div style="color: #9CA3AF; font-size: 10px; margin-bottom: 8px;">UEI: ${uei}</div>
+                            <div style="color: #9CA3AF; font-size: 10px; margin-bottom: 8px;">${uei}</div>
                             <div style="font-size: 11px;">
-                              <div style="margin-bottom: 2px;">${xAxisLabel}: <span style="color: ${xValueColor}; font-weight: bold;">${xValue}</span></div>
-                              <div>${yAxisLabel}: <span style="color: ${yValueColor}; font-weight: bold;">${yValue}</span></div>
+                              <div style="margin-bottom: 2px; display: flex; justify-content: space-between;"><span>${xAxisLabel}:</span> <span style="color: ${xValueColor}; font-weight: bold;">${xValue}</span></div>
+                              <div style="display: flex; justify-content: space-between;"><span>${yAxisLabel}:</span> <span style="color: ${yValueColor}; font-weight: bold;">${yValue}</span></div>
                             </div>
                           `;
                         }

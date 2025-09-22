@@ -195,8 +195,18 @@ export function ContractorDetail({ contractorId, onActiveTabChange }: Contractor
 
   if (isLoading) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor }}>
-        <div className="flex items-center justify-center h-screen">
+      <div className={`min-h-screen text-white pb-20 pt-20 relative ${CONTRACTOR_DETAIL_COLORS.backgroundColor}`}>
+        {/* Background grid */}
+        <div className="absolute inset-0 opacity-5 z-0">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(90deg, #8B8EFF 1px, transparent 1px),
+              linear-gradient(180deg, #8B8EFF 1px, transparent 1px)
+            `,
+            backgroundSize: '15px 15px'
+          }} />
+        </div>
+        <div className="flex items-center justify-center h-screen relative z-10">
           <div className="text-gray-400">Loading contractor details...</div>
         </div>
       </div>
@@ -269,44 +279,66 @@ export function ContractorDetail({ contractorId, onActiveTabChange }: Contractor
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor }}>
+    <div className="min-h-screen">
       {/* Header - Hybrid Luxury/HUD Design */}
-      <div className="relative border-b border-gray-800/60 overflow-x-hidden" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor }}>
+      <div className={`relative overflow-x-hidden ${CONTRACTOR_DETAIL_COLORS.backgroundColor}`}>
+        {/* Background grid */}
+        <div className="absolute inset-0 opacity-5 z-0">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(90deg, #8B8EFF 1px, transparent 1px),
+              linear-gradient(180deg, #8B8EFF 1px, transparent 1px)
+            `,
+            backgroundSize: '15px 15px'
+          }} />
+        </div>
         {/* Subtle scan line effect */}
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-300/10 to-transparent animate-scan" />
 
-        <div className="container mx-auto px-6 py-8 max-w-7xl">
+        <div className="container mx-auto px-6 py-8 max-w-7xl relative z-10">
           <ContractorDetailHeader contractor={contractor} />
 
-          {/* Metrics Cards - Positioned directly after header section like original */}
-          <HeadlineMetrics />
+          {/* Metrics Cards - Positioned with proper spacing after header section */}
+          <div className="mt-6">
+            <HeadlineMetrics />
+          </div>
         </div>
       </div>
 
       {/* Body Content */}
-      <div className="relative min-h-screen" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor }}>
+      <div className={`relative min-h-screen ${CONTRACTOR_DETAIL_COLORS.backgroundColor}`}>
+        {/* Background grid */}
+        <div className="absolute inset-0 opacity-5 z-0">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(90deg, #8B8EFF 1px, transparent 1px),
+              linear-gradient(180deg, #8B8EFF 1px, transparent 1px)
+            `,
+            backgroundSize: '15px 15px'
+          }} />
+        </div>
         <div className="py-6 pb-16 min-h-full">
-          <div className="container mx-auto px-6 max-w-7xl">
-            {/* Tab Navigation - Luxury Minimal */}
+          <div className="container mx-auto px-6 max-w-7xl relative z-10">
+            {/* Tab Navigation - Minimal Style */}
             <div className="mb-8">
-              <div className="flex items-center gap-2 p-2 border border-[#F97316]/30 rounded-xl backdrop-blur-md w-full bg-gradient-to-b from-gray-900/90 via-gray-800/90 to-gray-900/90 hover:border-[#F97316]/50 transition-all duration-500">
+              <div className="flex items-center gap-1 border-b border-gray-800/50">
                 {tabs.map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={cn(
-                      "flex-1 px-8 py-4 text-base font-normal tracking-tight transition-all duration-500 rounded-lg capitalize text-center",
+                      "flex-1 px-6 py-3 text-sm font-normal tracking-tight transition-all duration-300 border-b-2 border-transparent text-center capitalize",
                       activeTab === tab
-                        ? "text-[#D2AC38]"
-                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-900/40 hover:backdrop-blur-sm"
+                        ? "text-[#D2AC38] border-[#D2AC38]"
+                        : "text-gray-500 hover:text-gray-300 hover:border-gray-600"
                     )}
-                    style={{ fontFamily: 'Michroma, sans-serif', fontSize: '16px' }}
+                    style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
                   >
-                    {tab === 'overview' && <Globe className="inline w-5 h-5 mr-2" />}
-                    {tab === 'performance' && <BarChart3 className="inline w-5 h-5 mr-2" />}
-                    {tab === 'network' && <Share2 className="inline w-5 h-5 mr-2" />}
-                    {tab === 'activity' && <Activity className="inline w-5 h-5 mr-2" />}
-                    {tab === 'contacts' && <Users className="inline w-5 h-5 mr-2" />}
+                    {tab === 'overview' && <Globe className="inline w-4 h-4 mr-2" />}
+                    {tab === 'performance' && <BarChart3 className="inline w-4 h-4 mr-2" />}
+                    {tab === 'network' && <Share2 className="inline w-4 h-4 mr-2" />}
+                    {tab === 'activity' && <Activity className="inline w-4 h-4 mr-2" />}
+                    {tab === 'contacts' && <Users className="inline w-4 h-4 mr-2" />}
                     {tab}
                   </button>
                 ))}
@@ -316,8 +348,8 @@ export function ContractorDetail({ contractorId, onActiveTabChange }: Contractor
 
             {/* Copyright Footer */}
             <div className="text-center py-6 mt-8 border-t border-gray-800/50">
-              <div className="text-xs text-gray-500">
-                © 2025 Goldengate Intelligence. All rights reserved.
+              <div className="text-xs" style={{ color: '#D2AC38' }}>
+                © 2025 GOLDENGATE INTELLIGENCE. ALL RIGHTS RESERVED.
               </div>
             </div>
           </div>

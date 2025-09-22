@@ -142,15 +142,9 @@ export function AwardGrainPopup({ isOpen, onClose, relationship }: AwardGrainPop
                   {(() => {
                     const totalLifetime = relationship.totalValue;
                     const totalActive = totalLifetime * 0.85;
-                    const totalObligated = relationship.contracts.reduce((sum: number, contract: any) => {
-                      const contractValue = parseFloat(contract.currentValue.replace(/[$M]/g, '')) * 1000000;
-                      const activeValue = contractValue * 0.85;
-                      const obligatedValue = activeValue * (contract.utilization / 100);
-                      return sum + obligatedValue;
-                    }, 0);
-                    const weightedUtilization = totalActive > 0 ? (totalObligated / totalActive) * 100 : 0;
+                    const weightedUtilization = relationship.contracts.reduce((sum: number, contract: any) => sum + contract.utilization, 0) / relationship.contracts.length;
 
-                    const getObligationColor = () => {
+                    const getUtilizationColor = () => {
                       if (weightedUtilization <= 25) return '#15803d';
                       if (weightedUtilization <= 50) return '#84cc16';
                       if (weightedUtilization <= 75) return '#eab308';
@@ -185,22 +179,9 @@ export function AwardGrainPopup({ isOpen, onClose, relationship }: AwardGrainPop
                         {/* Subtle Separator */}
                         <div className="w-px h-8 bg-gray-700/40 mx-3"></div>
 
-                        {/* Obligated */}
-                        <div className="text-center" style={{ width: '80px' }}>
-                          <div className="text-lg font-semibold text-gray-300 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                            ${(totalObligated / 1000000).toFixed(0)}M
-                          </div>
-                          <div className="text-xs uppercase tracking-wider text-gray-500 mt-0.5">
-                            Obligated
-                          </div>
-                        </div>
-
-                        {/* Subtle Separator */}
-                        <div className="w-px h-8 bg-gray-700/40 mx-3"></div>
-
                         {/* Utilization Percentage */}
                         <div className="text-center" style={{ width: '80px' }}>
-                          <div className="text-lg font-bold leading-none" style={{ color: getObligationColor(), fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                          <div className="text-lg font-bold leading-none" style={{ color: getUtilizationColor(), fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                             {Math.round(weightedUtilization)}%
                           </div>
                           <div className="text-xs uppercase tracking-wider text-gray-500 mt-0.5">
@@ -222,7 +203,6 @@ export function AwardGrainPopup({ isOpen, onClose, relationship }: AwardGrainPop
             {relationship.contracts.map((contract: any, index: number) => {
               const status = getAwardStatus(contract);
               const contractValue = parseFloat(contract.currentValue.replace(/[$M]/g, '')) * 1000000;
-              const obligatedValue = contractValue * (contract.utilization / 100);
 
               return (
                 <div
@@ -279,19 +259,6 @@ export function AwardGrainPopup({ isOpen, onClose, relationship }: AwardGrainPop
                               </div>
                               <div className="text-xs uppercase tracking-wider text-gray-500 mt-0.5">
                                 Active
-                              </div>
-                            </div>
-
-                            {/* Subtle Separator */}
-                            <div className="w-px h-8 bg-gray-700/40 mx-3"></div>
-
-                            {/* Obligated */}
-                            <div className="text-center" style={{ width: '80px' }}>
-                              <div className="text-lg font-semibold text-gray-300 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                ${(obligatedValue / 1000000).toFixed(0)}M
-                              </div>
-                              <div className="text-xs uppercase tracking-wider text-gray-500 mt-0.5">
-                                Obligated
                               </div>
                             </div>
 
@@ -371,9 +338,9 @@ export function AwardGrainPopup({ isOpen, onClose, relationship }: AwardGrainPop
                                     borderColor = 'border-red-500/40'; // Hot - Red border
                                     heatLabel = 'Hot';
                                   } else if (lastActionDays <= 365) {
-                                    heatColor = '#f59e0b'; // Warm - Orange text
-                                    bgColor = 'bg-orange-500/20'; // Warm - Orange background
-                                    borderColor = 'border-orange-500/40'; // Warm - Orange border
+                                    heatColor = '#D2AC38'; // Warm - Gold text
+                                    bgColor = 'bg-[#D2AC38]/20'; // Warm - Gold background
+                                    borderColor = 'border-[#D2AC38]/40'; // Warm - Gold border
                                     heatLabel = 'Warm';
                                   } else {
                                     heatColor = '#3b82f6'; // Cold - Blue text

@@ -180,7 +180,7 @@ export function OpportunityDetailModal({
           {/* AI Summary */}
           {opportunity.aiSummary && (
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-yellow-500 font-aptos flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-yellow-500 flex items-center gap-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                 <TrendingUp className="h-4 w-4" />
                 AI Analysis
               </h3>

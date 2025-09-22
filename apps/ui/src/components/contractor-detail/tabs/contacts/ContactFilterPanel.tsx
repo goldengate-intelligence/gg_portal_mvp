@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
+import { Card } from "../../../ui/card";
 import { CONTRACTOR_DETAIL_COLORS } from '../../../../lib/utils';
 
 interface Person {
@@ -44,8 +45,9 @@ export function ContactFilterPanel({
   const presentSeniorities = new Set(filteredPeople.map(p => p.seniority));
 
   return (
-    <div className="p-4 border border-gray-700/30 rounded-xl backdrop-blur-md bg-gray-900/50">
-      <div className="flex items-center gap-4">
+    <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
+      <div className="p-4 relative z-10">
+        <div className="flex items-center gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
@@ -53,13 +55,13 @@ export function ContactFilterPanel({
             placeholder="Search by name or title..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-[#F97316]/40 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#F97316] transition-all"
+            className="w-full pl-10 pr-4 py-2.5 border border-[#D2AC38]/40 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#D2AC38] transition-all"
             style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}
           />
         </div>
 
         <select
-          className="px-4 py-2.5 border border-[#F97316]/40 rounded-lg text-gray-400 hover:border-[#F97316]/60 focus:outline-none focus:border-[#F97316] transition-all cursor-pointer"
+          className="px-4 py-2.5 border border-[#D2AC38]/40 rounded-lg text-gray-400 hover:border-[#D2AC38]/60 focus:outline-none focus:border-[#D2AC38] transition-all cursor-pointer"
           style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}
           onChange={(e) => setSelectedSeniority(e.target.value ? [e.target.value] : [])}
         >
@@ -71,7 +73,7 @@ export function ContactFilterPanel({
         </select>
 
         <select
-          className="px-4 py-2.5 border border-[#F97316]/40 rounded-lg text-gray-400 hover:border-[#F97316]/60 focus:outline-none focus:border-[#F97316] transition-all cursor-pointer"
+          className="px-4 py-2.5 border border-[#D2AC38]/40 rounded-lg text-gray-400 hover:border-[#D2AC38]/60 focus:outline-none focus:border-[#D2AC38] transition-all cursor-pointer"
           style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}
           onChange={(e) => setSelectedDepartment(e.target.value ? [e.target.value] : [])}
         >
@@ -117,7 +119,8 @@ export function ContactFilterPanel({
             )}
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }

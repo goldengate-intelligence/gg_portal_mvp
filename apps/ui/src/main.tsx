@@ -20,6 +20,7 @@ import { discoveryRoute, ueiProfileRoute, contractorNetworkRoute, contractorDeta
 import Header from './components/Header'
 import { PlatformFooter } from './components/platform/PlatformFooter'
 import { AuthProvider } from './contexts/auth-context'
+import { AgentChatProvider } from './contexts/agent-chat-context'
 import { useLocation } from '@tanstack/react-router'
 
 function ConditionalHeader() {
@@ -115,9 +116,11 @@ if (rootElement && !rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <AuthProvider>
-        <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
-          <RouterProvider router={router} />
-        </TanStackQueryProvider.Provider>
+        <AgentChatProvider>
+          <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
+            <RouterProvider router={router} />
+          </TanStackQueryProvider.Provider>
+        </AgentChatProvider>
       </AuthProvider>
     </StrictMode>,
   )

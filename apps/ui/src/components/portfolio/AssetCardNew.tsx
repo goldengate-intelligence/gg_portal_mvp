@@ -1,5 +1,9 @@
-import React from 'react';
-import { Plane, Shield, Factory, Building, Truck, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plane, Shield, Factory, Building, Truck, Zap, Pin } from 'lucide-react';
+import { useAgentChatContext } from '../../contexts/agent-chat-context';
+import { FileUploadModal } from './FileUploadModal';
+import { KnowledgeBaseModal } from './KnowledgeBaseModal';
+import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from '../../services/contractorMetrics';
 
 interface AssetCardProps {
   companyName: string;
@@ -14,6 +18,19 @@ interface AssetCardProps {
   onDragStart?: () => void;
   onDragEnd?: () => void;
   onDrop?: () => void;
+  onGroupDrop?: (draggedAssetId: string, targetAssetId: string) => void;
+  isGrouped?: boolean;
+  groupMembers?: string[];
+  isGroupExpanded?: boolean;
+  onGroupToggle?: () => void;
+  isDraggedOver?: boolean;
+  isPinned?: boolean;
+  onPin?: (uei: string) => void;
+  aggregatedMetrics?: {
+    lifetime: string;
+    revenue: string;
+    pipeline: string;
+  };
 }
 
 // Map NAICS descriptions to primary industry tags (2-digit NAICS groups)
@@ -84,8 +101,21 @@ export function AssetCardNew({
   onClick,
   onDragStart,
   onDragEnd,
-  onDrop
+  onDrop,
+  onGroupDrop,
+  isGrouped = false,
+  groupMembers = [],
+  isGroupExpanded = false,
+  onGroupToggle,
+  isDraggedOver = false,
+  isPinned = false,
+  onPin,
+  aggregatedMetrics
 }: AssetCardProps) {
+  const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null);
+  const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
+  const [isKnowledgeBaseOpen, setIsKnowledgeBaseOpen] = useState(false);
+  const { openWithContext } = useAgentChatContext();
   const industryImageSrc = getIndustryImage(naicsDescription, companyName);
   const primaryIndustryTag = getPrimaryIndustryTag(naicsDescription, companyName);
 
@@ -95,10 +125,27 @@ export function AssetCardNew({
     if (name.includes('Raytheon')) return 'RTX';
     if (name.includes('BAE')) return 'BAE';
     if (name.includes('Applied')) return 'ACI';
+    // For groups, create abbreviation from group name
+    if (isGrouped) {
+      return name.split(' ')
+        .map(word => word.charAt(0))
+        .join('')
+        .slice(0, 3)
+        .toUpperCase();
+    }
     return name.split(' ').map(word => word.charAt(0)).join('').slice(0, 3);
   };
 
   const getCardTheme = (name: string) => {
+    // Special theme for grouped assets
+    if (isGrouped) {
+      return {
+        accent: '#8B8EFF',
+        progress: 'from-[#8B8EFF] to-purple-400',
+        fill: '95%'
+      };
+    }
+
     if (name.includes('Trio')) return {
       accent: '#D2AC38',
       progress: 'from-[#D2AC38] to-green-400',
@@ -126,22 +173,41 @@ export function AssetCardNew({
     };
   };
 
-  const getRandomMetrics = (name: string) => {
-    if (name.includes('Trio')) return { revenue: '$125M', lifetime: '$890M', pipeline: '$280M' };
-    if (name.includes('Raytheon')) return { revenue: '$2.1B', lifetime: '$45B', pipeline: '$8.5B' };
-    if (name.includes('BAE')) return { revenue: '$1.8B', lifetime: '$28B', pipeline: '$3.2B' };
-    if (name.includes('Applied')) return { revenue: '$180M', lifetime: '$1.2B', pipeline: '$450M' };
-    return { revenue: '$100M', lifetime: '$500M', pipeline: '$200M' };
+  const getContractorFinancialMetrics = (uei: string, companyName: string) => {
+    // First try to get metrics by UEI
+    let contractorMetrics = getContractorMetrics(uei);
+
+    // If not found by UEI, try by company name
+    if (!contractorMetrics) {
+      contractorMetrics = getContractorMetricsByName(companyName);
+    }
+
+    // If still not found, use default metrics
+    if (!contractorMetrics) {
+      contractorMetrics = getDefaultMetrics(uei, companyName);
+    }
+
+    return {
+      revenue: contractorMetrics.revenue,
+      lifetime: contractorMetrics.lifetimeAwards,
+      pipeline: contractorMetrics.pipeline
+    };
   };
 
   const initials = getCompanyInitials(companyName);
   const theme = getCardTheme(companyName);
-  const metrics = getRandomMetrics(companyName);
+  const metrics = aggregatedMetrics || getContractorFinancialMetrics(uei, companyName);
 
   // Square card layout for all companies
   return (
     <div
-      className="bg-black/40 border border-[#D2AC38]/30 rounded-xl hover:border-[#D2AC38]/50 transition-all duration-300 cursor-move overflow-hidden relative shadow-lg hover:shadow-xl"
+      className={`border rounded-xl transition-all duration-300 cursor-move overflow-hidden relative ${
+        isDraggedOver
+          ? 'bg-black/40 border-[#D2AC38] hover:border-[#D2AC38]/70'
+          : isGrouped
+            ? 'bg-black/40 border-[#8B8EFF]/50 hover:border-[#8B8EFF]/70'
+            : 'bg-black/40 border-[#F97316]/40 hover:border-[#F97316]/60'
+      }`}
       style={{ width: '100%', height: '220px' }}
       draggable={true}
       onDragStart={(e) => {
@@ -162,26 +228,33 @@ export function AssetCardNew({
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        e.currentTarget.style.borderColor = '#D2AC38';
       }}
       onDragLeave={(e) => {
-        e.currentTarget.style.borderColor = '';
+        // Remove any visual indicators when drag leaves
       }}
       onDrop={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        e.currentTarget.style.borderColor = '';
-        if (onDrop) onDrop();
+
+        try {
+          const draggedData = JSON.parse(e.dataTransfer.getData('text/plain'));
+          const draggedAssetId = draggedData.uei;
+          const targetAssetId = uei;
+
+          if (draggedAssetId !== targetAssetId) {
+            if (onGroupDrop) {
+              onGroupDrop(draggedAssetId, targetAssetId);
+            }
+          } else {
+            if (onDrop) onDrop();
+          }
+        } catch (error) {
+          console.error('Error parsing drag data:', error);
+          if (onDrop) onDrop();
+        }
       }}
       onClick={onClick}
     >
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, ${theme.accent}22 0%, transparent 50%),
-                           radial-gradient(circle at 75% 75%, ${theme.accent}15 0%, transparent 50%)`
-        }} />
-      </div>
 
       {/* Header Section */}
       <div className="relative p-4 bg-gradient-to-br from-gray-900/90 via-gray-800/70 to-gray-900/50 h-28">
@@ -189,73 +262,163 @@ export function AssetCardNew({
         <div className="flex items-start justify-between h-full">
           <div className="flex items-start gap-4">
             {/* Logo Square */}
-            <div className="w-20 h-20 bg-gray-700/50 rounded-lg border border-gray-600/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-gray-300 text-lg font-bold">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#D2AC38]/10 via-transparent to-[#D2AC38]/5 rounded-lg border-2 border-[#D2AC38]/40 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+              {/* Company initials */}
+              <span className="text-[#D2AC38] text-lg font-bold uppercase" style={{ fontFamily: 'Michroma, sans-serif' }}>
                 {initials}
               </span>
             </div>
 
             {/* Company Info */}
             <div className="flex flex-col justify-center h-20">
-              <h3
-                className="text-white font-bold text-lg leading-tight hover:text-[#D2AC38] transition-colors cursor-pointer mb-2"
-                draggable={false}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  if (onClick) onClick();
-                }}
-              >
-                {companyName.split(' ').slice(0, 2).join(' ')}
-              </h3>
-
-              {/* Industry Tag and Icons Row */}
-              <div className="flex items-center gap-3">
-                <span className="inline-block px-3 py-1 bg-[#D2AC38]/20 text-[#F4D03F] text-xs rounded-full border border-[#D2AC38]/40 uppercase tracking-wide font-medium">
-                  {primaryIndustryTag}
-                </span>
-
-                {/* Action Icons */}
-                <div className="flex gap-1">
-                  {/* AI Chat Icon */}
-                  <div className="p-1 bg-blue-500/20 border border-blue-500/40 rounded hover:bg-blue-500/30 transition-colors cursor-pointer group">
-                    <svg className="w-3 h-3 text-blue-400 group-hover:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              <div className="flex items-center gap-2 mb-0">
+                <h3
+                  className="text-white leading-tight hover:text-[#D2AC38] transition-colors cursor-pointer uppercase mb-0"
+                  style={{ fontFamily: 'Genos, sans-serif', fontWeight: '900', fontSize: '24px' }}
+                  draggable={false}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (onClick) onClick();
+                  }}
+                >
+                  {companyName.split(' ').slice(0, 2).join(' ')}
+                </h3>
+                {isPinned && (
+                  <Pin className="w-4 h-4 text-orange-400 fill-orange-400/20" />
+                )}
+                {isGrouped && (
+                  <div
+                    className="flex items-center gap-1 px-2 py-1 bg-[#8B8EFF]/20 border border-[#8B8EFF]/40 rounded-full cursor-pointer hover:bg-[#8B8EFF]/30 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      if (onGroupToggle) onGroupToggle();
+                    }}
+                  >
+                    <svg className="w-3 h-3 text-[#8B8EFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
+                    <span className="text-[#8B8EFF] text-xs font-medium">
+                      {groupMembers.length}
+                    </span>
                   </div>
-
-                  {/* Document Attachment Icon */}
-                  <div className="p-1 bg-gray-500/20 border border-gray-500/40 rounded hover:bg-gray-500/30 transition-colors cursor-pointer group">
-                    <svg className="w-3 h-3 text-gray-400 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                  </div>
-
-                  {/* Performance Indicator */}
-                  <div className="p-1 bg-[#84cc16]/20 border border-[#84cc16]/40 rounded">
-                    <svg className="w-3 h-3 text-[#84cc16]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-
-                  {/* Alert/Hot Indicator */}
-                  <div className="p-1 bg-red-500/20 border border-red-500/40 rounded">
-                    <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                </div>
+                )}
               </div>
+
+              {/* UEI Bubble */}
+              <span className="inline-block px-3 py-1 bg-gray-600/20 text-gray-300 text-xs rounded-full border border-gray-600/40 uppercase tracking-wide font-medium w-fit">
+                {isGrouped ? `${groupMembers.length} Entities` : uei}
+              </span>
             </div>
           </div>
 
-          {/* Industry Image */}
-          <div className="w-20 h-20 bg-gray-700/50 rounded-lg border border-gray-600/30 overflow-hidden flex-shrink-0">
-            <img
-              src={industryImageSrc}
-              alt="Industry"
-              className="w-full h-full object-cover"
-            />
+          {/* Right Side - Industry Tag and Image */}
+          <div className="flex items-start gap-3">
+            {/* Industry Tag and Icons - mirror left side structure */}
+            <div className="flex flex-col justify-center h-20">
+              <span className="inline-block px-3 py-1 bg-[#D2AC38]/20 text-[#F4D03F] text-xs rounded-full border border-[#D2AC38]/40 uppercase tracking-wide font-medium mb-0 w-fit ml-auto">
+                {primaryIndustryTag}
+              </span>
+
+              {/* Action Icons Row - unified bubble container */}
+              <div className="flex items-center px-1.5 py-0.5 bg-gray-600/20 border border-gray-600/40 rounded-full justify-between mt-1">
+                {/* Notes Icon - First */}
+                <div
+                  className="p-0.5 hover:bg-indigo-500/30 rounded transition-all cursor-pointer relative"
+                  onMouseEnter={() => setActiveTooltip('notes')}
+                  onMouseLeave={() => setActiveTooltip(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    openWithContext(uei, companyName, 'contractor');
+                  }}
+                >
+                  <svg className="w-3 h-3 text-indigo-400 hover:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  {activeTooltip === 'notes' && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-50">
+                      Take quick notes on this entity
+                    </div>
+                  )}
+                </div>
+
+                {/* Document Attachment Icon */}
+                <div
+                  className="p-0.5 hover:bg-cyan-500/30 rounded transition-all cursor-pointer relative"
+                  onMouseEnter={() => setActiveTooltip('attach')}
+                  onMouseLeave={() => setActiveTooltip(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setIsFileUploadOpen(true);
+                  }}
+                >
+                  <svg className="w-3 h-3 text-cyan-400 hover:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                  {activeTooltip === 'attach' && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-50">
+                      Attach documents for your knowledge base
+                    </div>
+                  )}
+                </div>
+
+                {/* Document Manager/Folder */}
+                <div
+                  className="p-0.5 hover:bg-teal-500/30 rounded transition-all cursor-pointer relative"
+                  onMouseEnter={() => setActiveTooltip('folder')}
+                  onMouseLeave={() => setActiveTooltip(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setIsKnowledgeBaseOpen(true);
+                  }}
+                >
+                  <svg className="w-3 h-3 text-teal-400 hover:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                  {activeTooltip === 'folder' && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-50">
+                      View contents of your knowledge base
+                    </div>
+                  )}
+                </div>
+
+                {/* Pin to Top */}
+                <div
+                  className={`p-0.5 rounded hover:bg-orange-500/30 transition-all cursor-pointer relative ${
+                    isPinned ? 'text-orange-300' : 'text-orange-400'
+                  }`}
+                  onMouseEnter={() => setActiveTooltip('pin')}
+                  onMouseLeave={() => setActiveTooltip(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (onPin) onPin(uei);
+                  }}
+                >
+                  <Pin className={`w-3 h-3 hover:text-orange-300 transition-colors ${
+                    isPinned ? 'fill-orange-400/50' : ''
+                  }`} />
+                  {activeTooltip === 'pin' && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-50">
+                      {isPinned ? 'Unpin this entity' : 'Pin this entity'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Industry Image */}
+            <div className="w-20 h-20 bg-gray-700/50 rounded-lg border border-gray-600/30 overflow-hidden flex-shrink-0">
+              <img
+                src={industryImageSrc}
+                alt="Industry"
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -264,24 +427,42 @@ export function AssetCardNew({
       <div className="p-4 relative z-10">
         {/* Financial Metrics Grid - NO ICONS */}
         <div className="grid grid-cols-4 gap-4">
-          <div className="bg-gray-800/30 rounded p-1.5 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-1">Active</span>
-            <span className="text-[#FFB84D] font-bold text-lg block">{activeAwards.value}</span>
+          <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
+            <span className="text-gray-400 text-xs uppercase block mb-2">Lifetime Awards</span>
+            <span className="font-bold text-xl block" style={{ color: '#F97316' }}>{metrics.lifetime}</span>
           </div>
-          <div className="bg-gray-800/30 rounded p-1.5 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-1">Revenue</span>
-            <span className="text-green-400 font-bold text-lg block">{metrics.revenue}</span>
+          <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
+            <span className="text-gray-400 text-xs uppercase block mb-2">Active Awards</span>
+            <span className="font-bold text-xl block" style={{ color: '#FFB84D' }}>{activeAwards.value}</span>
           </div>
-          <div className="bg-gray-800/30 rounded p-1.5 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-1">Lifetime</span>
-            <span className="text-blue-400 font-bold text-lg block">{metrics.lifetime}</span>
+          <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
+            <span className="text-gray-400 text-xs uppercase block mb-2">Revenue (TTM)</span>
+            <span className="font-bold text-xl block" style={{ color: '#42D4F4' }}>{metrics.revenue}</span>
           </div>
-          <div className="bg-gray-800/30 rounded p-1.5 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-1">Pipeline</span>
-            <span className="text-purple-400 font-bold text-lg block">{metrics.pipeline}</span>
+          <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
+            <span className="text-gray-400 text-xs uppercase block mb-2">Pipeline</span>
+            <span className="font-bold text-xl block" style={{ color: '#8B8EFF' }}>{metrics.pipeline}</span>
           </div>
         </div>
       </div>
+
+      {/* File Upload Modal */}
+      <FileUploadModal
+        isOpen={isFileUploadOpen}
+        onClose={() => setIsFileUploadOpen(false)}
+        entityId={uei}
+        entityName={companyName}
+        entityType="contractor"
+      />
+
+      {/* Knowledge Base Modal */}
+      <KnowledgeBaseModal
+        isOpen={isKnowledgeBaseOpen}
+        onClose={() => setIsKnowledgeBaseOpen(false)}
+        entityId={uei}
+        entityName={companyName}
+        entityType="contractor"
+      />
     </div>
   );
 }

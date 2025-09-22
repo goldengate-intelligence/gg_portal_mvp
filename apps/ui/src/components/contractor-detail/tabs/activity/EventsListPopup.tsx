@@ -266,21 +266,35 @@ export function EventsListPopup({ isOpen, onClose, contractId, contractTitle }: 
           </div>
         </div>
 
-        {/* Events List */}
+        {/* Events Table */}
         <div className="flex-1 overflow-y-auto" data-popup-scroll>
           <div className="p-4">
-            <div className="space-y-2">
-              {sortedEvents.map((event, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group bg-gray-900/40"
-                >
-                  <div className="p-4">
-                    {/* Event Header */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
+            <div className="rounded-lg border-2 border-orange-500/40 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-black/40 border-b border-gray-700/50">
+                    <th className="text-left py-3 px-4 text-[#D2AC38] font-medium">Event Date</th>
+                    <th className="text-left py-3 px-4 text-[#D2AC38] font-medium">Event Type</th>
+                    <th className="text-left py-3 px-4 text-[#D2AC38] font-medium">Recipient</th>
+                    <th className="text-left py-3 px-4 text-[#D2AC38] font-medium">Event Amount</th>
+                    <th className="text-left py-3 px-4 text-[#D2AC38] font-medium">Agency</th>
+                    <th className="text-left py-3 px-4 text-[#D2AC38] font-medium">NAICS</th>
+                    <th className="text-left py-3 px-4 text-[#D2AC38] font-medium">Utilization</th>
+                    <th className="text-left py-3 px-4 text-[#D2AC38] font-medium">Action Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedEvents.map((event, index) => (
+                    <tr
+                      key={index}
+                      className={index % 2 === 0 ? 'bg-black/40' : 'bg-[#223040]'}
+                    >
+                      <td className="py-3 px-4 text-gray-300">
+                        {formatDate(event.event_date)}
+                      </td>
+                      <td className="py-3 px-4">
                         <div
-                          className="px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wide"
+                          className="px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wide inline-block"
                           style={{
                             backgroundColor: getEventTypeColor(event.event_type) + '20',
                             color: getEventTypeColor(event.event_type),
@@ -289,55 +303,23 @@ export function EventsListPopup({ isOpen, onClose, contractId, contractTitle }: 
                         >
                           {event.event_type}
                         </div>
-                        <span className="text-lg font-semibold text-white">
-                          {formatMoney(event.event_amount)}
-                        </span>
-                        <span className="text-gray-400">•</span>
-                        <span className="text-gray-300">{formatDate(event.event_date)}</span>
-                      </div>
-                      <div className="text-sm text-gray-400">
-                        FY{event.fiscal_year} • {event.action_type}
-                      </div>
-                    </div>
-
-                    {/* Event Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
-                      {/* Recipient Info */}
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Recipient</div>
-                        <div className="text-gray-300 font-medium">{event.recipient_name}</div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-300">
+                        <div>{event.recipient_name}</div>
                         <div className="text-xs text-gray-500">{event.recipient_state}</div>
-                        {event.parent_company_name && (
-                          <div className="text-xs text-gray-400">Parent: {event.parent_company_name}</div>
-                        )}
-                      </div>
-
-                      {/* Agency Info */}
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Agency</div>
-                        <div className="text-gray-300 font-medium">{event.awarding_agency_name}</div>
-                        <div className="text-xs text-gray-400">{event.awarding_sub_agency_name}</div>
-                      </div>
-
-                      {/* Contract Info */}
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Contract</div>
-                        <div className="text-gray-300 font-medium">{event.contract_pricing_type}</div>
-                        <div className="text-xs text-gray-400">{event.extent_competed}</div>
-                        <div className="text-xs text-gray-500">Total: {formatMoney(event.contract_total_value)}</div>
-                      </div>
-
-                      {/* Industry & Location */}
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Industry & PoP</div>
-                        <div className="text-gray-300 font-medium">{event.naics_code}</div>
-                        <div className="text-xs text-gray-400">{event.naics_description}</div>
-                        <div className="text-xs text-gray-500">PoP: {event.pop_state}</div>
-                      </div>
-
-                      {/* Utilization */}
-                      <div>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Utilization</div>
+                      </td>
+                      <td className="py-3 px-4 text-white font-semibold">
+                        {formatMoney(event.event_amount)}
+                      </td>
+                      <td className="py-3 px-4 text-gray-300">
+                        <div>{event.awarding_agency_name}</div>
+                        <div className="text-xs text-gray-500">{event.awarding_sub_agency_name}</div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-300">
+                        <div>{event.naics_code}</div>
+                        <div className="text-xs text-gray-500">{event.naics_description}</div>
+                      </td>
+                      <td className="py-3 px-4">
                         <div className="text-lg font-bold leading-none" style={{
                           color: event.utilization <= 25 ? '#15803d' :
                                 event.utilization <= 50 ? '#84cc16' :
@@ -346,104 +328,14 @@ export function EventsListPopup({ isOpen, onClose, contractId, contractTitle }: 
                         }}>
                           {event.utilization}%
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">Obligated</div>
-                      </div>
-                    </div>
-
-                    {/* Period of Performance Timeline */}
-                    <div className="mt-4 pt-3 border-t border-gray-700/30">
-                      {(() => {
-                        const startDate = new Date(event.start_date);
-                        const endDate = new Date(event.end_date);
-                        const today = new Date();
-                        const totalDuration = endDate.getTime() - startDate.getTime();
-                        const elapsed = Math.max(0, today.getTime() - startDate.getTime());
-                        const progressPercent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-                        const remainingMonths = Math.max(0, Math.floor((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30)));
-
-                        // Timeline color based on time remaining and progress
-                        const getTimelineColor = () => {
-                          if (today > endDate) return '#6b7280'; // Completed - gray
-                          if (remainingMonths <= 3) return '#dc2626'; // Critical - red
-                          if (remainingMonths <= 6) return '#eab308'; // Warning - yellow
-                          if (remainingMonths <= 12) return '#84cc16'; // Caution - chartreuse
-                          return '#15803d'; // Good - green
-                        };
-
-                        const getStatusLabel = () => {
-                          if (today > endDate) return 'COMPLETED';
-                          if (today < startDate) return 'UPCOMING';
-                          return 'ACTIVE';
-                        };
-
-                        const getStatusColor = () => {
-                          if (today > endDate) return '#6b7280';
-                          if (today < startDate) return '#60a5fa';
-                          return '#22c55e';
-                        };
-
-                        return (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="text-xs text-gray-500 uppercase tracking-wider">Period of Performance</div>
-                              <div className="px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide" style={{
-                                backgroundColor: getStatusColor() + '20',
-                                color: getStatusColor(),
-                                border: `1px solid ${getStatusColor()}40`
-                              }}>
-                                {getStatusLabel()}
-                              </div>
-                            </div>
-                            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all duration-300"
-                                style={{
-                                  width: `${Math.max(progressPercent, 3)}%`,
-                                  backgroundColor: getTimelineColor()
-                                }}
-                              />
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm text-gray-300" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                <span className="text-gray-500">{formatDate(event.start_date)}</span>
-                                <span className="mx-2 text-gray-600">-</span>
-                                <span className="text-gray-500">{formatDate(event.end_date)}</span>
-                              </div>
-                              <span className="text-sm text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                {Math.round(progressPercent)}% Elapsed
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Small Business Flags */}
-                    {event.small_business_flags.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-700/30">
-                        <div className="flex gap-2 flex-wrap">
-                          {event.small_business_flags.map((flag, flagIndex) => (
-                            <span
-                              key={flagIndex}
-                              className="px-2 py-1 bg-[#D2AC38]/10 text-[#D2AC38] rounded text-xs"
-                            >
-                              {flag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Prime Contractor (for subawards) */}
-                    {event.prime_contractor_name && (
-                      <div className="mt-3 pt-3 border-t border-gray-700/30">
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Prime Contractor</div>
-                        <div className="text-gray-300">{event.prime_contractor_name}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                      </td>
+                      <td className="py-3 px-4 text-gray-300">
+                        {event.action_type}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

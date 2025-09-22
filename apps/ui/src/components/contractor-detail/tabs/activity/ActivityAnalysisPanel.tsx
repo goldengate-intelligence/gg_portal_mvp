@@ -35,66 +35,105 @@ export function ActivityAnalysisPanel({ contractor, performanceData }: ActivityA
     }
   };
 
+  // Net flow calculation and color logic
+  const netFlowValue = 101; // In millions
+  const getNetFlowColor = () => {
+    if (netFlowValue > 0) return '#22c55e'; // Green for positive
+    if (netFlowValue < 0) return '#FF4C4C'; // Red for negative
+    return '#eab308'; // Yellow for zero
+  };
+
+  const getNetFlowBorderColor = () => {
+    if (netFlowValue > 0) return 'border-[#22c55e]/30';
+    if (netFlowValue < 0) return 'border-[#FF4C4C]/30';
+    return 'border-[#eab308]/30';
+  };
+
   return (
-    <div className="h-full rounded-lg border border-gray-700" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
+    <div className="h-full rounded-lg border border-gray-700" style={{ backgroundColor: '#223040' }}>
       {/* Header */}
       <div className="px-6 py-3">
         <div className="flex items-center justify-between">
           <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500">
             ACTIVITY ANALYSIS
           </h4>
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#22c55e', boxShadow: '0 0 10px rgba(34,197,94,0.5)' }} />
-            <span className="text-[10px] tracking-wider font-light" style={{ fontFamily: 'Genos, sans-serif', color: '#22c55e' }}>
-              TRACKING
-            </span>
+          <div className="flex gap-2">
+            <button className="px-3 py-1 text-xs bg-[#D2AC38]/20 text-[#D2AC38] rounded-full border border-[#D2AC38]/40">90 Days</button>
+            <button className="px-3 py-1 text-xs bg-gray-700/30 text-gray-400 rounded-full border border-gray-700/30 hover:bg-gray-600/30">1 Year</button>
           </div>
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="p-4">
-        {/* Key Partners - Text Focused */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="text-center p-3 bg-black/20 rounded-lg">
-            <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Top Client</div>
-            <div className={`text-lg font-bold mb-1 ${
-              partnerIntelligence.topPartner.type === 'agency' ? 'text-[#9B7EBD]' :
-              partnerIntelligence.topPartner.type === 'prime' ? 'text-[#5BC0EB]' :
-              'text-[#FF4C4C]'
-            }`}>{partnerIntelligence.topPartner.name}</div>
-            <div className="text-xs text-gray-400">{partnerIntelligence.topPartner.contribution}% of Active Awards</div>
-          </div>
-          <div className="text-center p-3 bg-black/20 rounded-lg">
-            <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Most Active Relationship (TTM)</div>
-            <div className={`text-lg font-bold mb-1 ${
-              partnerIntelligence.emergingPartner.type === 'agency' ? 'text-[#9B7EBD]' :
-              partnerIntelligence.emergingPartner.type === 'prime' ? 'text-[#5BC0EB]' :
-              'text-[#FF4C4C]'
-            }`}>{partnerIntelligence.emergingPartner.name}</div>
-            <div className="text-xs text-gray-400">$425M Awarded</div>
-          </div>
-        </div>
+      <div className="px-6 pb-6 pt-2 flex-1">
+        {/* Simplified Activity Analysis - Key Metrics Only */}
+        <div className="h-full flex flex-col justify-center space-y-3">
 
-        {/* Status Reports */}
-        <div>
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Status Reports</div>
-          <div className="space-y-2">
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-green-400 rounded-full mt-2"></div>
-              <span className="text-xs text-gray-300">Award inflows ($272M) outpacing outflows ($50M) by 5.4x in last 90 days</span>
+          {/* Section Headers Row */}
+          <div className="grid grid-cols-3 gap-6 mb-4">
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-wider font-semibold text-gray-400">Net Award Flow</div>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-yellow-400 rounded-full mt-2"></div>
-              <span className="text-xs text-gray-300">MegaCorp concentration at 28.1% of active awards creates dependency risk</span>
+            <div className="text-center">
+              <div className="text-sm text-[#22c55e] uppercase tracking-wider font-semibold">Award Inflows</div>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-red-400 rounded-full mt-2"></div>
-              <span className="text-xs text-gray-300">$252M in contract value expiring in next 90 days requires renewal attention</span>
+            <div className="text-center">
+              <div className="text-sm text-[#FF4C4C] uppercase tracking-wider font-semibold">Vendor Outflows</div>
             </div>
           </div>
-        </div>
 
+          {/* Main Content: Balanced Layout */}
+          <div className="grid grid-cols-3 gap-6 h-full">
+            {/* Left Side: Net Flow Summary - Takes 1/3 */}
+            <div className="flex flex-col justify-center text-center p-10 bg-gradient-to-br from-black/50 via-black/30 to-black/60 rounded-xl border-2 border-gray-600/50 relative overflow-hidden shadow-2xl">
+              {/* Enhanced background accent with gradient */}
+              <div className="absolute inset-0 opacity-10 bg-gray-500/20"></div>
+              <div className="relative z-10">
+                <div className="text-6xl font-extrabold mb-3" style={{ color: getNetFlowColor() }}>
+                  {netFlowValue > 0 ? '+' : ''}${netFlowValue}M
+                </div>
+                <div className="text-sm text-gray-400 uppercase tracking-widest font-medium">90 Day Period</div>
+              </div>
+            </div>
+
+            {/* Center: Inflows - Takes 1/3 */}
+            <div className="space-y-3">
+              <div className="bg-black/20 rounded-lg p-4 border border-[#22c55e]/30 text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[#22c55e]/5"></div>
+                <div className="relative z-10">
+                  <div className="text-2xl font-bold text-[#22c55e] mb-1">$140M</div>
+                  <div className="text-xs text-gray-400 uppercase">Awards</div>
+                </div>
+              </div>
+              <div className="bg-black/20 rounded-lg p-4 border border-[#22c55e]/30 text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[#22c55e]/5"></div>
+                <div className="relative z-10">
+                  <div className="text-2xl font-bold text-[#22c55e] mb-1">28%</div>
+                  <div className="text-xs text-gray-400 uppercase">Value-Weighted Utilization</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Outflows - Takes 1/3 */}
+            <div className="space-y-3">
+              <div className="bg-black/20 rounded-lg p-4 border border-[#FF4C4C]/30 text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[#FF4C4C]/5"></div>
+                <div className="relative z-10">
+                  <div className="text-2xl font-bold text-[#FF4C4C] mb-1">$39M</div>
+                  <div className="text-xs text-gray-400 uppercase">Awards</div>
+                </div>
+              </div>
+              <div className="bg-black/20 rounded-lg p-4 border border-[#FF4C4C]/30 text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[#FF4C4C]/5"></div>
+                <div className="relative z-10">
+                  <div className="text-2xl font-bold text-[#FF4C4C] mb-1">32%</div>
+                  <div className="text-xs text-gray-400 uppercase">Value-Weighted Utilization</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

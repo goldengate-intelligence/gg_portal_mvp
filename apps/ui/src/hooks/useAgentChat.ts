@@ -189,11 +189,58 @@ export function useAgentChat(): AgentChatHook {
 
 // Agent response generation logic
 function generateAgentResponse(
-  userInput: string, 
+  userInput: string,
   metadata?: ChatMessage['metadata']
 ): { content: string; type: ChatMessage['type']; metadata?: ChatMessage['metadata'] } {
   const input = userInput.toLowerCase();
-  
+
+  // Monitoring Dashboard Configuration
+  if (input.includes('configure my monitoring dashboard') || metadata?.context === 'risk_configuration') {
+    return {
+      content: `I can help you with:
+
+**CREATE NEW MONITORING SCHEMA:**
+Set up custom monitoring groups with specific criteria and thresholds
+
+**CONFIGURE EXISTING MONITORS:**
+Adjust settings for Activity, Performance, and Utilization tracking
+
+**ANALYZE MONITORING RESULTS:**
+Investigate contractors or data that appear in your monitoring alerts
+
+**THRESHOLD OPTIMIZATION:**
+Fine-tune when items should appear as green (good), yellow (warning), or red (critical)
+
+What would you like to work on?`,
+      type: 'text',
+      metadata: {
+        ...metadata,
+        context: 'monitoring_configuration'
+      }
+    };
+  }
+
+  // Notes and research mode
+  if (input.includes('research and take notes') || input.includes('set notes') || input.includes('notes mode')) {
+    const entityName = userInput.match(/on (.+)\.$/)?.[1] || userInput.match(/for (.+)$/)?.[1] || 'this entity';
+    return {
+      content: `I'm ready to help you take notes and research **${entityName.toUpperCase()}**.
+
+📝 **I can help with:**
+• Meeting notes and observations
+• Key insights and strategic analysis
+• Partnership opportunities and risks
+• Contract history and performance data
+
+What would you like to document or research?`,
+      type: 'text',
+      metadata: {
+        ...metadata,
+        context: 'notes_session'
+      }
+    };
+  }
+
   // Contractor search queries
   if (input.includes('find') || input.includes('search') || input.includes('contractor')) {
     if (input.includes('defense') || input.includes('aerospace') || input.includes('military')) {

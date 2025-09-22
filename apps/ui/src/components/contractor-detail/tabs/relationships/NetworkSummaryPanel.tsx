@@ -21,27 +21,14 @@ export function NetworkSummaryPanel({
 
   return (
     <div className="w-full">
-      <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
-        {/* Animated background grid */}
-        <div className="absolute inset-0 opacity-5 z-0">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `
-              linear-gradient(90deg, #F97316 1px, transparent 1px),
-              linear-gradient(180deg, #F97316 1px, transparent 1px)
-            `,
-            backgroundSize: '15px 15px'
-          }} />
-        </div>
-
-        {/* Glow effect on hover */}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #F9731620, transparent)' }} />
+      <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
         <div className="p-4 h-full flex flex-col relative z-10">
-          <h3 className="text-gray-200 font-normal mb-4 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px', letterSpacing: '0.0125em' }}>
+          <h3 className="font-bold tracking-wide mb-3 text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
             NETWORK SUMMARY
           </h3>
 
           {/* Two Column Layout */}
-          <div className="grid grid-cols-2 gap-4 flex-1">
+          <div className="grid grid-cols-2 gap-4 flex-1 items-stretch">
 
             {/* Left Column: AI Analysis */}
             <div className="col-span-1">
@@ -56,7 +43,7 @@ export function NetworkSummaryPanel({
                     {/* Supply Chain Intelligence */}
                     <div className="space-y-3">
                       {/* Core Capabilities - Redesigned */}
-                      <div className="bg-black/40 rounded-lg p-3 border border-[#D2AC38]/20">
+                      <div className="rounded-lg p-3 border border-[#D2AC38]/20" style={{ backgroundColor: '#03070F' }}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="text-[12px] uppercase tracking-wider text-[#D2AC38] font-semibold" style={{ fontFamily: 'Genos, sans-serif' }}>
                             CONTRACTOR PROFILE
@@ -74,7 +61,7 @@ export function NetworkSummaryPanel({
                         </div>
 
                         {/* Description */}
-                        <div className="text-[12px] text-gray-400 leading-relaxed mb-2">
+                        <div className="text-[13px] text-gray-400 leading-relaxed mb-2">
                           Manufacturing armor systems and structural components for defense vehicles.
                           Trusted by <span className="text-[#9B7EBD]">DOD</span> with direct awards,
                           integrated with <span className="text-[#5BC0EB]">major primes</span>,
@@ -82,12 +69,12 @@ export function NetworkSummaryPanel({
                         </div>
 
                         {/* Core Capabilities */}
-                        <div className="text-[10px] text-gray-400 mb-2">
+                        <div className="text-[11px] text-gray-400 mb-2">
                           Military vehicle armor • Structural assemblies • Precision hardware
                         </div>
 
                         <div className="mt-2 pt-2 border-t border-gray-700/30">
-                          <div className="text-[10px]">
+                          <div className="text-[11px]">
                             <span className="text-[#d2ac38]">PSC:</span> <span className="text-[#d2ac38]">5110, 5340, 9515</span>
                           </div>
                         </div>
@@ -96,7 +83,7 @@ export function NetworkSummaryPanel({
                       {/* Network Flow - Larger */}
                       <div className="space-y-3">
                         {/* Agency Direct */}
-                        <div className="flex items-start gap-3 bg-black/40 rounded-lg p-3 border border-gray-700">
+                        <div className="flex items-start gap-3 rounded-lg p-3 border border-gray-700" style={{ backgroundColor: '#03070F' }}>
                           <div className="mt-0.5">
                             <div className="w-10 h-10 rounded-full bg-[#9B7EBD]/20 border-2 border-[#9B7EBD]/60 flex items-center justify-center">
                               <span className="text-[14px] text-[#9B7EBD] font-bold">A</span>
@@ -107,15 +94,15 @@ export function NetworkSummaryPanel({
                               <span className="text-[13px] font-semibold text-gray-200">AGENCY CLIENTS</span>
                               <span className="text-[12px] text-[#9B7EBD]">→ DIRECT AWARDS</span>
                             </div>
-                            <div className="text-[12px] text-gray-400">
+                            <div className="text-[13px] text-gray-400">
                               DOD contracts for vehicle armor systems, field equipment hardware
                             </div>
-                            <div className="text-[10px] text-gray-500 mt-1">$50M • 1 Award • Department of Defense</div>
+                            <div className="text-[11px] text-gray-500 mt-1">$50M • 1 Award • Department of Defense</div>
                           </div>
                         </div>
 
                         {/* Prime Work */}
-                        <div className="flex items-start gap-3 bg-black/40 rounded-lg p-3 border border-gray-700">
+                        <div className="flex items-start gap-3 rounded-lg p-3 border border-gray-700" style={{ backgroundColor: '#03070F' }}>
                           <div className="mt-0.5">
                             <div className="w-10 h-10 rounded-full bg-[#5BC0EB]/20 border-2 border-[#5BC0EB]/60 flex items-center justify-center">
                               <span className="text-[14px] text-[#5BC0EB] font-bold">P</span>
@@ -126,15 +113,15 @@ export function NetworkSummaryPanel({
                               <span className="text-[13px] font-semibold text-gray-200">PRIME CLIENTS</span>
                               <span className="text-[12px] text-[#5BC0EB]">→ SUBCONTRACT AWARDS</span>
                             </div>
-                            <div className="text-[12px] text-gray-400">
+                            <div className="text-[13px] text-gray-400">
                               Manufacturing support for MegaCorp Industries & Global Defense Systems
                             </div>
-                            <div className="text-[10px] text-gray-500 mt-1">$380M • 91 Awards • 2 Prime Contractors</div>
+                            <div className="text-[11px] text-gray-500 mt-1">$380M • 91 Awards • 2 Prime Contractors</div>
                           </div>
                         </div>
 
                         {/* Sub Work */}
-                        <div className="flex items-start gap-3 bg-black/40 rounded-lg p-3 border border-gray-700">
+                        <div className="flex items-start gap-3 rounded-lg p-3 border border-gray-700" style={{ backgroundColor: '#03070F' }}>
                           <div className="mt-0.5">
                             <div className="w-10 h-10 rounded-full bg-[#FF4C4C]/20 border-2 border-[#FF4C4C]/60 flex items-center justify-center">
                               <span className="text-[14px] text-[#FF4C4C] font-bold">S</span>
@@ -145,10 +132,10 @@ export function NetworkSummaryPanel({
                               <span className="text-[13px] font-semibold text-gray-200">SUB VENDORS</span>
                               <span className="text-[12px] text-[#FF4C4C]">→ PROCUREMENT ORDERS</span>
                             </div>
-                            <div className="text-[12px] text-gray-400">
+                            <div className="text-[13px] text-gray-400">
                               Raw materials, specialized coatings, precision machining services
                             </div>
-                            <div className="text-[10px] text-gray-500 mt-1">$29M • 25 Orders • 3 Suppliers</div>
+                            <div className="text-[11px] text-gray-500 mt-1">$29M • 25 Orders • 3 Suppliers</div>
                           </div>
                         </div>
                       </div>
@@ -172,14 +159,25 @@ export function NetworkSummaryPanel({
                     </span>
                   </div>
                 </div>
-                <div className="flex-1 relative overflow-hidden rounded-lg transition-all duration-300 min-h-[300px]">
+                <div className="flex-1 relative overflow-hidden rounded-lg transition-all duration-300 min-h-[400px] border border-[#D2AC38]/30" style={{ background: 'linear-gradient(to bottom, #0C1524, #0C1524)' }}>
+                  {/* Animated background grid */}
+                  <div className="absolute inset-0 opacity-5 z-0">
+                    <div className="absolute inset-0" style={{
+                      backgroundImage: `
+                        linear-gradient(90deg, #D2AC38 1px, transparent 1px),
+                        linear-gradient(180deg, #D2AC38 1px, transparent 1px)
+                      `,
+                      backgroundSize: '15px 15px'
+                    }} />
+                  </div>
 
-                  <GoldengateNetworkGraph
-                    title="Contractor Network"
-                    height="100%"
-                    liveIndicator={false}
-                    liveText="TRACKING"
-                    className="w-full h-full"
+                  <div className="relative z-10 w-full h-full">
+                    <GoldengateNetworkGraph
+                      title="Contractor Network"
+                      height="100%"
+                      liveIndicator={false}
+                      liveText="TRACKING"
+                      className="w-full h-full"
                     nodes={[
                       {
                         id: contractor.uei,
@@ -231,26 +229,10 @@ export function NetworkSummaryPanel({
                         contracts: p.sharedContracts || 0
                       })) || [])
                     ]}
-                  />
-                </div>
-
-                {/* Financial Overview Panel */}
-                <div className="bg-black/40 border border-gray-700 rounded-lg p-3 mt-3">
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <div className="text-[12px] uppercase tracking-wider text-gray-500 mb-1" style={{ fontFamily: 'Genos, sans-serif' }}>INFLOWS</div>
-                      <div className="text-green-400 font-medium text-lg">+${formatMoney(50 + (networkData.relationships?.asSubcontractor?.totalValue || 0) / 1000000)}M</div>
-                    </div>
-                    <div>
-                      <div className="text-[12px] uppercase tracking-wider text-gray-500 mb-1" style={{ fontFamily: 'Genos, sans-serif' }}>OUTFLOWS</div>
-                      <div className="text-red-400 font-medium text-lg">-${formatMoney((networkData.relationships?.asPrime?.totalValue || 0) / 1000000)}M</div>
-                    </div>
-                    <div>
-                      <div className="text-[12px] uppercase tracking-wider text-gray-500 mb-1" style={{ fontFamily: 'Genos, sans-serif' }}>NET FLOW</div>
-                      <div className="text-green-400 font-medium text-lg">+${formatMoney(50 + (networkData.relationships?.asSubcontractor?.totalValue || 0) / 1000000 - (networkData.relationships?.asPrime?.totalValue || 0) / 1000000)}M</div>
-                    </div>
+                    />
                   </div>
                 </div>
+
               </div>
             </div>
 

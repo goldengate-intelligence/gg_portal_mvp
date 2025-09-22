@@ -19,20 +19,20 @@ export function NetworkMapPanel({
 
   return (
     <div className="col-span-1">
-      <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
+      <Card className="h-full border-[#D2AC38]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#D2AC38]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
         {/* Animated background grid */}
         <div className="absolute inset-0 opacity-5 z-0">
           <div className="absolute inset-0" style={{
             backgroundImage: `
-              linear-gradient(90deg, #F97316 1px, transparent 1px),
-              linear-gradient(180deg, #F97316 1px, transparent 1px)
+              linear-gradient(90deg, #D2AC38 1px, transparent 1px),
+              linear-gradient(180deg, #D2AC38 1px, transparent 1px)
             `,
             backgroundSize: '15px 15px'
           }} />
         </div>
 
         {/* Glow effect on hover */}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #F9731620, transparent)' }} />
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #D2AC3820, transparent)' }} />
         <div className="p-4 relative flex flex-col h-full z-10">
           <h3 className="text-gray-200 font-normal tracking-wider mb-4 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
             NETWORK MAP

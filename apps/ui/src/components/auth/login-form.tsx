@@ -28,18 +28,32 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center text-white" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor }}>
-      <div className="max-w-md w-full space-y-8 border border-gray-700/30 rounded-lg p-8" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.panelColorHex }}>
-        <div className="text-center">
-          <h1 className="text-[#D2AC38] text-2xl mb-2" style={{ fontFamily: 'Michroma, sans-serif' }}>Goldengate</h1>
-          <h2 className="text-white text-xl" style={{ fontFamily: 'Genos, sans-serif' }}>
+    <div className="min-h-screen w-full flex items-center justify-center text-white px-4 relative bg-gradient-to-t from-black/90 via-gray-900/50 to-black/90">
+      {/* Background grid */}
+      <div className="absolute inset-0 opacity-5 z-0">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(90deg, #D2AC38 1px, transparent 1px),
+            linear-gradient(180deg, #D2AC38 1px, transparent 1px)
+          `,
+          backgroundSize: '15px 15px'
+        }} />
+      </div>
+
+      <div className="w-full max-w-md space-y-8 border border-[#D2AC38]/30 rounded-xl p-8 backdrop-blur-sm relative z-10 hover:border-[#D2AC38]/50 transition-all duration-500" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.panelColor }}>
+        {/* Header glow effect */}
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 hover:opacity-5 transition-opacity duration-300 z-0"
+             style={{ background: 'linear-gradient(135deg, #D2AC3820, transparent)' }} />
+
+        <div className="text-center relative z-10">
+          <h2 className="text-2xl font-medium mb-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: '#D2AC38' }}>
             Sign in to your account
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#D2AC38]/80" style={{ fontFamily: 'Genos, sans-serif' }}>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                 Email address
               </label>
               <input
@@ -48,15 +62,15 @@ export function LoginForm() {
                 type="email"
                 autoComplete="email"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600/30 text-white rounded-md focus:outline-none focus:ring-1 focus:ring-[#D2AC38]/50 focus:border-[#D2AC38]/50 sm:text-sm"
-                style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor, fontFamily: 'system-ui, -apple-system, sans-serif' }}
+                className="appearance-none relative block w-full px-4 py-3 border border-gray-600/20 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D2AC38]/50 focus:border-[#D2AC38]/50 sm:text-sm backdrop-blur-sm hover:border-gray-500/30 transition-all duration-200"
+                style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor, fontFamily: 'system-ui, -apple-system, sans-serif' }}
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#D2AC38]/80" style={{ fontFamily: 'Genos, sans-serif' }}>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                 Password
               </label>
               <input
@@ -65,8 +79,8 @@ export function LoginForm() {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600/30 text-white rounded-md focus:outline-none focus:ring-1 focus:ring-[#D2AC38]/50 focus:border-[#D2AC38]/50 sm:text-sm"
-                style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor, fontFamily: 'system-ui, -apple-system, sans-serif' }}
+                className="appearance-none relative block w-full px-4 py-3 border border-gray-600/20 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D2AC38]/50 focus:border-[#D2AC38]/50 sm:text-sm backdrop-blur-sm hover:border-gray-500/30 transition-all duration-200"
+                style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor, fontFamily: 'system-ui, -apple-system, sans-serif' }}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -75,17 +89,25 @@ export function LoginForm() {
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-900 border border-red-800 p-4">
-              <div className="text-sm text-red-300" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>{error}</div>
+            <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 backdrop-blur-sm">
+              <div className="text-sm text-red-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>{error}</div>
             </div>
           )}
+
+          <div className="flex items-center justify-start mb-6">
+            <div className="text-sm">
+              <a href="#" className="text-[#D2AC38] hover:text-[#D2AC38]/80 transition-colors duration-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                Forgot your password
+              </a>
+            </div>
+          </div>
 
           <div>
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#D2AC38] hover:bg-[#D2AC38]/80 text-black"
-              style={{ fontFamily: 'Genos, sans-serif' }}
+              className="w-full bg-[#D2AC38] hover:bg-[#D2AC38]/90 text-black font-medium py-3 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-[#D2AC38]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>

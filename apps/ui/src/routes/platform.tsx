@@ -53,10 +53,20 @@ function PlatformComponent() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen text-white" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor }}>
-        <div className="container mx-auto px-6 py-8 pb-20 max-w-7xl"> {/* Add bottom padding for footer */}
+      <div className="min-h-screen w-full text-white bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90">
+        <div className="container mx-auto px-6 pt-24 pb-32 max-w-7xl">
 
-          {/* Mode Selection Cards */}
+            {/* Hero Header */}
+            <div className="text-center mb-12 mt-8">
+              <h1 className="text-white tracking-wide mb-4" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '64px', lineHeight: '0.9', letterSpacing: '-0.02em', fontWeight: '100' }}>
+                <span className="text-[#D2AC38]" style={{ fontWeight: '250' }}>Select</span> <span className="text-white" style={{ fontWeight: '100' }}>Function</span>
+              </h1>
+              <p className="text-gray-400 text-lg" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                Choose your workspace.
+              </p>
+            </div>
+
+            {/* Mode Selection Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             {modes.map((mode) => {
               const Icon = mode.icon;
@@ -77,16 +87,20 @@ function PlatformComponent() {
                         <div className="flex-1">
                           <div className="mb-2">
                             <h3
-                              className="text-5xl font-light text-white leading-none tracking-tight"
-                              style={{ fontFamily: 'Michroma, sans-serif' }}
+                              className="text-6xl leading-none tracking-tight"
+                              style={{
+                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                fontWeight: '250',
+                                color: mode.accentColor
+                              }}
                             >
                               {mode.id === 'recon' ? 'Discovery' : 'Portfolio'}
                             </h3>
                             <h3
-                              className="text-5xl font-light leading-none tracking-tight"
+                              className="text-6xl leading-none tracking-tight text-white"
                               style={{
-                                fontFamily: 'Michroma, sans-serif',
-                                color: mode.accentColor
+                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                fontWeight: '100'
                               }}
                             >
                               {mode.id === 'recon' ? 'Engine' : 'Management'}
@@ -134,7 +148,7 @@ function PlatformComponent() {
 
           {/* Footer */}
           <div className="mt-16 text-center">
-            <p className="text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'sans-serif', fontSize: '12px' }}>
+            <p className="uppercase tracking-wider" style={{ fontFamily: 'sans-serif', fontSize: '12px', color: '#D2AC38' }}>
               © 2025 GOLDENGATE INTELLIGENCE. ALL RIGHTS RESERVED.
             </p>
           </div>

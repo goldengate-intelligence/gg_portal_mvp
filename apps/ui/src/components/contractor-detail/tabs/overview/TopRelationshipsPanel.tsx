@@ -12,26 +12,10 @@ export function TopRelationshipsPanel({ networkData }: TopRelationshipsPanelProp
   const { Typography, PanelWrapper } = useDesignPatterns();
 
   return (
-    <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
-      {/* Animated background grid */}
-      <div className="absolute inset-0 opacity-5 z-0">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, #F97316 1px, transparent 1px),
-            linear-gradient(180deg, #F97316 1px, transparent 1px)
-          `,
-          backgroundSize: '15px 15px'
-        }} />
-      </div>
-
-      {/* Glow effect on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #F9731620, transparent)' }} />
+    <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
       <div className="p-4 h-full flex flex-col relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <h3
-            className={Typography.panelTitle}
-            style={Typography.panelTitleFont}
-          >
+          <h3 className="font-bold tracking-wide text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
             TOP RELATIONSHIPS
           </h3>
           {/* Legend */}

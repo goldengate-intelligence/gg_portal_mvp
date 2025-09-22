@@ -1,28 +1,146 @@
 import React from 'react';
+import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from '../../services/contractorMetrics';
 
-export function PortfolioMetrics() {
+// Asset types
+interface Asset {
+  id: string;
+  companyName: string;
+  naicsDescription: string;
+  marketType: 'civilian' | 'defense';
+  uei: string;
+  activeAwards: {
+    value: string;
+  };
+}
+
+interface GroupAsset {
+  id: string;
+  type: 'group';
+  companyName: string;
+  groupName: string;
+  naicsDescription: string;
+  marketType: 'civilian' | 'defense';
+  uei: string;
+  activeAwards: {
+    value: string;
+  };
+  memberAssets: Asset[];
+  entityCount: number;
+  aggregatedMetrics: {
+    lifetime: string;
+    revenue: string;
+    pipeline: string;
+  };
+}
+
+interface PortfolioMetricsProps {
+  assets: (Asset | GroupAsset)[];
+}
+
+export function PortfolioMetrics({ assets }: PortfolioMetricsProps) {
+  // Utility functions for financial calculations
+  const parseFinancialValue = (value: string): number => {
+    const numStr = value.replace(/[$,]/g, '');
+    const multiplier = numStr.includes('B') ? 1000000000 :
+                      numStr.includes('M') ? 1000000 :
+                      numStr.includes('K') ? 1000 : 1;
+    return parseFloat(numStr.replace(/[BMK]/g, '')) * multiplier;
+  };
+
+  const formatFinancialValue = (value: number): string => {
+    if (value >= 1000000000) {
+      return `$${(value / 1000000000).toFixed(1)}B`;
+    } else if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `$${(value / 1000).toFixed(1)}K`;
+    }
+    return `$${value.toFixed(0)}`;
+  };
+
+  // Get individual asset metrics using contractor metrics service
+  const getMemberMetrics = (asset: Asset) => {
+    // First try to get metrics by UEI
+    let contractorMetrics = getContractorMetrics(asset.uei);
+
+    // If not found by UEI, try by company name
+    if (!contractorMetrics) {
+      contractorMetrics = getContractorMetricsByName(asset.companyName);
+    }
+
+    // If still not found, use default metrics
+    if (!contractorMetrics) {
+      contractorMetrics = getDefaultMetrics(asset.uei, asset.companyName);
+    }
+
+    return {
+      revenue: contractorMetrics.revenue,
+      lifetime: contractorMetrics.lifetimeAwards,
+      pipeline: contractorMetrics.pipeline
+    };
+  };
+
+  // Calculate portfolio totals
+  const calculatePortfolioTotals = () => {
+    let totalActiveAwards = 0;
+    let totalLifetime = 0;
+    let totalRevenue = 0;
+    let totalPipeline = 0;
+    let totalContracts = 0;
+
+    assets.forEach(asset => {
+      // Add active awards value
+      totalActiveAwards += parseFinancialValue(asset.activeAwards.value);
+
+      if ('type' in asset && asset.type === 'group') {
+        // For groups, use aggregated metrics
+        totalLifetime += parseFinancialValue(asset.aggregatedMetrics.lifetime);
+        totalRevenue += parseFinancialValue(asset.aggregatedMetrics.revenue);
+        totalPipeline += parseFinancialValue(asset.aggregatedMetrics.pipeline);
+        totalContracts += asset.memberAssets.length; // Count member assets
+      } else {
+        // For individual assets, get their individual metrics
+        const metrics = getMemberMetrics(asset);
+        totalLifetime += parseFinancialValue(metrics.lifetime);
+        totalRevenue += parseFinancialValue(metrics.revenue);
+        totalPipeline += parseFinancialValue(metrics.pipeline);
+        totalContracts += 1; // Count as one contract
+      }
+    });
+
+    return {
+      activeAwards: formatFinancialValue(totalActiveAwards),
+      lifetime: formatFinancialValue(totalLifetime),
+      revenue: formatFinancialValue(totalRevenue),
+      pipeline: formatFinancialValue(totalPipeline),
+      contracts: totalContracts
+    };
+  };
+
+  const totals = calculatePortfolioTotals();
+
   const metrics = [
     {
-      title: 'LIFETIME AWARDS',
-      value: '$1.2B',
+      title: 'PORTFOLIO LIFETIME AWARDS',
+      value: totals.lifetime,
       accentColor: '#F97316',
-      count: '278',
-      countLabel: 'contracts',
+      count: totals.contracts.toString(),
+      countLabel: 'entities',
       timeframe: 'all time',
       description: 'Total historical value'
     },
     {
-      title: 'ACTIVE AWARDS',
-      value: '$480M',
+      title: 'PORTFOLIO ACTIVE AWARDS',
+      value: totals.activeAwards,
       accentColor: '#FFB84D',
-      count: '92',
-      countLabel: 'contracts',
+      count: totals.contracts.toString(),
+      countLabel: 'entities',
       timeframe: 'performing',
       description: 'Currently active'
     },
     {
-      title: 'REVENUE TTM',
-      value: '$112.5M',
+      title: 'PORTFOLIO REVENUE TTM',
+      value: totals.revenue,
       accentColor: '#42D4F4',
       count: 'Est',
       countLabel: 'recognized',
@@ -30,8 +148,8 @@ export function PortfolioMetrics() {
       description: 'STRAIGHT-LINE RECOGNITION (SLR)'
     },
     {
-      title: 'PIPELINE',
-      value: '$337.5M',
+      title: 'PORTFOLIO PIPELINE',
+      value: totals.pipeline,
       accentColor: '#8B8EFF',
       count: 'Est',
       countLabel: 'potential',

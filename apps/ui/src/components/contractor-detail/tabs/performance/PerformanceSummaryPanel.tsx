@@ -8,35 +8,23 @@ interface PerformanceSummaryPanelProps {
 
 export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryPanelProps) {
   return (
-    <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
-      {/* Animated background grid */}
-      <div className="absolute inset-0 opacity-5 z-0">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, #F97316 1px, transparent 1px),
-            linear-gradient(180deg, #F97316 1px, transparent 1px)
-          `,
-          backgroundSize: '15px 15px'
-        }} />
-      </div>
-
-      {/* Glow effect on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #F9731620, transparent)' }} />
+    <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
       <div className="p-4 h-full flex flex-col relative z-10">
-        <div className="mb-4">
-          <h3 className="text-lg text-gray-200 font-normal uppercase tracking-wider" style={{ fontFamily: 'Genos, sans-serif' }}>
-            Performance Summary
-          </h3>
-        </div>
+        <h3 className="font-bold tracking-wide mb-3 text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
+          Performance Summary
+        </h3>
         <div className="flex-1">
 
           {/* Two Container Layout */}
-          <div className="grid grid-cols-2 gap-8 mb-3 relative">
+          <div className="grid grid-cols-2 gap-8 mb-4 relative">
+
+            {/* Vertical Divider */}
+            <div className="absolute left-1/2 top-0 -bottom-4 w-px bg-gray-700/30 transform -translate-x-1/2 z-10"></div>
 
             {/* Left Container - Performance Scores */}
-            <div className="border border-gray-700 rounded-xl backdrop-blur-sm p-4 relative" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
+            <div className="rounded-xl backdrop-blur-sm p-4 relative" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500">
+                <h4 className="text-xs uppercase tracking-wider text-gray-500 font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
                   PERFORMANCE SCORES
                 </h4>
                 <div className="flex items-center gap-2">
@@ -46,7 +34,7 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
                   </span>
                 </div>
               </div>
-              <div className="flex items-start gap-6">
+              <div className="flex items-start gap-6 h-64">
                 {/* Composite Score - Larger radial */}
                 <div className="relative flex flex-col items-center">
                   <div className="relative w-40 h-40">
@@ -166,13 +154,10 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
               </div>
             </div>
 
-            {/* Vertical Dividing Line */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-700/50 -translate-x-1/2"></div>
-
             {/* Right Container - Peer Group Details */}
-            <div className="border border-gray-700 rounded-xl backdrop-blur-sm p-4 relative" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
+            <div className="rounded-xl backdrop-blur-sm p-4 relative" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500">
+                <h4 className="text-xs uppercase tracking-wider text-gray-500 font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
                   PEER GROUP DETAILS
                 </h4>
                 <div className="flex items-center gap-2">
@@ -183,28 +168,28 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 h-64">
-                <div className="bg-black/40 border border-gray-700 rounded-lg p-4 flex flex-col">
+                <div className="bg-black/40 rounded-lg p-4 flex flex-col">
                   <div className="text-xs uppercase tracking-wider text-center" style={{ fontFamily: 'Genos, sans-serif', color: '#D2AC38' }}>PERFORMANCE</div>
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-2xl font-light text-[#84cc16]">Strong</div>
                   </div>
                   <div className="text-gray-400 text-center font-sans" style={{ fontSize: '10px' }}>Tier</div>
                 </div>
-                <div className="bg-black/40 border border-gray-700 rounded-lg p-4 flex flex-col">
+                <div className="bg-black/40 rounded-lg p-4 flex flex-col">
                   <div className="text-xs uppercase tracking-wider text-center" style={{ fontFamily: 'Genos, sans-serif', color: '#D2AC38' }}>NAICS CODE</div>
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-2xl font-light text-white">332312</div>
                   </div>
                   <div className="text-gray-400 text-center font-sans" style={{ fontSize: '10px' }}>Fabricated Structural Metal Manufacturing</div>
                 </div>
-                <div className="bg-black/40 border border-gray-700 rounded-lg p-4 flex flex-col">
+                <div className="bg-black/40 rounded-lg p-4 flex flex-col">
                   <div className="text-xs uppercase tracking-wider text-center" style={{ fontFamily: 'Genos, sans-serif', color: '#D2AC38' }}>SIZE QUARTILE</div>
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-2xl font-light text-white">Q4</div>
                   </div>
                   <div className="text-gray-400 text-center font-sans" style={{ fontSize: '10px' }}>Lifetime Awards</div>
                 </div>
-                <div className="bg-black/40 border border-gray-700 rounded-lg p-4 flex flex-col">
+                <div className="bg-black/40 rounded-lg p-4 flex flex-col">
                   <div className="text-xs uppercase tracking-wider text-center" style={{ fontFamily: 'Genos, sans-serif', color: '#D2AC38' }}>GROUP SIZE</div>
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-2xl font-light text-white text-center">247</div>
@@ -216,13 +201,16 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
           </div>
 
           {/* Performance Analysis Section - Split into Two Containers */}
-          <div className="pt-6 mt-6 border-t border-gray-700/50">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="pt-4 border-t border-gray-700/50">
+            <div className="grid grid-cols-2 gap-8 relative">
+
+              {/* Vertical Divider */}
+              <div className="absolute left-1/2 -top-4 bottom-0 w-px bg-gray-700/30 transform -translate-x-1/2 z-10"></div>
 
               {/* Strongest Attribute Container */}
-              <div className="border border-gray-700 rounded-xl backdrop-blur-sm p-3" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
+              <div className="rounded-xl backdrop-blur-sm p-4" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
                 {/* Header */}
-                <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500 mb-3">
+                <h4 className="text-xs uppercase tracking-wider text-gray-500 mb-3 font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
                   STRONGEST ATTRIBUTE
                 </h4>
 
@@ -251,9 +239,9 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
               </div>
 
               {/* Weakest Attribute Container */}
-              <div className="border border-gray-700 rounded-xl backdrop-blur-sm p-3" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
+              <div className="rounded-xl backdrop-blur-sm p-4" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
                 {/* Header */}
-                <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500 mb-3">
+                <h4 className="text-xs uppercase tracking-wider text-gray-500 mb-3 font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
                   WEAKEST ATTRIBUTE
                 </h4>
 

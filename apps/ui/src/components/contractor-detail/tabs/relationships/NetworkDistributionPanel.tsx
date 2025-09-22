@@ -25,9 +25,9 @@ export function NetworkDistributionPanel({
 
   return (
     <div className="col-span-2">
-      <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
+      <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
         <div className="p-4 relative flex flex-col h-full">
-          <h3 className="text-gray-200 font-normal mb-4 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px', letterSpacing: '0.0125em' }}>
+          <h3 className="font-bold tracking-wide mb-3 text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
             NETWORK DISTRIBUTION
           </h3>
           <div className="flex-1 grid grid-cols-2 gap-4">
@@ -46,7 +46,7 @@ export function NetworkDistributionPanel({
               </div>
               <div className="flex-1 relative rounded-lg overflow-hidden min-h-[316px]">
               {/* Three Column Container Layout - V3 Remix with unified flow design */}
-              <div className="h-full bg-black/40 border border-gray-700 backdrop-blur-sm rounded-lg p-3 flex flex-col">
+              <div className="h-full border border-gray-700 backdrop-blur-sm rounded-lg p-3 flex flex-col" style={{ backgroundColor: '#03070F' }}>
 
                 {/* Top Stats Bar - Compact */}
                 <div className="grid grid-cols-3 gap-3 mb-2">
@@ -113,7 +113,7 @@ export function NetworkDistributionPanel({
                                 ${formatMoney(partner.sharedRevenue / 1000000)}M
                               </div>
                               <div className="text-[10px] text-[#5BC0EB]">
-                                {((partner.sharedRevenue / (networkData.relationships?.asSubcontractor?.totalValue || 1)) * 100).toFixed(0)}%
+                                {((partner.sharedRevenue / ((networkData.relationships?.asSubcontractor?.totalValue || 0) + (networkData.relationships?.asPrime?.totalValue || 0))) * 100).toFixed(0)}%
                               </div>
                             </div>
                           </div>
@@ -136,7 +136,7 @@ export function NetworkDistributionPanel({
                                 ${formatMoney(partner.sharedRevenue / 1000000)}M
                               </div>
                               <div className="text-[10px] text-[#FF4C4C]">
-                                {((partner.sharedRevenue / (networkData.relationships?.asPrime?.totalValue || 1)) * 100).toFixed(0)}%
+                                {((partner.sharedRevenue / ((networkData.relationships?.asSubcontractor?.totalValue || 0) + (networkData.relationships?.asPrime?.totalValue || 0))) * 100).toFixed(0)}%
                               </div>
                             </div>
                           </div>

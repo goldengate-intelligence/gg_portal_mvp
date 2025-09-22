@@ -8,32 +8,27 @@ interface ExecutiveSummaryPanelProps {
 
 export function ExecutiveSummaryPanel({ contractor }: ExecutiveSummaryPanelProps) {
   return (
-    <Card className="h-full border-[#F97316]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#F97316]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/80 to-black/90 backdrop-blur-sm">
-      {/* Animated background grid */}
-      <div className="absolute inset-0 opacity-5 z-0">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, #F97316 1px, transparent 1px),
-            linear-gradient(180deg, #F97316 1px, transparent 1px)
-          `,
-          backgroundSize: '15px 15px'
-        }} />
-      </div>
-
-      {/* Glow effect on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0" style={{ background: 'linear-gradient(135deg, #F9731620, transparent)' }} />
+    <Card className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90" style={{ backgroundColor: '#111726' }}>
       <div className="p-4 h-full flex flex-col relative z-10">
-        <h3 className="font-normal tracking-wide mb-3 text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
+        <h3 className="font-bold tracking-wide mb-3 text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
           EXECUTIVE SUMMARY
         </h3>
         <div className="flex-1">
           <div className="border border-gray-700 rounded-xl flex overflow-hidden h-full" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
             {/* Left side - Image with gradient */}
-            <div className="relative" style={{ width: '40%' }}>
-              <img
-                src="/gg_industry_images/6_manufacturing.jpg"
-                alt="Manufacturing"
-                className="w-full h-full object-cover"
+            <div className="relative overflow-hidden" style={{ width: '40%' }}>
+              <div
+                className="w-full h-full bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: 'url(/gg_industry_images/6_manufacturing.jpg?v=3)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  imageRendering: 'high-quality',
+                  transform: 'translateZ(0)',
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden',
+                  perspective: '1000px'
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-gray-900/70"></div>
             </div>
@@ -44,7 +39,7 @@ export function ExecutiveSummaryPanel({ contractor }: ExecutiveSummaryPanelProps
               <div
                 className="flex items-center gap-2 mb-3 px-3 py-1.5 rounded-full w-fit"
                 style={{
-                  backgroundColor: CONTRACTOR_DETAIL_COLORS.backgroundColor,
+                  backgroundColor: '#010204',
                   border: '1px solid #4a4a4a'
                 }}
               >

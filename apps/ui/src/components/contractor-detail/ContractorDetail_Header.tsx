@@ -13,36 +13,48 @@ export function ContractorDetailHeader({ contractor }: ContractorDetailHeaderPro
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-4 gap-6">
-      {/* Left Section - Logo/Visual */}
-      <div className="col-span-1">
-            <div className="relative">
-              {/* Company Logo with HUD overlay */}
-              <div className="w-full h-48 bg-gray-900/40 border border-[#F97316]/30 hover:border-[#F97316]/50 transition-all duration-500 rounded-lg overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-700/3 to-gray-900/2" />
-                <div className="flex items-center justify-center h-full p-6">
-                  <div className="relative z-10 flex flex-col items-center justify-center">
-                    {/* TFL Logo */}
-                    <div className="font-black tracking-wider text-gray-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '62px' }}>
-                      TFL
-                    </div>
-                    <div className="text-xs font-semibold tracking-[0.3em] text-gray-400 mt-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                      TRIO FABRICATION
-                    </div>
-                    <div className="text-xs font-normal tracking-[0.4em] text-gray-500" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                      LLC
+    <div className="w-full">
+      {/* Grid container with two separate panels */}
+      <div className="grid grid-cols-4 gap-6 h-full">
+        {/* Photo Panel - 1 column */}
+        <div className="col-span-1">
+          <div className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 relative p-3 border border-gray-700/50 hover:border-gray-600/40">
+            {/* Gradient background matching financial metric cards */}
+            <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-gray-800/25 to-gray-900/50 rounded-xl"></div>
+            <div className="relative z-10">
+              <div className="relative">
+                {/* Company Logo with HUD overlay */}
+                <div className="w-full aspect-square border border-[#D2AC38]/50 hover:border-[#D2AC38]/70 transition-all duration-500 rounded-lg overflow-hidden relative" style={{ backgroundColor: '#010204' }}>
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #010204CC, #01020499)' }} />
+                  <div className="flex items-center justify-center h-full p-6">
+                    <div className="relative z-10 flex flex-col items-center justify-center">
+                      {/* TFL Logo */}
+                      <div className="font-black tracking-wider text-gray-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '62px' }}>
+                        TFL
+                      </div>
+                      <div className="text-xs font-semibold tracking-[0.3em] text-gray-400 mt-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                        TRIO FABRICATION
+                      </div>
+                      <div className="text-xs font-normal tracking-[0.4em] text-gray-500" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                        LLC
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-      {/* Right Section - Company Details */}
-      <div className="col-span-3">
+        {/* Data Panel - 3 columns */}
+        <div className="col-span-3">
+          <div className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 relative p-6 border border-gray-700/50 hover:border-gray-600/40">
+            {/* Gradient background matching financial metric cards */}
+            <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-gray-800/25 to-gray-900/50 rounded-xl"></div>
+            <div className="relative z-10">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-4">
-                <h1 className="text-4xl font-light text-white tracking-wide font-sans">
+                <h1 className="text-4xl text-white tracking-wide font-sans" style={{ fontWeight: '250' }}>
                   {contractor?.name || 'Trio Fabrication LLC'}
                 </h1>
               </div>
@@ -68,10 +80,10 @@ export function ContractorDetailHeader({ contractor }: ContractorDetailHeaderPro
             </div>
 
             {/* Website and Bubbles */}
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-4 mb-6">
               <span className="text-[#D2AC38] font-sans font-normal" style={{ fontSize: '16px' }}>www.website.com</span>
               <div className="relative group">
-                <span className="px-1.5 py-0.5 bg-gray-600/20 border border-gray-600/40 rounded-full uppercase tracking-wider text-gray-300 font-sans font-normal" style={{ fontSize: '10px' }}>{contractor?.uei || 'UNKNOWN12345'}</span>
+                <span className="px-1.5 py-0.5 bg-gray-500/20 border border-gray-500/40 rounded-full uppercase tracking-wider text-gray-400 font-sans font-normal" style={{ fontSize: '10px' }}>{contractor?.uei || 'UNKNOWN12345'}</span>
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                   <div className="text-center font-medium">UEI Number</div>
                 </div>
@@ -90,17 +102,14 @@ export function ContractorDetailHeader({ contractor }: ContractorDetailHeaderPro
               </div>
             </div>
 
-            <p className="text-white leading-relaxed max-w-3xl mb-6">
-              {contractor?.establishedDate && `Established in ${new Date(contractor.establishedDate).getFullYear()}, `}
-              {contractor?.name || 'Trio Fabrication LLC'} builds solutions for the {contractor?.industry?.replace('-', ' ') || 'manufacturing'} sector,
-              focusing on {contractor?.primaryAgency || 'Defense'} contracts
-              {contractor?.primaryNaicsDescription && ` with specialization in ${contractor.primaryNaicsDescription.toLowerCase()}`}.
+            <p className="text-lg text-gray-300 leading-relaxed max-w-3xl mb-6" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              Defense contractor specializing in structural metal manufacturing and fabrication.
             </p>
 
             {/* Location/Sector/Agency Grid - Flat with HUD accents */}
             <div className="grid grid-cols-6 gap-8 mb-8">
               <div className="col-span-2">
-                <div className="text-gray-500 font-light uppercase tracking-wider" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>LOCATION</div>
+                <div className="font-light uppercase tracking-wider" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px', color: '#D2AC38' }}>LOCATION</div>
                 <div className="text-lg text-white font-light">
                   {contractor?.city && contractor?.state
                     ? contractor.state === 'DC'
@@ -112,14 +121,17 @@ export function ContractorDetailHeader({ contractor }: ContractorDetailHeaderPro
                 </div>
               </div>
               <div className="col-span-2">
-                <div className="text-gray-500 font-light uppercase tracking-wider" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>SECTOR</div>
+                <div className="font-light uppercase tracking-wider" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px', color: '#D2AC38' }}>SECTOR</div>
                 <div className="text-lg text-white font-light">{contractor?.industry?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Manufacturing'}</div>
               </div>
               <div className="col-span-2">
-                <div className="text-gray-500 font-light uppercase tracking-wider" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>AGENCY FOCUS</div>
+                <div className="font-light uppercase tracking-wider" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px', color: '#D2AC38' }}>AGENCY FOCUS</div>
                 <div className="text-lg text-white font-light">{contractor?.primaryAgency || 'Defense'}</div>
               </div>
             </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

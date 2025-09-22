@@ -65,18 +65,19 @@ export function ContactGridPanel({
   return (
     <div className="grid grid-cols-3 gap-4">
       {people.map((person) => (
-        <div
+        <Card
           key={person.id}
-          className="border border-gray-700 rounded-xl overflow-hidden shadow-2xl hover:border-gray-600 transition-all duration-500 group h-full bg-gray-900/40"
+          className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90"
+          style={{ backgroundColor: '#111726' }}
         >
-          <div className="p-4 flex flex-col h-full">
+          <div className="p-4 flex flex-col h-full relative z-10">
             {/* Header with subtle accent */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h3 className="text-[#D2AC38] font-normal tracking-wide mb-1" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
+                <h3 className="text-white font-bold tracking-wide mb-1" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '18px' }}>
                   {person.fullName.toUpperCase()}
                 </h3>
-                <p className="text-sm text-white font-light mb-2">{person.jobTitle}</p>
+                <p className="text-sm text-[#D2AC38] font-normal mb-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>{person.jobTitle}</p>
                 <div className="flex items-center gap-3">
                   <span className="text-xs px-2 py-0.5 rounded-full" style={{
                     backgroundColor: person.seniority === 'C-Level' ? 'rgba(255, 76, 76, 0.15)' :
@@ -194,7 +195,7 @@ export function ContactGridPanel({
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       ))}
     </div>
   );

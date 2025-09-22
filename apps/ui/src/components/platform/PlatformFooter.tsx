@@ -12,6 +12,7 @@ import { Button } from '../ui/button';
 import { AgentChat } from './AgentChat';
 import { QueryHistory } from './QueryHistory';
 import { useAuth } from '../../contexts/auth-context';
+import { useLocation } from '@tanstack/react-router';
 import { CONTRACTOR_DETAIL_COLORS } from '../../lib/utils';
 
 interface PlatformFooterProps {
@@ -21,12 +22,33 @@ interface PlatformFooterProps {
 
 export function PlatformFooter({ mode = 'platform', contextInfo }: PlatformFooterProps) {
   const { user } = useAuth();
+  const location = useLocation();
+
+  // Dynamic footer background based on current page (same logic as header)
+  const getFooterBackground = () => {
+    const pathname = location.pathname;
+    if (pathname.includes('/platform/discovery')) {
+      return '#000000'; // Pure black for discovery
+    }
+    if (pathname.includes('/platform/portfolio')) {
+      return '#000000'; // Pure black for portfolio
+    }
+    if (pathname === '/platform') {
+      return '#000000'; // Pure black for platform page
+    }
+    if (pathname === '/dashboard') {
+      return '#000000'; // Pure black for dashboard
+    }
+    if (pathname.includes('/contractor-detail')) {
+      return '#000000'; // Black for contractor detail pages
+    }
+    return CONTRACTOR_DETAIL_COLORS.bannerColor; // Default for other pages
+  };
 
   return (
     <>
       {/* Footer Status Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl border-t border-gray-800 flex-shrink-0" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.bannerColor + 'ee' }}>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#D2AC38]/5 to-transparent" />
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-800 flex-shrink-0" style={{ backgroundColor: getFooterBackground() }}>
         
         <div className="container mx-auto px-6 py-3">
           <div className="flex items-center justify-between">

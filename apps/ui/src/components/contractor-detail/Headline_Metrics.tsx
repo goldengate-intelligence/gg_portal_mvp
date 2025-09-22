@@ -37,7 +37,7 @@ function MetricCard({ title, value, accentColor, count, countLabel, timeframe, d
 
           <div className="flex items-center justify-between text-[11px]">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-white/70 font-medium">{count}</span>
+              <span className="text-white font-medium">{count}</span>
               <span className="text-gray-500 uppercase tracking-wide">{countLabel}</span>
             </div>
             <span className="text-gray-600 uppercase tracking-wider">{timeframe}</span>
@@ -94,7 +94,7 @@ export function HeadlineMetrics() {
   ];
 
   return (
-    <div className="mt-2 grid grid-cols-4 gap-6">
+    <div className="mt-6 grid grid-cols-4 gap-6">
       {metrics.map((metric, index) => (
         <MetricCard key={index} {...metric} />
       ))}

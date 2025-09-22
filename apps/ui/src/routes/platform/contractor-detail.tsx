@@ -9,9 +9,9 @@ export default function ContractorDetailRoute() {
   const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 relative overflow-hidden">
       {/* Main Content */}
-      <div className="relative z-10 pb-20"> {/* Add bottom padding for footer */}
+      <div className="relative z-10 pb-20 pt-16"> {/* Add top padding for header and bottom padding for footer */}
         <ContractorDetail
           contractorId={params.contractorId}
           onActiveTabChange={setActiveTab}

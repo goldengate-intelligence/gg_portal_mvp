@@ -29,7 +29,7 @@ export function OverviewTab({
   return (
     <div className="space-y-6">
       {/* Command Center Dashboard - Updated Grid Layout */}
-      <div className="grid grid-cols-4 gap-4 items-stretch">
+      <div className="grid grid-cols-4 gap-6 items-stretch">
 
         {/* UPPER LEFT: Executive Summary */}
         <div className="col-span-2 flex w-full">
@@ -48,7 +48,7 @@ export function OverviewTab({
       </div>
 
       {/* Second Row: Charts */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-6">
 
         {/* LEFT: Awards & Revenue History */}
         <div className="col-span-1">
