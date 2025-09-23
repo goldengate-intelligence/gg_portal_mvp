@@ -44,6 +44,48 @@ export function AIAssistant({
     target.focus();
   };
 
+  // Function to render formatted AI messages
+  const renderFormattedMessage = (content: string) => {
+    // Split content by lines and process each line
+    const lines = content.split('\n');
+    const elements: JSX.Element[] = [];
+
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+
+      if (!trimmedLine) {
+        // Empty line - add spacing
+        elements.push(<div key={index} className="h-3" />);
+      } else if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        // Bold headers
+        const text = trimmedLine.slice(2, -2);
+        elements.push(
+          <div key={index} className="font-semibold text-[#D2AC38] text-base mb-2 mt-3">
+            {text}
+          </div>
+        );
+      } else if (trimmedLine.startsWith('•')) {
+        // Bullet points
+        const text = trimmedLine.slice(1).trim();
+        elements.push(
+          <div key={index} className="flex items-start gap-2 mb-1 ml-2">
+            <span className="text-[#D2AC38] text-xs mt-1">•</span>
+            <span className="text-gray-300 text-sm leading-relaxed">{text}</span>
+          </div>
+        );
+      } else {
+        // Regular text
+        elements.push(
+          <div key={index} className="text-gray-300 text-sm leading-relaxed mb-2">
+            {trimmedLine}
+          </div>
+        );
+      }
+    });
+
+    return elements;
+  };
+
   return (
     <>
       {isOpen && (
@@ -58,7 +100,7 @@ export function AIAssistant({
               <Bot className="w-5 h-5" />
             </button>
           </div>
-        <div className="p-4 h-full flex flex-col">
+        <div className="px-4 pt-8 pb-4 h-full flex flex-col">
         {/* AI Panel Header */}
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-700">
           <div className="flex items-center gap-2">
@@ -66,13 +108,6 @@ export function AIAssistant({
             <h3 className="text-white font-medium">AI Chat</h3>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={onClose}
-              className="px-2 py-1 text-xs text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded transition-colors"
-              title="Collapse AI Assistant"
-            >
-              <ChevronRight className="w-3 h-3" />
-            </button>
             <button
               onClick={onClose}
               className="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded transition-colors"
@@ -117,13 +152,19 @@ export function AIAssistant({
 
             {conversation.map((message, index) => (
               <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
+                <div className={`max-w-[80%] p-4 rounded-lg ${
                   message.type === 'user'
-                    ? 'bg-gray-800 text-white'
+                    ? 'bg-gray-800 text-white text-sm'
                     : 'bg-gray-950 text-white'
                 }`}>
-                  {message.content}
-                  <div className="text-xs opacity-60 mt-1">
+                  {message.type === 'user' ? (
+                    <div className="text-sm">{message.content}</div>
+                  ) : (
+                    <div className="space-y-1">
+                      {renderFormattedMessage(message.content)}
+                    </div>
+                  )}
+                  <div className="text-xs opacity-60 mt-3 pt-2 border-t border-gray-700/50">
                     {message.timestamp.toLocaleTimeString()}
                   </div>
                 </div>

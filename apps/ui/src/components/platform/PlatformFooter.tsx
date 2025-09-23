@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MessageSquare,
   Navigation,
@@ -32,13 +32,31 @@ export function PlatformFooter({ mode = 'platform', contextInfo }: PlatformFoote
   const [aiConversation, setAiConversation] = useState<AIConversationItem[]>([]);
   const [aiInput, setAiInput] = useState('');
 
+  // Listen for Smart Search events from DiscoveryInterface
+  useEffect(() => {
+    const handleSmartSearchEvent = () => {
+      setIsAiOpen(true);
+      setAiInput("Let's configure a Smart Search.");
+
+      // Auto-send the message after a brief delay
+      setTimeout(() => {
+        handleAIMessage("Let's configure a Smart Search.");
+        setAiInput('');
+      }, 100);
+    };
+
+    window.addEventListener('openSmartSearch', handleSmartSearchEvent);
+    return () => window.removeEventListener('openSmartSearch', handleSmartSearchEvent);
+  }, []);
+
   // AI message handler
-  const handleAIMessage = () => {
-    if (!aiInput.trim()) return;
+  const handleAIMessage = (messageOverride?: string) => {
+    const messageContent = messageOverride || aiInput.trim();
+    if (!messageContent) return;
 
     const newUserMessage: AIConversationItem = {
       type: 'user',
-      content: aiInput,
+      content: messageContent,
       timestamp: new Date()
     };
 
@@ -46,15 +64,48 @@ export function PlatformFooter({ mode = 'platform', contextInfo }: PlatformFoote
 
     // Simulate AI response
     setTimeout(() => {
+      let aiResponseContent: string;
+
+      // Check for Smart Search configuration request
+      if (messageContent.toLowerCase().includes('smart search') && messageContent.toLowerCase().includes('configure')) {
+        aiResponseContent = `**Smart Search Configuration**
+
+I'll help you configure Smart Search to maximize your research efficiency!
+
+**🎯 Context-Aware Search:**
+• Leverage your portfolio knowledge base for enhanced results
+• Apply intelligent filters based on your research history
+• Cross-reference internal notes and external data sources
+
+**⚡ Advanced Capabilities:**
+• Natural language query interpretation
+• Automated risk assessment integration
+• Real-time compliance status checking
+• Multi-dimensional contractor analysis
+
+**🔗 External Integrations:**
+• FPDS contract data correlation
+• SEC filing analysis
+• Industry benchmark comparisons
+• Geospatial performance mapping
+
+**What specific search parameters would you like me to configure for this session?**`;
+      } else {
+        // Default AI response
+        aiResponseContent = "I'll help you with platform navigation and research. What would you like to explore?";
+      }
+
       const aiResponse: AIConversationItem = {
         type: 'ai',
-        content: "I'll help you with platform navigation and research. What would you like to explore?",
+        content: aiResponseContent,
         timestamp: new Date()
       };
       setAiConversation(prev => [...prev, aiResponse]);
     }, 500);
 
-    setAiInput('');
+    if (!messageOverride) {
+      setAiInput('');
+    }
   };
 
   // Dynamic footer background based on current page (same logic as header)
@@ -108,9 +159,9 @@ export function PlatformFooter({ mode = 'platform', contextInfo }: PlatformFoote
               <History className="w-5 h-5" />
             </button>
           </div>
-          <div className="p-4 h-full flex flex-col">
+          <div className="px-4 pt-8 pb-4 h-full flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-700">
+            <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-700">
               <div className="flex items-center gap-2">
                 <History className="w-5 h-5 text-[#D2AC38]" />
                 <h3 className="text-white font-medium">Archived Chats</h3>
@@ -246,7 +297,7 @@ export function PlatformFooter({ mode = 'platform', contextInfo }: PlatformFoote
         conversation={aiConversation}
         input={aiInput}
         onInputChange={setAiInput}
-        onSendMessage={handleAIMessage}
+        onSendMessage={() => handleAIMessage()}
         onSuggestedPrompt={(prompt) => setAiInput(prompt)}
       />
     </>

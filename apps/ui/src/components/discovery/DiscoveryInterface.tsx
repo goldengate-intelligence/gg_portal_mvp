@@ -4,7 +4,7 @@ import { QueryTabs } from './QueryTabs';
 import { SearchToolbar } from './SearchToolbar';
 import { ResultsTable } from './ResultsTable';
 import { QueryHistory } from './QueryHistory';
-import { AIAssistant } from './AIAssistant';
+import { FileUploadModal } from '../portfolio/FileUploadModal';
 import { useDiscoveryState } from './logic/useDiscoveryState';
 import { contractorApi } from './services/contractorApi';
 
@@ -49,6 +49,7 @@ const PanelTitle = ({ children }: { children: React.ReactNode }) => (
 export function DiscoveryInterface() {
   const { state, actions } = useDiscoveryState();
   const [showHistoryModal, setShowHistoryModal] = React.useState(false);
+  const [isFileUploadOpen, setIsFileUploadOpen] = React.useState(false);
 
   // Handle search
   const handleSearch = async () => {
@@ -112,23 +113,10 @@ export function DiscoveryInterface() {
     }
   };
 
-  const handleAIMessage = () => {
-    if (!state.aiInput.trim()) return;
-
-    actions.addAIMessage('user', state.aiInput);
-
-    // Simulate AI response
-    setTimeout(() => {
-      actions.addAIMessage('ai', "I'll help you query the contractor database. Let me execute that search for you.");
-
-      // Extract search query from AI input and execute
-      if (state.aiInput.toLowerCase().includes('search') || state.aiInput.toLowerCase().includes('find')) {
-        actions.setSearchQuery(state.aiInput.trim());
-        handleSearch();
-      }
-    }, 500);
-
-    actions.setAiInput('');
+  // Function to trigger Smart Search via PlatformFooter's AI Chat
+  const triggerSmartSearch = () => {
+    // Dispatch a custom event that PlatformFooter can listen to
+    window.dispatchEvent(new CustomEvent('openSmartSearch'));
   };
 
   const activeTab = state.queryTabs[state.activeQueryTab];
@@ -157,17 +145,15 @@ export function DiscoveryInterface() {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => {
-                                actions.setIsAiOpen(true);
-                                actions.setAiInput("Configure intelligent search parameters and analysis settings for this research session.");
-                              }}
+                              onClick={triggerSmartSearch}
                               className="flex items-center gap-2 px-3 py-2 bg-[#F97316]/10 border border-[#F97316]/30 rounded-lg text-[#F97316] hover:bg-[#F97316]/20 transition-colors text-sm"
                             >
                               <Bot className="w-4 h-4" />
                               Smart Search
                             </button>
                             <button
-                              className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/20 transition-colors text-sm"
+                              className="flex items-center gap-2 px-3 py-2 bg-cyan-400/10 border border-cyan-400/30 rounded-lg text-cyan-400 hover:bg-cyan-400/20 transition-colors text-sm"
+                              onClick={() => setIsFileUploadOpen(true)}
                             >
                               <Paperclip className="w-4 h-4" />
                               Attach Context
@@ -212,16 +198,6 @@ export function DiscoveryInterface() {
         </div>
       </div>
 
-      {/* AI Assistant Panel */}
-      <AIAssistant
-        isOpen={state.isAiOpen}
-        onClose={() => actions.setIsAiOpen(false)}
-        conversation={state.aiConversation}
-        input={state.aiInput}
-        onInputChange={actions.setAiInput}
-        onSendMessage={handleAIMessage}
-        onSuggestedPrompt={(prompt) => actions.setAiInput(prompt)}
-      />
 
 
       {/* Query History Modal */}
@@ -256,6 +232,15 @@ export function DiscoveryInterface() {
           </div>
         </div>
       )}
+
+      {/* File Upload Modal */}
+      <FileUploadModal
+        isOpen={isFileUploadOpen}
+        onClose={() => setIsFileUploadOpen(false)}
+        entityId="discovery"
+        entityName="Discovery Context"
+        entityType="portfolio"
+      />
     </>
   );
 }

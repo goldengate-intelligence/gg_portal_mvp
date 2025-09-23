@@ -7,7 +7,7 @@ import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } f
 
 // Design Framework Components - Indigo Theme
 const ExternalPanelContainer = ({ children }: { children: React.ReactNode }) => (
-  <div className="h-full border border-[#8B8EFF]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#8B8EFF]/50 hover:shadow-3xl hover:shadow-[#8B8EFF]/10 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm transform hover:scale-[1.01]">
+  <div className="h-full border border-[#8B8EFF]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#8B8EFF]/50 hover:shadow-3xl hover:shadow-[#8B8EFF]/10 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
     {/* Animated background grid */}
     <div className="absolute inset-0 opacity-5 z-0">
       <div className="absolute inset-0" style={{
@@ -31,7 +31,7 @@ const ExternalPanelContainer = ({ children }: { children: React.ReactNode }) => 
 // IMPORTANT: OFFICIAL GUNMETAL COLOR = #223040
 const ChartStyleContainer = ({ children }: { children: React.ReactNode }) => (
   <div
-    className="rounded-lg p-4 transition-all duration-300 hover:shadow-lg hover:shadow-[#223040]/20 transform hover:scale-[1.02]"
+    className="rounded-lg p-4 transition-all duration-300 hover:shadow-lg hover:shadow-[#223040]/20"
     style={{
       backgroundColor: '#223040'
     }}

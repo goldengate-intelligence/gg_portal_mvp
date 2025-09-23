@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plane, Shield, Factory, Building, Truck, Zap, Pin, Trash2 } from 'lucide-react';
+import { Plane, Shield, Factory, Building, Truck, Zap, Pin } from 'lucide-react';
 import { useAgentChatContext } from '../../contexts/agent-chat-context';
 import { FileUploadModal } from './FileUploadModal';
 import { KnowledgeBaseModal } from './KnowledgeBaseModal';
@@ -68,7 +68,7 @@ export function AssetCardNew({
   onInsertionHover,
   onInsertionDrop
 }: AssetCardProps) {
-  const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
   const [isKnowledgeBaseOpen, setIsKnowledgeBaseOpen] = useState(false);
   const { openWithContext } = useAgentChatContext();
@@ -193,14 +193,18 @@ export function AssetCardNew({
                              contractorMetrics?.primaryAgency === 'Department of Defense';
 
   // Dynamic card layout with collapsible content
+  const isModalOpen = isFileUploadOpen || isKnowledgeBaseOpen;
+
   return (
     <div
-      className={`border ${isExpanded ? 'rounded-xl' : 'rounded-xl'} cursor-pointer overflow-visible relative transition-all duration-300 ease-in-out transform hover:scale-[1.02] hover:shadow-xl ${
+      className={`border ${isExpanded ? 'rounded-xl' : 'rounded-xl'} cursor-pointer overflow-visible relative ${
+        isModalOpen ? '' : 'transform hover:scale-[1.02] hover:shadow-xl transition-transform duration-300 ease-in-out'
+      } ${
         isDraggedOver
           ? 'bg-black/40 border-[#D2AC38] hover:border-[#D2AC38]/90 shadow-lg shadow-[#D2AC38]/20'
           : isGrouped
-            ? 'bg-black/40 border-[#8B8EFF]/50 hover:border-[#8B8EFF]/90 hover:shadow-lg hover:shadow-[#8B8EFF]/20'
-            : 'bg-black/40 border-[#F97316]/40 hover:border-[#F97316]/90 hover:shadow-lg hover:shadow-[#F97316]/20'
+            ? `bg-black/40 border-[#8B8EFF]/50 ${isModalOpen ? '' : 'hover:border-[#8B8EFF]/90 hover:shadow-lg hover:shadow-[#8B8EFF]/20'}`
+            : `bg-black/40 border-[#F97316]/40 ${isModalOpen ? '' : 'hover:border-[#F97316]/90 hover:shadow-lg hover:shadow-[#F97316]/20'}`
       }`}
       style={{
         width: '100%',
@@ -414,17 +418,28 @@ export function AssetCardNew({
         {/* Action Icons - Upper Right Corner */}
         <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
           {/* Action Icons Row - unified bubble container */}
-          <div className="flex items-center px-3 py-1 bg-gray-600/20 border border-gray-600/40 rounded-full gap-2 transition-all duration-300 hover:bg-gray-600/30 hover:border-gray-600/60 hover:scale-105">
+          <div className={`flex items-center px-3 py-1 bg-gray-600/20 border border-gray-600/40 rounded-full gap-2 transition-all duration-200 ${
+            isModalOpen ? '' : 'hover:bg-gray-600/30 hover:border-gray-600/60'
+          }`}>
                 {/* Expand/Collapse Indicator */}
                 <div
-                  className={`p-0.5 hover:bg-[#D2AC38]/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110 ${
+                  className={`p-0.5 rounded cursor-pointer relative ${
+                    isModalOpen ? '' : 'hover:bg-[#D2AC38]/30 hover:scale-110 transition-all duration-300'
+                  } ${
                     isExpanded ? 'rotate-180' : 'rotate-0'
                   }`}
-                  onMouseEnter={() => setActiveTooltip('expand')}
-                  onMouseLeave={() => setActiveTooltip(null)}
+                  onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip('expand');
+                  }}
+                  onMouseLeave={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip(null);
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    setActiveTooltip(null);
                     if (onToggleExpanded) onToggleExpanded();
                   }}
                 >
@@ -436,20 +451,29 @@ export function AssetCardNew({
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
-                  {activeTooltip === 'expand' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
+                  {activeTooltip === 'expand' && !isModalOpen && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
                       {isExpanded ? 'Collapse details' : 'Expand details'}
                     </div>
                   )}
                 </div>
                 {/* Smart Research/Lightbulb Icon */}
                 <div
-                  className="p-0.5 hover:bg-purple-500/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110"
-                  onMouseEnter={() => setActiveTooltip('smart-research')}
-                  onMouseLeave={() => setActiveTooltip(null)}
+                  className={`p-0.5 rounded cursor-pointer relative ${
+                    isModalOpen ? '' : 'hover:bg-purple-500/30 hover:scale-110 transition-all duration-300'
+                  }`}
+                  onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip('smart-research');
+                  }}
+                  onMouseLeave={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip(null);
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    setActiveTooltip(null);
                     openWithContext(uei, companyName, 'contractor');
                   }}
                 >
@@ -457,8 +481,8 @@ export function AssetCardNew({
                     <circle cx="11" cy="11" r="8" strokeWidth={2}/>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M8 11h6m-3-3v6"/>
                   </svg>
-                  {activeTooltip === 'smart-research' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
+                  {activeTooltip === 'smart-research' && !isModalOpen && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
                       AI pursues context-driven research
                     </div>
                   )}
@@ -466,20 +490,29 @@ export function AssetCardNew({
 
                 {/* Document Attachment Icon */}
                 <div
-                  className="p-0.5 hover:bg-cyan-500/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110"
-                  onMouseEnter={() => setActiveTooltip('attach')}
-                  onMouseLeave={() => setActiveTooltip(null)}
+                  className={`p-0.5 rounded cursor-pointer relative ${
+                    isModalOpen ? '' : 'hover:bg-cyan-500/30 hover:scale-110 transition-all duration-300'
+                  }`}
+                  onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip('attach');
+                  }}
+                  onMouseLeave={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip(null);
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    setActiveTooltip(null);
                     setIsFileUploadOpen(true);
                   }}
                 >
                   <svg className="w-4 h-4 text-cyan-400 hover:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
-                  {activeTooltip === 'attach' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
+                  {activeTooltip === 'attach' && !isModalOpen && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
                       Attach documents for your knowledge base
                     </div>
                   )}
@@ -487,20 +520,29 @@ export function AssetCardNew({
 
                 {/* Document Manager/Folder */}
                 <div
-                  className="p-0.5 hover:bg-teal-500/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110"
-                  onMouseEnter={() => setActiveTooltip('folder')}
-                  onMouseLeave={() => setActiveTooltip(null)}
+                  className={`p-0.5 rounded cursor-pointer relative ${
+                    isModalOpen ? '' : 'hover:bg-teal-500/30 hover:scale-110 transition-all duration-300'
+                  }`}
+                  onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip('folder');
+                  }}
+                  onMouseLeave={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip(null);
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    setActiveTooltip(null);
                     setIsKnowledgeBaseOpen(true);
                   }}
                 >
                   <svg className="w-4 h-4 text-teal-400 hover:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                   </svg>
-                  {activeTooltip === 'folder' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
+                  {activeTooltip === 'folder' && !isModalOpen && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
                       View contents of your knowledge base
                     </div>
                   )}
@@ -508,45 +550,36 @@ export function AssetCardNew({
 
                 {/* Pin to Top */}
                 <div
-                  className={`p-0.5 rounded hover:bg-orange-500/30 transition-all duration-300 cursor-pointer relative hover:scale-110 ${
+                  className={`p-0.5 rounded cursor-pointer relative ${
+                    isModalOpen ? '' : 'hover:bg-orange-500/30 hover:scale-110 transition-all duration-300'
+                  } ${
                     isPinned ? 'text-orange-300' : 'text-orange-400'
                   }`}
-                  onMouseEnter={() => setActiveTooltip('pin')}
-                  onMouseLeave={() => setActiveTooltip(null)}
+                  onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip('pin');
+                  }}
+                  onMouseLeave={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip(null);
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    setActiveTooltip(null);
                     if (onPin) onPin(uei);
                   }}
                 >
                   <Pin className={`w-4 h-4 hover:text-orange-300 transition-colors ${
                     isPinned ? 'fill-orange-400/50' : ''
                   }`} />
-                  {activeTooltip === 'pin' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
+                  {activeTooltip === 'pin' && !isModalOpen && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
                       {isPinned ? 'Unpin this entity' : 'Pin this entity'}
                     </div>
                   )}
                 </div>
 
-                {/* Delete/Remove Asset */}
-                <div
-                  className="p-0.5 hover:bg-red-500/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110"
-                  onMouseEnter={() => setActiveTooltip('delete')}
-                  onMouseLeave={() => setActiveTooltip(null)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    if (onRemove) onRemove(uei);
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300 transition-colors" />
-                  {activeTooltip === 'delete' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
-                      Remove this entity
-                    </div>
-                  )}
-                </div>
           </div>
 
         </div>
