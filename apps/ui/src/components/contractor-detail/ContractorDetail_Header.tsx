@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, FolderOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
+import { getContractorLogo } from './services/contractorLogoService';
 import type { Contractor } from '../../types';
 
 interface ContractorDetailHeaderProps {
@@ -11,6 +12,8 @@ interface ContractorDetailHeaderProps {
 
 export function ContractorDetailHeader({ contractor }: ContractorDetailHeaderProps) {
   const navigate = useNavigate();
+
+  const contractorLogo = getContractorLogo(contractor?.uei || '');
 
   return (
     <div className="w-full">
@@ -25,18 +28,41 @@ export function ContractorDetailHeader({ contractor }: ContractorDetailHeaderPro
               <div className="relative">
                 {/* Company Logo with HUD overlay */}
                 <div className="w-full aspect-square border border-[#D2AC38]/50 hover:border-[#D2AC38]/70 transition-all duration-500 rounded-lg overflow-hidden relative" style={{ backgroundColor: '#010204' }}>
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #010204CC, #01020499)' }} />
-                  <div className="flex items-center justify-center h-full p-6">
+                  {contractorLogo ? (
+                    <img
+                      src={contractorLogo}
+                      alt={`${contractor?.name || 'Company'} logo`}
+                      className="w-full h-full object-contain p-4"
+                      style={{ backgroundColor: 'rgba(1, 2, 4, 0.8)' }}
+                      onError={(e) => {
+                        // Fallback to initials if logo fails to load
+                        e.currentTarget.style.display = 'none';
+                        const fallbackElement = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (fallbackElement) {
+                          fallbackElement.style.display = 'flex';
+                        }
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="absolute inset-0 flex items-center justify-center h-full p-6"
+                    style={{
+                      background: 'linear-gradient(135deg, #010204CC, #01020499)',
+                      display: contractorLogo ? 'none' : 'flex'
+                    }}
+                  >
                     <div className="relative z-10 flex flex-col items-center justify-center">
-                      {/* TFL Logo */}
+                      {/* Company Logo/Initials */}
                       <div className="font-black tracking-wider text-gray-200" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '62px' }}>
                         TFL
                       </div>
                       <div className="text-xs font-semibold tracking-[0.3em] text-gray-400 mt-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                        TRIO FABRICATION
+                        {contractor?.name?.toUpperCase() || 'TRIO FABRICATION'}
                       </div>
                       <div className="text-xs font-normal tracking-[0.4em] text-gray-500" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                        LLC
+                        {contractor?.name?.includes('LLC') ? 'LLC' :
+                         contractor?.name?.includes('INC') ? 'INC' :
+                         contractor?.name?.includes('CORP') ? 'CORP' : 'LLC'}
                       </div>
                     </div>
                   </div>

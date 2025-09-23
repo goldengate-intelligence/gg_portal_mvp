@@ -56,7 +56,7 @@ export default function Header() {
                   Platform
                 </Link>
               </div>
-              <div className="px-3 py-1 text-lg" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              <div className="px-3 py-1 text-lg ml-4" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                 <Link to="/dashboard" className="text-gray-300 hover:brightness-125 transition-all header-nav-text">
                   Dashboard
                 </Link>

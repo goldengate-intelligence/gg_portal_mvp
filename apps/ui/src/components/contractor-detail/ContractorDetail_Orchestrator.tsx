@@ -8,6 +8,7 @@ import { ActivityTab } from './tabs/activity';
 import { ContactsTab } from './tabs/contacts';
 import { CONTRACTOR_DETAIL_COLORS, cn } from '../../logic/utils';
 import { getLocationCoordinates, coordinatesToMapPercentage, parsePlaceOfPerformance } from './services/geocoding';
+import { registerContractorLogo } from './services/contractorLogoService';
 import { Globe, BarChart3, Share2, Activity, Users } from 'lucide-react';
 import type { Contractor } from '../../types';
 
@@ -122,10 +123,11 @@ export function ContractorDetail({ contractorId, onActiveTabChange }: Contractor
       primaryAgency: 'Defense',
       state: 'DC',
       city: 'Washington',
-      establishedDate: '2010-01-01',
+      establishedDate: new Date('2010-01-01'),
       primaryNaicsDescription: 'Fabricated Plate Work Manufacturing',
       website: 'www.triofabrication.com',
-      totalContractValue: 50000000
+      totalContractValue: 50000000,
+      // No logoUrl - use CSS initials like contractor detail header
     };
 
     // Mock performance data
@@ -187,6 +189,12 @@ export function ContractorDetail({ contractorId, onActiveTabChange }: Contractor
       setContractor(mockContractor);
       setPerformanceData(mockPerformanceData);
       setNetworkData(mockNetworkData);
+
+      // Register contractor logo so asset cards can access it
+      if (mockContractor.logoUrl) {
+        registerContractorLogo(mockContractor.uei, mockContractor.logoUrl);
+      }
+
       setIsLoading(false);
     }, 1000);
   }, [contractorId]);

@@ -15,7 +15,8 @@ import LoginRoute from './routes/login.tsx'
 import RegisterRoute from './routes/register.tsx'
 import DashboardRoute from './routes/dashboard.tsx'
 import PlatformRoute from './routes/platform.tsx'
-import { discoveryRoute, ueiProfileRoute, contractorNetworkRoute, contractorDetailRoute, portfolioRoute } from './routes/platform-routes.tsx'
+import { discoveryRoute, contractorDetailRoute, portfolioRoute } from './routes/platform-routes.tsx'
+import { settingsRoutes } from './routes/settings-routes.tsx'
 
 import Header from './components/Header'
 import { PlatformFooter } from './components/platform/PlatformFooter'
@@ -43,6 +44,7 @@ function ConditionalFooter() {
   const shouldShowFooter = location.pathname === '/platform' ||
                           location.pathname === '/dashboard' ||
                           location.pathname.startsWith('/platform/') ||
+                          location.pathname.startsWith('/settings/') ||
                           showFooterRoutes.some(route => location.pathname.startsWith(route))
 
   if (!shouldShowFooter) {
@@ -93,10 +95,10 @@ const routeTree = rootRoute.addChildren([
   DashboardRoute(rootRoute),
   PlatformRoute(rootRoute),
   discoveryRoute(rootRoute),
-  ueiProfileRoute(rootRoute),
-  contractorNetworkRoute(rootRoute),
   contractorDetailRoute(rootRoute),
   portfolioRoute(rootRoute),
+  // Settings routes
+  ...settingsRoutes.map(route => route(rootRoute)),
   FormSimpleDemo(rootRoute),
   FormAddressDemo(rootRoute),
   TableDemo(rootRoute),

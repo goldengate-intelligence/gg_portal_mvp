@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Plane, Shield, Factory, Building, Truck, Zap, Pin } from 'lucide-react';
+import { Plane, Shield, Factory, Building, Truck, Zap, Pin, Trash2 } from 'lucide-react';
 import { useAgentChatContext } from '../../contexts/agent-chat-context';
 import { FileUploadModal } from './FileUploadModal';
 import { KnowledgeBaseModal } from './KnowledgeBaseModal';
 import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from './services/contractorMetrics';
 import { getIndustryImage, getIndustryTag } from './logic/industryClassification';
+import { getContractorLogo } from '../contractor-detail/services/contractorLogoService';
 
 interface AssetCardProps {
   companyName: string;
@@ -34,6 +35,9 @@ interface AssetCardProps {
   };
   isExpanded?: boolean;
   onToggleExpanded?: () => void;
+  onRemove?: (uei: string) => void;
+  onInsertionHover?: (type: 'before' | 'after' | 'group') => void;
+  onInsertionDrop?: (type: 'before' | 'after') => void;
 }
 
 // Industry classification now handled by centralized service
@@ -59,7 +63,10 @@ export function AssetCardNew({
   onPin,
   aggregatedMetrics,
   isExpanded = false,
-  onToggleExpanded
+  onToggleExpanded,
+  onRemove,
+  onInsertionHover,
+  onInsertionDrop
 }: AssetCardProps) {
   const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null);
   const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
@@ -173,6 +180,8 @@ export function AssetCardNew({
     };
   };
 
+  const contractorLogo = getContractorLogo(uei);
+
   const initials = getCompanyInitials(companyName);
   const theme = getCardTheme(companyName);
   const metrics = aggregatedMetrics || getContractorFinancialMetrics(uei, companyName);
@@ -186,15 +195,15 @@ export function AssetCardNew({
   // Dynamic card layout with collapsible content
   return (
     <div
-      className={`border ${isExpanded ? 'rounded-xl' : 'rounded-xl'} cursor-pointer overflow-visible relative ${
+      className={`border ${isExpanded ? 'rounded-xl' : 'rounded-xl'} cursor-pointer overflow-visible relative transition-all duration-300 ease-in-out transform hover:scale-[1.02] hover:shadow-xl ${
         isDraggedOver
-          ? 'bg-black/40 border-[#D2AC38] hover:border-[#D2AC38]/90'
+          ? 'bg-black/40 border-[#D2AC38] hover:border-[#D2AC38]/90 shadow-lg shadow-[#D2AC38]/20'
           : isGrouped
-            ? 'bg-black/40 border-[#8B8EFF]/50 hover:border-[#8B8EFF]/90'
-            : 'bg-black/40 border-[#F97316]/40 hover:border-[#F97316]/90'
+            ? 'bg-black/40 border-[#8B8EFF]/50 hover:border-[#8B8EFF]/90 hover:shadow-lg hover:shadow-[#8B8EFF]/20'
+            : 'bg-black/40 border-[#F97316]/40 hover:border-[#F97316]/90 hover:shadow-lg hover:shadow-[#F97316]/20'
       }`}
-      style={{ 
-        width: '100%', 
+      style={{
+        width: '100%',
         height: isExpanded ? '220px' : '112px'
       }}
       draggable={true}
@@ -224,13 +233,52 @@ export function AssetCardNew({
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
+
+        // Get mouse position relative to card
+        const rect = e.currentTarget.getBoundingClientRect();
+        const mouseY = e.clientY - rect.top;
+        const cardHeight = rect.height;
+        const topQuarter = cardHeight * 0.25;
+        const bottomQuarter = cardHeight * 0.75;
+
+        // Clear any existing insertion indicators
+        if (onInsertionHover) {
+          if (mouseY < topQuarter) {
+            // Top quarter - show insertion line above this card
+            onInsertionHover('before');
+          } else if (mouseY > bottomQuarter) {
+            // Bottom quarter - show insertion line below this card
+            onInsertionHover('after');
+          } else {
+            // Middle half - show grouping highlight
+            onInsertionHover('group');
+            e.currentTarget.style.borderColor = '#D2AC38';
+            e.currentTarget.style.boxShadow = '0 0 20px rgba(210, 172, 56, 0.3)';
+          }
+        } else {
+          // Fallback to grouping if no insertion handler
+          e.currentTarget.style.borderColor = '#D2AC38';
+          e.currentTarget.style.boxShadow = '0 0 20px rgba(210, 172, 56, 0.3)';
+        }
       }}
       onDragLeave={(e) => {
         // Remove any visual indicators when drag leaves
+        e.currentTarget.style.borderColor = '';
+        e.currentTarget.style.boxShadow = '';
+        if (onInsertionHover) {
+          onInsertionHover('group'); // Clear insertion indicators
+        }
       }}
       onDrop={(e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // Clean up visual indicators
+        e.currentTarget.style.borderColor = '';
+        e.currentTarget.style.boxShadow = '';
+        if (onInsertionHover) {
+          onInsertionHover('group'); // Clear insertion indicators
+        }
 
         try {
           const draggedData = JSON.parse(e.dataTransfer.getData('text/plain'));
@@ -238,7 +286,21 @@ export function AssetCardNew({
           const targetAssetId = uei;
 
           if (draggedAssetId !== targetAssetId) {
-            if (onGroupDrop) {
+            // Get mouse position to determine drop type
+            const rect = e.currentTarget.getBoundingClientRect();
+            const mouseY = e.clientY - rect.top;
+            const cardHeight = rect.height;
+            const topQuarter = cardHeight * 0.25;
+            const bottomQuarter = cardHeight * 0.75;
+
+            if (mouseY < topQuarter && onInsertionDrop) {
+              // Drop above this card (reorder)
+              onInsertionDrop('before');
+            } else if (mouseY > bottomQuarter && onInsertionDrop) {
+              // Drop below this card (reorder)
+              onInsertionDrop('after');
+            } else if (onGroupDrop) {
+              // Drop in middle (group)
               onGroupDrop(draggedAssetId, targetAssetId);
             }
           } else {
@@ -255,27 +317,47 @@ export function AssetCardNew({
       <div className={`relative h-28 ${
         isExpanded ? 'rounded-t-xl' : 'rounded-xl'
       }`}>
-        <div className={`absolute inset-0.5 bg-gradient-to-br from-gray-900/90 via-gray-800/70 to-gray-900/50 ${
+        <div className={`absolute inset-0.5 bg-gradient-to-br from-gray-900/90 via-gray-800/70 to-gray-900/50 transition-all duration-300 ${
           isExpanded ? 'rounded-t-xl' : 'rounded-xl'
         }`}></div>
         <div className="relative z-10 p-4 h-full">
         {/* Company Logo & Info */}
         <div className="flex items-start justify-between h-full">
-          <div className="flex items-start gap-4">
-            {/* Logo Square */}
-            <div className="w-20 h-20 bg-gradient-to-br from-[#D2AC38]/10 via-transparent to-[#D2AC38]/5 rounded-lg border-2 border-[#D2AC38]/40 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-              {/* Company initials */}
-              <span className="text-[#D2AC38] text-lg font-bold uppercase" style={{ fontFamily: 'Michroma, sans-serif' }}>
-                {initials}
-              </span>
-            </div>
+          {/* Logo Square */}
+          <div className="w-20 h-20 bg-gradient-to-br from-[#D2AC38]/10 via-transparent to-[#D2AC38]/5 rounded-lg border-2 border-[#D2AC38]/40 flex items-center justify-center flex-shrink-0 relative overflow-hidden mr-4 transition-all duration-300 hover:border-[#D2AC38]/60 hover:from-[#D2AC38]/15 hover:to-[#D2AC38]/8">
+            {contractorLogo ? (
+              <img
+                src={contractorLogo}
+                alt={`${companyName} logo`}
+                className="w-full h-full object-contain p-2"
+                onError={(e) => {
+                  // Fallback to initials if logo fails to load
+                  e.currentTarget.style.display = 'none';
+                  const initialsElement = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (initialsElement) {
+                    initialsElement.style.display = 'block';
+                  }
+                }}
+              />
+            ) : null}
+            {/* Company initials - shown by default or as fallback */}
+            <span
+              className="text-[#D2AC38] text-lg font-bold uppercase"
+              style={{
+                fontFamily: 'Michroma, sans-serif',
+                display: contractorLogo ? 'none' : 'block'
+              }}
+            >
+              {initials}
+            </span>
+          </div>
 
-            {/* Company Info */}
-            <div className="flex flex-col justify-start h-20">
+          {/* Company Info */}
+          <div className="flex flex-col justify-start h-20 flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0">
                 <h3
-                  className="text-white leading-tight hover:text-[#D2AC38] transition-colors cursor-pointer uppercase mb-0"
-                  style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: '250', fontSize: '24px' }}
+                  className="text-white leading-tight hover:text-[#D2AC38] transition-all duration-300 cursor-pointer uppercase mb-0 hover:scale-105"
+                  style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: '300', fontSize: '24px' }}
                   draggable={false}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -290,7 +372,7 @@ export function AssetCardNew({
                 )}
                 {isGrouped && (
                   <div
-                    className="flex items-center gap-1 px-2 py-1 bg-[#8B8EFF]/20 border border-[#8B8EFF]/40 rounded-full cursor-pointer hover:bg-[#8B8EFF]/30 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 bg-[#8B8EFF]/20 border border-[#8B8EFF]/40 rounded-full cursor-pointer hover:bg-[#8B8EFF]/30 transition-all duration-300 hover:scale-105 hover:border-[#8B8EFF]/60"
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -308,25 +390,43 @@ export function AssetCardNew({
               </div>
 
               {/* UEI and NAICS Text (no bubble) */}
-              <span className="text-gray-300 text-xs uppercase tracking-wide font-medium">
-                {isGrouped ? `${groupMembers.length} Entities` : `${uei} • ${naicsDescription}`}
-              </span>
+              <div className="uppercase tracking-wide">
+                {isGrouped ? (
+                  <span className="font-medium text-gray-300 text-xs">{groupMembers.length} Entities</span>
+                ) : (
+                  <>
+                    <div className="font-medium text-gray-300/80 text-sm tracking-wider">{uei}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="font-normal text-[#F97316]/90 text-xs">{naicsDescription}</div>
+                      <div className={`px-2 py-0.5 rounded-full text-xs transition-all duration-300 hover:scale-105 ${isDefenseContractor ? 'text-red-400 bg-red-400/10 hover:bg-red-400/20 hover:text-red-300' : 'text-teal-400 bg-teal-400/10 hover:bg-teal-400/20 hover:text-teal-300'}`}>
+                        {isDefenseContractor ? 'DEFENSE' : 'CIVILIAN'}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Right Side - Action Icons and Image */}
-          <div className="flex items-start gap-3">
-            {/* Action Icons - mirror left side structure */}
-            <div className="flex flex-col justify-start h-20">
-              {/* Action Icons Row - unified bubble container */}
-              <div className="flex items-center px-3 py-1 bg-gray-600/20 border border-gray-600/40 rounded-full gap-2">
+        </div>
+
+        {/* Action Icons - Upper Right Corner */}
+        <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
+          {/* Action Icons Row - unified bubble container */}
+          <div className="flex items-center px-3 py-1 bg-gray-600/20 border border-gray-600/40 rounded-full gap-2 transition-all duration-300 hover:bg-gray-600/30 hover:border-gray-600/60 hover:scale-105">
                 {/* Expand/Collapse Indicator */}
                 <div
-                  className={`p-0.5 hover:bg-[#D2AC38]/30 rounded transition-all cursor-pointer relative ${
+                  className={`p-0.5 hover:bg-[#D2AC38]/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110 ${
                     isExpanded ? 'rotate-180' : 'rotate-0'
                   }`}
                   onMouseEnter={() => setActiveTooltip('expand')}
                   onMouseLeave={() => setActiveTooltip(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (onToggleExpanded) onToggleExpanded();
+                  }}
                 >
                   <svg 
                     className="w-4 h-4 text-[#D2AC38] hover:text-[#D2AC38]/80" 
@@ -342,10 +442,10 @@ export function AssetCardNew({
                     </div>
                   )}
                 </div>
-                {/* Notes Icon - First */}
+                {/* Smart Research/Lightbulb Icon */}
                 <div
-                  className="p-0.5 hover:bg-indigo-500/30 rounded transition-all cursor-pointer relative"
-                  onMouseEnter={() => setActiveTooltip('notes')}
+                  className="p-0.5 hover:bg-purple-500/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110"
+                  onMouseEnter={() => setActiveTooltip('smart-research')}
                   onMouseLeave={() => setActiveTooltip(null)}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -353,19 +453,20 @@ export function AssetCardNew({
                     openWithContext(uei, companyName, 'contractor');
                   }}
                 >
-                  <svg className="w-4 h-4 text-indigo-400 hover:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <svg className="w-4 h-4 text-purple-400 hover:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8" strokeWidth={2}/>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M8 11h6m-3-3v6"/>
                   </svg>
-                  {activeTooltip === 'notes' && (
+                  {activeTooltip === 'smart-research' && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
-                      Take quick notes on this entity
+                      AI pursues context-driven research
                     </div>
                   )}
                 </div>
 
                 {/* Document Attachment Icon */}
                 <div
-                  className="p-0.5 hover:bg-cyan-500/30 rounded transition-all cursor-pointer relative"
+                  className="p-0.5 hover:bg-cyan-500/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110"
                   onMouseEnter={() => setActiveTooltip('attach')}
                   onMouseLeave={() => setActiveTooltip(null)}
                   onClick={(e) => {
@@ -386,7 +487,7 @@ export function AssetCardNew({
 
                 {/* Document Manager/Folder */}
                 <div
-                  className="p-0.5 hover:bg-teal-500/30 rounded transition-all cursor-pointer relative"
+                  className="p-0.5 hover:bg-teal-500/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110"
                   onMouseEnter={() => setActiveTooltip('folder')}
                   onMouseLeave={() => setActiveTooltip(null)}
                   onClick={(e) => {
@@ -407,7 +508,7 @@ export function AssetCardNew({
 
                 {/* Pin to Top */}
                 <div
-                  className={`p-0.5 rounded hover:bg-orange-500/30 transition-all cursor-pointer relative ${
+                  className={`p-0.5 rounded hover:bg-orange-500/30 transition-all duration-300 cursor-pointer relative hover:scale-110 ${
                     isPinned ? 'text-orange-300' : 'text-orange-400'
                   }`}
                   onMouseEnter={() => setActiveTooltip('pin')}
@@ -427,64 +528,71 @@ export function AssetCardNew({
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
 
-            {/* Industry Image */}
-            <div className="w-20 h-20 bg-gray-700/50 rounded-lg border border-gray-600/30 overflow-hidden flex-shrink-0">
-              <img
-                src={industryImageSrc}
-                alt="Industry"
-                className="w-full h-full object-cover"
-              />
-            </div>
+                {/* Delete/Remove Asset */}
+                <div
+                  className="p-0.5 hover:bg-red-500/30 rounded transition-all duration-300 cursor-pointer relative hover:scale-110"
+                  onMouseEnter={() => setActiveTooltip('delete')}
+                  onMouseLeave={() => setActiveTooltip(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (onRemove) onRemove(uei);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300 transition-colors" />
+                  {activeTooltip === 'delete' && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-black rounded pointer-events-none whitespace-nowrap z-[100]">
+                      Remove this entity
+                    </div>
+                  )}
+                </div>
           </div>
-        </div>
-        </div>
-      </div>
 
-      {/* Content Section - Collapsible */}
-      {isExpanded && (
-        <div className="relative z-10 p-4">
-        {/* Financial Metrics Grid - NO ICONS */}
-        <div className="grid grid-cols-4 gap-4">
-          <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Lifetime Awards</span>
-            <span className="font-bold text-xl block" style={{ color: '#F97316' }}>{metrics.lifetime}</span>
-          </div>
-          <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Active Awards</span>
-            <span className="font-bold text-xl block" style={{ color: '#FFB84D' }}>{activeAwards.value}</span>
-          </div>
-          <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Revenue (TTM)</span>
-            <span className="font-bold text-xl block" style={{ color: '#42D4F4' }}>{metrics.revenue}</span>
-          </div>
-          <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center">
-            <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Pipeline</span>
-            <span className="font-bold text-xl block" style={{ color: '#8B8EFF' }}>{metrics.pipeline}</span>
-          </div>
         </div>
-        </div>
-      )}
 
-      {/* File Upload Modal */}
-      <FileUploadModal
-        isOpen={isFileUploadOpen}
-        onClose={() => setIsFileUploadOpen(false)}
-        entityId={uei}
-        entityName={companyName}
-        entityType="contractor"
-      />
+         {/* Content Section - Collapsible */}
+         {isExpanded && (
+           <div className="relative z-10 p-4">
+             {/* Financial Metrics Grid - NO ICONS */}
+             <div className="grid grid-cols-4 gap-4">
+               <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
+                 <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Lifetime Awards</span>
+                 <span className="font-bold text-xl block" style={{ color: '#F97316' }}>{metrics.lifetime}</span>
+               </div>
+               <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
+                 <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Active Awards</span>
+                 <span className="font-bold text-xl block" style={{ color: '#FFB84D' }}>{activeAwards.value}</span>
+               </div>
+               <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
+                 <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Revenue (TTM)</span>
+                 <span className="font-bold text-xl block" style={{ color: '#42D4F4' }}>{metrics.revenue}</span>
+               </div>
+               <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
+                 <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Pipeline</span>
+                 <span className="font-bold text-xl block" style={{ color: '#8B8EFF' }}>{metrics.pipeline}</span>
+               </div>
+             </div>
+           </div>
+         )}
 
-      {/* Knowledge Base Modal */}
-      <KnowledgeBaseModal
-        isOpen={isKnowledgeBaseOpen}
-        onClose={() => setIsKnowledgeBaseOpen(false)}
-        entityId={uei}
-        entityName={companyName}
-        entityType="contractor"
-      />
-    </div>
+         {/* File Upload Modal */}
+         <FileUploadModal
+           isOpen={isFileUploadOpen}
+           onClose={() => setIsFileUploadOpen(false)}
+           entityId={uei}
+           entityName={companyName}
+           entityType="contractor"
+         />
+
+         {/* Knowledge Base Modal */}
+         <KnowledgeBaseModal
+           isOpen={isKnowledgeBaseOpen}
+           onClose={() => setIsKnowledgeBaseOpen(false)}
+           entityId={uei}
+           entityName={companyName}
+           entityType="contractor"
+         />
+     </div>
   );
 }

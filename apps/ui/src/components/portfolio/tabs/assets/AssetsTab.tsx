@@ -7,7 +7,7 @@ import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } f
 
 // Design Framework Components - Indigo Theme
 const ExternalPanelContainer = ({ children }: { children: React.ReactNode }) => (
-  <div className="h-full border border-[#8B8EFF]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#8B8EFF]/50 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm">
+  <div className="h-full border border-[#8B8EFF]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#8B8EFF]/50 hover:shadow-3xl hover:shadow-[#8B8EFF]/10 transition-all duration-500 group relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 backdrop-blur-sm transform hover:scale-[1.01]">
     {/* Animated background grid */}
     <div className="absolute inset-0 opacity-5 z-0">
       <div className="absolute inset-0" style={{
@@ -31,7 +31,7 @@ const ExternalPanelContainer = ({ children }: { children: React.ReactNode }) => 
 // IMPORTANT: OFFICIAL GUNMETAL COLOR = #223040
 const ChartStyleContainer = ({ children }: { children: React.ReactNode }) => (
   <div
-    className="rounded-lg p-4"
+    className="rounded-lg p-4 transition-all duration-300 hover:shadow-lg hover:shadow-[#223040]/20 transform hover:scale-[1.02]"
     style={{
       backgroundColor: '#223040'
     }}
@@ -106,6 +106,7 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [draggedAsset, setDraggedAsset] = useState<string | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<GroupAsset | null>(null);
+  const [insertionIndex, setInsertionIndex] = useState<number | null>(null);
 
   // Helper functions for financial calculations
   const parseFinancialValue = (value: string): number => {
@@ -158,6 +159,7 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
 
   const handleDragEnd = () => {
     setDraggedAsset(null);
+    setInsertionIndex(null);
   };
 
   const handleDrop = (targetId: string) => {
@@ -173,6 +175,53 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
     newAssets.splice(targetIndex, 0, draggedItem);
 
     setAssets(newAssets);
+  };
+
+  // Handle dropping between cards for reordering
+  const handleInsertionDrop = (index: number) => {
+    if (!draggedAsset) return;
+
+    const draggedIndex = assets.findIndex(asset => asset.id === draggedAsset);
+    if (draggedIndex === -1) return;
+
+    const newAssets = [...assets];
+    const [draggedItem] = newAssets.splice(draggedIndex, 1);
+
+    // Adjust insertion index if dragging forward
+    const adjustedIndex = index > draggedIndex ? index - 1 : index;
+    newAssets.splice(adjustedIndex, 0, draggedItem);
+
+    setAssets(newAssets);
+    setInsertionIndex(null);
+  };
+
+  // Handle drag over insertion zones
+  const handleInsertionDragOver = (index: number) => {
+    setInsertionIndex(index);
+  };
+
+  const handleInsertionDragLeave = () => {
+    setInsertionIndex(null);
+  };
+
+  // Handle intelligent insertion hover based on mouse position within card
+  const handleCardInsertionHover = (assetIndex: number) => (type: 'before' | 'after' | 'group') => {
+    if (type === 'before') {
+      setInsertionIndex(assetIndex);
+    } else if (type === 'after') {
+      setInsertionIndex(assetIndex + 1);
+    } else {
+      setInsertionIndex(null); // Clear insertion, will show grouping
+    }
+  };
+
+  // Handle intelligent insertion drop based on mouse position within card
+  const handleCardInsertionDrop = (assetIndex: number) => (type: 'before' | 'after') => {
+    if (type === 'before') {
+      handleInsertionDrop(assetIndex);
+    } else if (type === 'after') {
+      handleInsertionDrop(assetIndex + 1);
+    }
   };
 
   const handleGroupDrop = (draggedAssetId: string, targetAssetId: string) => {
@@ -377,10 +426,16 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
     console.log('Updated pinned assets after group creation:', Array.from(updatedPinnedAssets));
     console.log('Updated pin order after group creation:', updatedPinOrder);
 
-    // Replace both assets with the new group
-    const newAssets = assets
-      .filter(asset => asset.id !== targetAssetId && asset.id !== draggedAssetId)
-      .concat(newGroup);
+    // Replace both assets with the new group at the target asset's position
+    const newAssets = assets.map(asset => {
+      if (asset.id === targetAssetId) {
+        return newGroup; // Replace target asset with the group
+      }
+      if (asset.id === draggedAssetId) {
+        return null; // Mark dragged asset for removal
+      }
+      return asset;
+    }).filter(Boolean) as (Asset | GroupAsset)[];
 
     setAssets(newAssets);
     setIsModalOpen(false);
@@ -657,8 +712,15 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
                 {/* Content */}
                 <div className="pt-8">
                   <div className="grid grid-cols-1 gap-4">
-                    {sortedAssets.map((asset) => (
-                      <div key={asset.id} className="relative group">
+                    {sortedAssets.map((asset, index) => (
+                      <div key={asset.id} className="relative group transition-all duration-300 ease-in-out" style={{ animationDelay: `${index * 50}ms` }}>
+                        {/* Insertion line overlay - positioned absolutely */}
+                        {insertionIndex === index && (
+                          <div className="absolute -top-0.5 left-0 right-0 h-0.5 bg-[#D2AC38] z-30 animate-pulse shadow-lg shadow-[#D2AC38]/50 transition-all duration-300" />
+                        )}
+                        {insertionIndex === index + 1 && (
+                          <div className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-[#D2AC38] z-30 animate-pulse shadow-lg shadow-[#D2AC38]/50 transition-all duration-300" />
+                        )}
                         <AssetCardNew
                           companyName={asset.companyName}
                           naicsDescription={asset.naicsDescription}
@@ -676,6 +738,9 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
                           aggregatedMetrics={'type' in asset && asset.type === 'group' ? (asset as GroupAsset).aggregatedMetrics : undefined}
                           isExpanded={expandedAssets.has(getAssetIdentifier(asset))}
                           onToggleExpanded={() => handleToggleExpanded(getAssetIdentifier(asset))}
+                          onRemove={() => handleRemoveAsset(asset.id)}
+                          onInsertionHover={handleCardInsertionHover(index)}
+                          onInsertionDrop={handleCardInsertionDrop(index)}
                           onClick={() => {
                             if ('type' in asset && asset.type === 'group') {
                               handleGroupClick(asset);
@@ -684,18 +749,6 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
                             }
                           }}
                         />
-
-
-                        {/* Remove Asset Button */}
-                        <button
-                          className="absolute top-6 right-6 p-1.5 bg-gray-500/10 border border-gray-500/20 rounded-lg group-hover:bg-red-500/20 group-hover:border-red-500/30 hover:!bg-red-500/70 hover:!border-red-400 transition-all cursor-pointer z-30 hover:scale-125 opacity-0 group-hover:opacity-100 hover:!opacity-100"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveAsset(asset.id);
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-gray-400 group-hover:text-red-300 hover:!text-red-200" />
-                        </button>
                       </div>
                     ))}
                   </div>

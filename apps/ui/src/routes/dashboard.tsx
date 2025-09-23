@@ -14,12 +14,12 @@ function DashboardComponent() {
   };
 
   const userSettings = [
-    { label: 'Profile Settings', icon: User, description: 'Manage your personal information and preferences' },
-    { label: 'Account Security', icon: Shield, description: 'Update password and security settings' },
-    { label: 'Agent Automation', icon: Bot, description: 'Configure AI agents and automated workflows' },
-    { label: 'Usage Analytics', icon: BarChart3, description: 'View platform usage metrics and insights' },
-    { label: 'Notifications', icon: Bell, description: 'Configure email and system notifications' },
-    { label: 'Help & Support', icon: HelpCircle, description: 'Access documentation and support resources' }
+    { label: 'Profile Settings', icon: User, description: 'Manage your personal information and preferences', href: '/settings/profile' },
+    { label: 'Account Security', icon: Shield, description: 'Update password and security settings', href: '/settings/security' },
+    { label: 'Agent Automation', icon: Bot, description: 'Configure AI agents and automated workflows', href: '/settings/agents' },
+    { label: 'Usage Analytics', icon: BarChart3, description: 'View platform usage metrics and insights', href: '/settings/analytics' },
+    { label: 'Notifications', icon: Bell, description: 'Configure email and system notifications', href: '/settings/notifications' },
+    { label: 'Help & Support', icon: HelpCircle, description: 'Access documentation and support resources', href: '/settings/support' }
   ];
 
   return (
@@ -56,14 +56,13 @@ function DashboardComponent() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* User Information */}
             <div className="lg:col-span-1">
-              <div className="h-full border border-[#D2AC38]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#D2AC38]/50 transition-all duration-500 group relative bg-black/50 backdrop-blur-sm">
-                {/* Glow effect on hover */}
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0"
-                     style={{ background: 'linear-gradient(135deg, #D2AC3820, transparent)' }} />
+              <div className="h-full border border-gray-700/50 hover:border-gray-600/40 rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative" style={{ backgroundColor: '#111726' }}>
+                {/* Gradient background matching contractor-detail */}
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-gray-800/25 to-gray-900/50 rounded-xl"></div>
 
                 <div className="p-6 relative z-10">
-                <h3 className="text-white mb-6 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px', fontWeight: 'bold' }}>ACCOUNT INFORMATION</h3>
-                <div className="p-6 border border-gray-700/50 rounded-lg relative overflow-hidden bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
+                <h3 className="text-gray-200 mb-6 uppercase tracking-wide font-bold" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>ACCOUNT INFORMATION</h3>
+                <div className="p-6 border border-gray-700 rounded-xl relative overflow-hidden" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
                 <dl className="space-y-4">
                   <div>
                     <dt className="text-sm font-medium text-white">Full Name</dt>
@@ -108,16 +107,15 @@ function DashboardComponent() {
             {/* Settings & Quick Actions */}
             <div className="lg:col-span-2">
               <div className="space-y-6">
-                <div className="border border-[#D2AC38]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#D2AC38]/50 transition-all duration-500 relative bg-black/50 backdrop-blur-sm">
-                  {/* Glow effect on hover */}
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 hover:opacity-10 transition-opacity duration-300 z-0"
-                       style={{ background: 'linear-gradient(135deg, #D2AC3820, transparent)' }} />
+                <div className="border border-gray-700/50 hover:border-gray-600/40 rounded-xl overflow-hidden shadow-2xl transition-all duration-500 relative" style={{ backgroundColor: '#111726' }}>
+                  {/* Gradient background matching contractor-detail */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-gray-800/25 to-gray-900/50 rounded-xl"></div>
 
                   <div className="p-6 relative z-10">
-                  <h3 className="text-white mb-6 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px', fontWeight: 'bold' }}>SETTINGS & PREFERENCES</h3>
+                  <h3 className="text-gray-200 mb-6 uppercase tracking-wide font-bold" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>SETTINGS & PREFERENCES</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {userSettings.map((setting, index) => (
-                      <div key={setting.label} className="p-6 border border-gray-700/50 hover:border-[#D2AC38]/30 rounded-lg transition-all cursor-pointer group relative overflow-hidden bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
+                      <Link key={setting.label} to={setting.href} className="p-6 border border-gray-700 hover:border-[#D2AC38]/50 rounded-lg transition-all cursor-pointer group relative overflow-hidden block" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
                         <div className="flex items-start gap-3">
                           <setting.icon className="text-[#D2AC38] group-hover:text-[#D2AC38] transition-colors mt-1" style={{ width: '30px', height: '30px' }} />
                           <div>
@@ -129,20 +127,19 @@ function DashboardComponent() {
                             </p>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                   </div>
                 </div>
 
                 {/* Quick Platform Access */}
-                <div className="h-full border border-[#D2AC38]/30 rounded-xl overflow-hidden shadow-2xl hover:border-[#D2AC38]/50 transition-all duration-500 group relative bg-black/50 backdrop-blur-sm">
-                  {/* Glow effect on hover */}
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0"
-                       style={{ background: 'linear-gradient(135deg, #D2AC3820, transparent)' }} />
+                <div className="h-full border border-gray-700/50 hover:border-gray-600/40 rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative" style={{ backgroundColor: '#111726' }}>
+                  {/* Gradient background matching contractor-detail */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-gray-800/25 to-gray-900/50 rounded-xl"></div>
 
                   <div className="p-6 relative z-10">
-                  <h3 className="text-white mb-6 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px', fontWeight: 'bold' }}>QUICK ACCESS</h3>
+                  <h3 className="text-gray-200 mb-6 uppercase tracking-wide font-bold" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>QUICK ACCESS</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Button asChild className="bg-[#F97316] hover:bg-[#F97316]/80 text-white font-bold w-full">
                       <Link to="/platform/discovery">DISCOVER ASSETS</Link>

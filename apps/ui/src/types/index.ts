@@ -92,6 +92,11 @@ export interface Contractor {
   activeContracts?: number;
   pastPerformanceScore?: number; // 0-100
   
+  // Profile media
+  profilePhotoUrl?: string;
+  logoUrl?: string;
+  website?: string;
+
   // Metadata
   createdAt: Date;
   updatedAt: Date;

@@ -57,7 +57,7 @@ function PlatformComponent() {
         <div className="container mx-auto px-6 pt-24 pb-20 max-w-7xl">
 
             {/* Hero Header */}
-            <div className="text-center mb-12 mt-8">
+            <div className="text-center mb-6 mt-8">
               <h1 className="text-white tracking-wide mb-4" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '64px', lineHeight: '0.9', letterSpacing: '-0.02em', fontWeight: '100' }}>
                 <span className="text-[#D2AC38]" style={{ fontWeight: '250' }}>Select</span> <span className="text-white" style={{ fontWeight: '100' }}>Function</span>
               </h1>
@@ -67,7 +67,7 @@ function PlatformComponent() {
             </div>
 
             {/* Mode Selection Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-1 mb-12">
             {modes.map((mode) => {
               const Icon = mode.icon;
 
@@ -75,7 +75,7 @@ function PlatformComponent() {
                 <Link
                   key={mode.id}
                   to={mode.id === 'recon' ? '/platform/discovery' : '/platform/portfolio'}
-                  className={`block cursor-pointer transition-all duration-200 border rounded-lg ${mode.borderColor} hover:${mode.borderColor.replace('/40', '/60')}`}
+                  className={`block cursor-pointer transition-all duration-200 border rounded-lg ${mode.borderColor} hover:${mode.borderColor.replace('/40', '/60')} mx-1`}
                   style={{
                     backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor
                   }}

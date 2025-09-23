@@ -43,9 +43,9 @@ function App() {
         </div>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center p-6 rounded-lg bg-gray-800/50 backdrop-blur">
+          <div className="text-center p-6 rounded-lg bg-gray-800/50 backdrop-blur border border-[#D2AC38]/30 hover:border-[#D2AC38]/60 transition-all duration-300">
             <div className="flex justify-center mb-4">
-              <div className="p-3 bg-[#D2AC38]/20 border border-[#D2AC38]/40 rounded-xl">
+              <div className="p-3 bg-[#D2AC38]/20 border border-[#D2AC38]/60 rounded-xl">
                 <Building2 className="w-6 h-6 text-[#D2AC38]" />
               </div>
             </div>
@@ -55,27 +55,27 @@ function App() {
             </p>
           </div>
 
-          <div className="text-center p-6 rounded-lg bg-gray-800/50 backdrop-blur">
+          <div className="text-center p-6 rounded-lg bg-gray-800/50 backdrop-blur border border-[#D2AC38]/30 hover:border-[#D2AC38]/60 transition-all duration-300">
             <div className="flex justify-center mb-4">
-              <div className="p-3 bg-[#D2AC38]/20 border border-[#D2AC38]/40 rounded-xl">
+              <div className="p-3 bg-[#D2AC38]/20 border border-[#D2AC38]/60 rounded-xl">
                 <Bot className="w-6 h-6 text-[#D2AC38]" />
               </div>
             </div>
             <h3 className="text-lg font-semibold mb-4 text-[#D2AC38] uppercase" style={{ fontFamily: 'Genos, sans-serif', letterSpacing: '0.0125em' }}>Agent Native</h3>
             <p className="text-gray-300 leading-relaxed text-sm">
-              Intelligent architecture optimized for autonomous workflows.
+              First-of-its-kind architecture optimized for seamless autonomous workflows.
             </p>
           </div>
 
-          <div className="text-center p-6 rounded-lg bg-gray-800/50 backdrop-blur">
+          <div className="text-center p-6 rounded-lg bg-gray-800/50 backdrop-blur border border-[#D2AC38]/30 hover:border-[#D2AC38]/60 transition-all duration-300">
             <div className="flex justify-center mb-4">
-              <div className="p-3 bg-[#D2AC38]/20 border border-[#D2AC38]/40 rounded-xl">
+              <div className="p-3 bg-[#D2AC38]/20 border border-[#D2AC38]/60 rounded-xl">
                 <Shield className="w-6 h-6 text-[#D2AC38]" />
               </div>
             </div>
             <h3 className="text-lg font-semibold mb-4 text-[#D2AC38] uppercase" style={{ fontFamily: 'Genos, sans-serif', letterSpacing: '0.0125em' }}>Elite Governance</h3>
             <p className="text-gray-300 leading-relaxed text-sm">
-              Zero-trust security framework with advanced access controls.
+              Zero-trust security framework with defense-grade access control systems.
             </p>
           </div>
         </div>
