@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from "../../../ui/card";
 import { CONTRACTOR_DETAIL_COLORS, cn } from '../../../../logic/utils';
-import { Activity, TrendingUp, TrendingDown, AlertCircle, Calendar, DollarSign, Hash } from 'lucide-react';
+import { Activity, TrendingUp, TrendingDown, AlertCircle, Calendar, DollarSign, Hash, Building2, Users, Shield } from 'lucide-react';
 import { AwardGrainPopup } from './AwardGrainPopup';
 import { EventsListPopup } from './EventsListPopup';
 import { EventsDetailView } from './EventsDetailView';
@@ -20,6 +20,7 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [showEventsDetail, setShowEventsDetail] = useState(false);
   const [eventsDetailRelationship, setEventsDetailRelationship] = useState<any>(null);
+  const [expandedCards, setExpandedCards] = useState(new Set<string>());
 
   // Mock contract data - in production this would come from props
   const contracts = [
@@ -47,7 +48,7 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
       parentAward: 'MC-2023-BASE-001',
       id: 'MC-2024-0456',
       role: 'sub',
-      client: 'MegaCorp Industries',
+      client: 'MegaCorp Industries Corporation',
       clientType: 'prime',
       desc: 'Advanced Defense Systems Integration',
       totalValue: '$280M',
@@ -59,13 +60,13 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
       psc: '1560',
       type: 'SUBCONTRACT',
       utilization: 85,
-      subTo: 'MegaCorp Industries'
+      subTo: 'MegaCorp Industries Corporation'
     },
     {
       parentAward: 'GD-2023-SUB-0789',
       id: 'GD-SUB-0789',
       role: 'sub',
-      client: 'Global Defense Systems',
+      client: 'Global Defense Systems LLC',
       clientType: 'prime',
       desc: 'Strategic Defense Platform Components',
       totalValue: '$145M',
@@ -77,7 +78,7 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
       psc: '1560',
       type: 'SUBCONTRACT',
       utilization: 35,
-      subTo: 'Global Defense Systems'
+      subTo: 'Global Defense Systems LLC'
     },
     // SUBCONTRACTORS (Our subs - outflows)
     {
@@ -102,7 +103,7 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
       parentAward: 'W912HZ-22-C-0001',
       id: 'SUB-2024-002',
       role: 'prime',
-      client: 'Beta Technologies Inc',
+      client: 'Beta Technologies Incorporated',
       clientType: 'sub',
       desc: 'Technical Support Services',
       totalValue: '$50M',
@@ -246,6 +247,17 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
     setEventsDetailRelationship(null);
   };
 
+  // Card expansion handlers
+  const toggleCardExpansion = (relationshipName: string) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(relationshipName)) {
+      newExpanded.delete(relationshipName);
+    } else {
+      newExpanded.add(relationshipName);
+    }
+    setExpandedCards(newExpanded);
+  };
+
   const toggleAward = (awardId: string) => {
     const newExpanded = new Set(expandedContractAwards);
     if (newExpanded.has(awardId)) {
@@ -254,6 +266,375 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
       newExpanded.add(awardId);
     }
     setExpandedContractAwards(newExpanded);
+  };
+
+  // New relationship card component following asset card pattern
+  const renderRelationshipCard = (relationship: any, type: 'inflow' | 'outflow') => {
+    const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null);
+    const isExpanded = expandedCards.has(relationship.name);
+    const accentColor = type === 'inflow' ? '#10B981' : '#FF4C4C';
+
+    // Calculate metrics similar to asset cards
+    const awardedAmount = relationship.totalValue * (type === 'inflow' ? 0.85 : 0.75);
+    const obligationRate = relationship.contracts.reduce((sum: number, contract: any) => sum + contract.utilization, 0) / relationship.contracts.length;
+    const obligatedAmount = awardedAmount * (obligationRate / 100);
+
+    // Get type badge info
+    const getTypeInfo = () => {
+      if (relationship.type === 'agency') return { label: 'AGENCY', color: '#9B7EBD' };
+      if (relationship.type === 'prime') return { label: 'PRIME', color: '#5BC0EB' };
+      return { label: 'SUB', color: '#FF4C4C' };
+    };
+
+    const typeInfo = getTypeInfo();
+
+    // Generate initials for the relationship
+    const getRelationshipInitials = (name: string) => {
+      return name.split(' ').map(word => word.charAt(0)).join('').slice(0, 3).toUpperCase();
+    };
+
+    const initials = getRelationshipInitials(relationship.name);
+
+    return (
+      <div
+        key={relationship.name}
+        className={`border ${isExpanded ? 'rounded-xl' : 'rounded-xl'} cursor-pointer overflow-visible relative bg-black/40`}
+        style={{
+          height: isExpanded ? '220px' : '112px',
+          borderColor: accentColor + '50',
+          boxShadow: `0 0 0 1px ${accentColor}40`
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 0 1px ${accentColor}90, 0 10px 15px -3px ${accentColor}20, 0 4px 6px -2px ${accentColor}10`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 0 1px ${accentColor}40`;
+        }}
+        onClick={() => toggleCardExpansion(relationship.name)}
+      >
+        {/* Header Section */}
+        <div className={`relative h-28 ${isExpanded ? 'rounded-t-xl' : 'rounded-xl'}`}>
+          <div className={`absolute inset-0.5 bg-gradient-to-br from-gray-900/90 via-gray-800/70 to-gray-900/50 transition-all duration-300 ${isExpanded ? 'rounded-t-xl' : 'rounded-xl'}`}></div>
+          <div className="relative z-10 p-4 h-full">
+            {/* Company Info */}
+            <div className="flex items-start justify-between h-full">
+              {/* Logo Square */}
+              <div
+                className="w-20 h-20 bg-gradient-to-br from-[#D2AC38]/10 via-transparent to-[#D2AC38]/5 rounded-lg border-2 border-[#D2AC38]/40 flex items-center justify-center flex-shrink-0 relative overflow-hidden mr-4 transition-all duration-300 hover:border-[#D2AC38]/60 hover:from-[#D2AC38]/15 hover:to-[#D2AC38]/8"
+              >
+                {/* Company initials */}
+                <span
+                  className="text-[#D2AC38] text-lg font-bold uppercase"
+                  style={{
+                    fontFamily: 'Michroma, sans-serif'
+                  }}
+                >
+                  {initials}
+                </span>
+              </div>
+
+              {/* Left side - Company name and basic info */}
+              <div className="flex flex-col justify-start h-20 flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0">
+                  <h3
+                    className={`text-white leading-tight uppercase mb-0 transition-colors duration-300 ${
+                      relationship.type === 'agency'
+                        ? 'cursor-default'
+                        : 'hover:text-[#D2AC38] cursor-pointer'
+                    }`}
+                    style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: '300', fontSize: '24px' }}
+                    onClick={(e) => {
+                      if (relationship.type !== 'agency') {
+                        e.stopPropagation();
+                        // Navigate to contractor profile (would go here for non-agencies)
+                      }
+                    }}
+                  >
+                    {relationship.name}
+                  </h3>
+                </div>
+
+                {/* UEI/Agency Info and Type Badge */}
+                <div className="uppercase tracking-wide">
+                  {(() => {
+                    // Generate UEI or agency identifier
+                    const getEntityIdentifier = () => {
+                      if (relationship.type === 'agency') {
+                        // For agencies, use agency code or department abbreviation
+                        if (relationship.name.includes('Defense')) return 'DOD-AGENCY';
+                        if (relationship.name.includes('Corps')) return 'USACE-AGENCY';
+                        if (relationship.name.includes('Navy')) return 'NAVY-AGENCY';
+                        if (relationship.name.includes('Air Force')) return 'USAF-AGENCY';
+                        if (relationship.name.includes('Army')) return 'ARMY-AGENCY';
+                        return 'GOV-AGENCY';
+                      } else {
+                        // For companies, generate a mock UEI
+                        const nameHash = relationship.name.split('').reduce((a, b) => {
+                          a = ((a << 5) - a) + b.charCodeAt(0);
+                          return a & a;
+                        }, 0);
+                        const ueiSuffix = Math.abs(nameHash).toString().slice(0, 9).padStart(9, '0');
+                        return `W${ueiSuffix}`;
+                      }
+                    };
+
+                    const getWorkSummary = () => {
+                      // Analyze contract types to determine work summary
+                      const naicsCodes = relationship.contracts.map((c: any) => c.naics);
+                      const primaryNaics = naicsCodes[0];
+
+                      if (primaryNaics?.startsWith('332')) return 'Manufacturing & Fabrication';
+                      if (primaryNaics?.startsWith('541')) return 'Professional Services';
+                      if (primaryNaics?.startsWith('336')) return 'Aerospace & Defense';
+                      if (primaryNaics?.startsWith('238')) return 'Construction Services';
+                      if (primaryNaics?.startsWith('334')) return 'Technology & Electronics';
+                      return 'Multi-sector Operations';
+                    };
+
+                    return (
+                      <div className="font-medium text-gray-300/80 text-sm tracking-wider">
+                        {getEntityIdentifier()}
+                      </div>
+                    );
+                  })()}
+                  <div className="flex items-center justify-between">
+                    <div className="font-normal text-[#F97316]/90 text-xs">
+                      {relationship.contracts.length} Contract{relationship.contracts.length !== 1 ? 's' : ''} • {(() => {
+                        // Generate work summary
+                        const naicsCodes = relationship.contracts.map((c: any) => c.naics);
+                        const primaryNaics = naicsCodes[0];
+
+                        if (primaryNaics?.startsWith('332')) return 'Manufacturing & Fabrication';
+                        if (primaryNaics?.startsWith('541')) return 'Professional Services';
+                        if (primaryNaics?.startsWith('336')) return 'Aerospace & Defense';
+                        if (primaryNaics?.startsWith('238')) return 'Construction Services';
+                        if (primaryNaics?.startsWith('334')) return 'Technology & Electronics';
+                        return 'Multi-sector Operations';
+                      })()}
+                    </div>
+                    <div
+                      className="px-2 py-0.5 rounded-full text-xs transition-all duration-300 hover:scale-105"
+                      style={{
+                        color: typeInfo.color,
+                        backgroundColor: `${typeInfo.color}10`,
+                        border: `1px solid ${typeInfo.color}40`
+                      }}
+                    >
+                      {typeInfo.label}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Icons - Upper Right Corner */}
+        <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
+          {/* Action Icons Row - unified bubble container */}
+          <div className="flex items-center px-3 py-1 bg-gray-600/20 border border-gray-600/40 rounded-full gap-2 transition-all duration-200 hover:bg-gray-600/30 hover:border-gray-600/60">
+            {/* Expand/Collapse Indicator */}
+            <div
+              className={`p-0.5 rounded cursor-pointer relative hover:bg-[#D2AC38]/30 hover:scale-110 transition-all duration-300 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
+              onMouseEnter={(e) => {
+                e.stopPropagation();
+                setActiveTooltip('expand');
+              }}
+              onMouseLeave={(e) => {
+                e.stopPropagation();
+                setActiveTooltip(null);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setActiveTooltip(null);
+                toggleCardExpansion(relationship.name);
+              }}
+            >
+              <svg
+                className="w-4 h-4 text-[#D2AC38] hover:text-[#D2AC38]/80"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              {activeTooltip === 'expand' && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                  {isExpanded ? 'Collapse details' : 'Expand details'}
+                </div>
+              )}
+            </div>
+
+            {/* Smart Research/Lightbulb Icon */}
+            <div
+              className="p-0.5 rounded cursor-pointer relative hover:bg-purple-500/30 hover:scale-110 transition-all duration-300"
+              onMouseEnter={(e) => {
+                e.stopPropagation();
+                setActiveTooltip('smart-research');
+              }}
+              onMouseLeave={(e) => {
+                e.stopPropagation();
+                setActiveTooltip(null);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setActiveTooltip(null);
+                // openWithContext functionality would go here
+              }}
+            >
+              <svg className="w-4 h-4 text-purple-400 hover:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" strokeWidth={2}/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M8 11h6m-3-3v6"/>
+              </svg>
+              {activeTooltip === 'smart-research' && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                  AI engages context-driven research
+                </div>
+              )}
+            </div>
+
+            {/* Document Attachment Icon */}
+            <div
+              className="p-0.5 rounded cursor-pointer relative hover:bg-cyan-500/30 hover:scale-110 transition-all duration-300"
+              onMouseEnter={(e) => {
+                e.stopPropagation();
+                setActiveTooltip('attach');
+              }}
+              onMouseLeave={(e) => {
+                e.stopPropagation();
+                setActiveTooltip(null);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setActiveTooltip(null);
+                // File upload functionality would go here
+              }}
+            >
+              <svg className="w-4 h-4 text-cyan-400 hover:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+              {activeTooltip === 'attach' && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                  Attach documents for your knowledge base
+                </div>
+              )}
+            </div>
+
+            {/* Document Manager/Folder */}
+            <div
+              className="p-0.5 rounded cursor-pointer relative hover:bg-teal-500/30 hover:scale-110 transition-all duration-300"
+              onMouseEnter={(e) => {
+                e.stopPropagation();
+                setActiveTooltip('folder');
+              }}
+              onMouseLeave={(e) => {
+                e.stopPropagation();
+                setActiveTooltip(null);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setActiveTooltip(null);
+                // Knowledge base functionality would go here
+              }}
+            >
+              <svg className="w-4 h-4 text-teal-400 hover:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+              {activeTooltip === 'folder' && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                  View contents of your knowledge base
+                </div>
+              )}
+            </div>
+
+            {/* Award Grain - Go Deeper */}
+            <div
+              className="p-0.5 rounded cursor-pointer relative hover:bg-orange-500/30 hover:scale-110 transition-all duration-300"
+              onMouseEnter={(e) => {
+                e.stopPropagation();
+                setActiveTooltip('award-grain');
+              }}
+              onMouseLeave={(e) => {
+                e.stopPropagation();
+                setActiveTooltip(null);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setActiveTooltip(null);
+                openEventsDetail(relationship, e);
+              }}
+            >
+              <svg
+                className="w-4 h-4 text-orange-500 hover:text-orange-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                style={{
+                  animation: 'dramaticGlow 3s ease-in-out infinite alternate'
+                }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {activeTooltip === 'award-grain' && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                  View award details
+                </div>
+              )}
+            </div>
+
+            <style jsx>{`
+              @keyframes dramaticGlow {
+                0% {
+                  filter: drop-shadow(0 0 2px rgba(249, 115, 22, 0.3));
+                  transform: scale(1);
+                }
+                50% {
+                  filter: drop-shadow(0 0 16px rgba(249, 115, 22, 1)) drop-shadow(0 0 24px rgba(249, 115, 22, 0.8));
+                  transform: scale(1.05);
+                }
+                100% {
+                  filter: drop-shadow(0 0 2px rgba(249, 115, 22, 0.3));
+                  transform: scale(1);
+                }
+              }
+            `}</style>
+
+          </div>
+        </div>
+
+        {/* Expanded Content Section */}
+        {isExpanded && (
+          <div className="relative z-10 p-4">
+            {/* Financial Metrics Grid - Following asset card pattern */}
+            <div className="grid grid-cols-4 gap-4">
+              <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
+                <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Lifetime</span>
+                <span className="font-bold text-xl block" style={{ color: '#F97316' }}>${(relationship.totalValue / 1000000).toFixed(0)}M</span>
+              </div>
+              <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
+                <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Active</span>
+                <span className="font-bold text-xl block" style={{ color: '#FFB84D' }}>${(awardedAmount / 1000000).toFixed(0)}M</span>
+              </div>
+              <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
+                <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Obligations</span>
+                <span className="font-bold text-xl block" style={{ color: '#10B981' }}>${(obligatedAmount / 1000000).toFixed(0)}M</span>
+              </div>
+              <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
+                <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Utilization</span>
+                <span className="font-bold text-xl block" style={{
+                  color: obligationRate <= 25 ? '#10B981' : obligationRate <= 50 ? '#84cc16' : obligationRate <= 75 ? '#eab308' : '#dc2626'
+                }}>{Math.round(obligationRate)}%</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Render function for contract details
@@ -273,13 +654,13 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
       if (remainingMonths <= 3) return '#dc2626'; // Red
       if (remainingMonths <= 6) return '#eab308'; // Yellow
       if (remainingMonths <= 12) return '#84cc16'; // Chartreuse
-      return '#15803d'; // Forest green
+      return '#10B981'; // Emerald green
     };
 
     // Utilization color (inverted - 0% is green, 100% is red)
     const getUtilizationColor = () => {
       const util = Math.min(100, contract.utilization);
-      if (util <= 25) return '#15803d'; // Forest green
+      if (util <= 25) return '#10B981'; // Emerald green
       if (util <= 50) return '#84cc16'; // Chartreuse
       if (util <= 75) return '#eab308'; // Yellow
       return '#dc2626'; // Red
@@ -325,7 +706,7 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
 
             {/* Value */}
             <div className="text-right">
-              <div className="text-[20px] font-bold" style={{ color: '#15803d' }}>
+              <div className="text-[20px] font-bold" style={{ color: '#10B981' }}>
                 {contract.currentValue}
               </div>
               {contract.totalValue !== contract.currentValue && (
@@ -425,7 +806,7 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
         {/* Stacked Inner Containers */}
         <div className="space-y-4">
           {/* Contract Inflows Container - Enhanced */}
-          <div className="flex-1 overflow-auto rounded-xl border border-gray-700" style={{ backgroundColor: '#223040' }}>
+          <div className="flex-1 overflow-visible rounded-xl border border-gray-700" style={{ backgroundColor: '#223040' }}>
             <div className="p-4">
 
               <div className="mb-3">
@@ -436,319 +817,21 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
 
               <div className="space-y-2">
                 {/* Agencies Section */}
-                {sortedInflowRelationships.agencies.map((relationship) => (
-                  <div key={relationship.name}
-                       style={{ backgroundColor: '#03070F' }} className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group relative">
-                    {/* Color accent bar like metric cards */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[2px]"
-                         style={{ backgroundColor: '#22c55e' }} />
-
-                    <div
-                      className="p-2.5 transition-all"
-                    >
-
-                      {/* Redesigned Layout - Better Space Utilization */}
-                      <div className="relative">
-                        {/* Main content area */}
-                        <div className="space-y-3">
-                          {/* Layout with proper alignment */}
-                          <div className="flex justify-between">
-                            <div className="flex items-center flex-1">
-                              {/* Name and Type */}
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-base text-white font-medium">
-                                    {relationship.name}
-                                  </div>
-                                  <div className={`px-1.5 py-0.5 rounded-full border text-[10px] font-medium uppercase tracking-wide ${
-                                    relationship.type === 'agency'
-                                      ? 'bg-[#9B7EBD]/20 border-[#9B7EBD]/40 text-[#9B7EBD]'
-                                      : 'bg-[#5BC0EB]/20 border-[#5BC0EB]/40 text-[#5BC0EB]'
-                                  }`}>
-                                    {relationship.type === 'agency' ? 'Agency' : 'Prime'}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Right Side: Clean Financial Flow */}
-                            <div className="flex items-center mr-15">
-                              {(() => {
-                                const awardedAmount = relationship.totalValue * 0.85;
-                                const obligationRate = relationship.contracts.reduce((sum: number, contract: any) => sum + contract.utilization, 0) / relationship.contracts.length;
-                                const obligatedAmount = awardedAmount * (obligationRate / 100);
-
-                                // Color based on obligation level
-                                const getObligationColor = () => {
-                                  if (obligationRate <= 25) return '#15803d'; // Forest green
-                                  if (obligationRate <= 50) return '#84cc16'; // Chartreuse
-                                  if (obligationRate <= 75) return '#eab308'; // Yellow
-                                  return '#dc2626'; // Red
-                                };
-
-                                return (
-                                  <>
-                                    {/* Lifetime */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-sm font-medium text-gray-500 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        ${(relationship.totalValue / 1000000).toFixed(0)}M
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Lifetime
-                                      </div>
-                                    </div>
-
-                                    {/* Subtle Separator */}
-                                    <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-                                    {/* Awarded */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-base font-bold text-white leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        ${(awardedAmount / 1000000).toFixed(0)}M
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Active
-                                      </div>
-                                    </div>
-
-                                    {/* Subtle Separator */}
-                                    <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-
-                                    {/* Utilization Percentage */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-sm font-bold leading-none" style={{ color: getObligationColor(), fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        {Math.round(obligationRate)}%
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Utilization
-                                      </div>
-                                    </div>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          </div>
-
-                          {/* Bottom Row: Timeline - Constrained to values box width */}
-                          {relationship.earliestStart && relationship.latestEnd && (() => {
-                            const today = new Date('2025-09-19');
-                            const totalDuration = relationship.latestEnd.getTime() - relationship.earliestStart.getTime();
-                            const elapsed = today.getTime() - relationship.earliestStart.getTime();
-                            const progressPercent = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
-
-                            return (
-                              <div className="mr-15 space-y-2">
-                                <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-300"
-                                    style={{
-                                      width: `${Math.max(progressPercent, 3)}%`,
-                                      backgroundColor: progressPercent <= 25 ? '#15803d' : progressPercent <= 50 ? '#84cc16' : progressPercent <= 75 ? '#eab308' : '#dc2626'
-                                    }}
-                                  />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <div className="text-xs text-gray-300" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                    <span className="text-gray-500">Performance Period:</span>
-                                    <span className="ml-2">
-                                      {relationship.earliestStart.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                                    </span>
-                                    <span className="mx-2">-</span>
-                                    <span>
-                                      {relationship.latestEnd.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                                    </span>
-                                  </div>
-                                  <span className="text-xs text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                    {Math.round(progressPercent)}% Elapsed
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
-
-                        {/* Right Arrow - Opens Events Detail View */}
-                        <div
-                          className="absolute right-[10px] top-1/2 transform -translate-y-1/2 cursor-pointer"
-                          onClick={(e) => openEventsDetail(relationship, e)}
-                        >
-                          <div className="w-8 h-8 bg-gray-700/50 rounded-full flex items-center justify-center hover:bg-gray-600/60 transition-colors">
-                            <svg className="w-4 h-4 text-gray-400 hover:text-gray-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {expandedRelationships.has(relationship.name) && (
-                      <div className="border-t border-gray-700/30">
-                        {relationship.contracts.map((contract: any) => renderContractDetails(contract))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {sortedInflowRelationships.agencies.map((relationship) =>
+                  renderRelationshipCard(relationship, 'inflow')
+                )}
 
 
                 {/* Prime Contractors Section */}
-                {sortedInflowRelationships.primes.map((relationship) => (
-                  <div key={relationship.name}
-                       style={{ backgroundColor: '#03070F' }} className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group relative">
-                    {/* Color accent bar like metric cards */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[2px]"
-                         style={{ backgroundColor: '#22c55e' }} />
-
-                    <div
-                      className="p-2.5 transition-all"
-                    >
-
-                      {/* Redesigned Layout - Better Space Utilization */}
-                      <div className="relative">
-                        {/* Main content area */}
-                        <div className="space-y-3">
-                          {/* Layout with proper alignment */}
-                          <div className="flex justify-between">
-                            <div className="flex items-center flex-1">
-                              {/* Name and Type */}
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-base text-white font-medium">
-                                    {relationship.name}
-                                  </div>
-                                  <div className={`px-1.5 py-0.5 rounded-full border text-[10px] font-medium uppercase tracking-wide ${
-                                    relationship.type === 'agency'
-                                      ? 'bg-[#9B7EBD]/20 border-[#9B7EBD]/40 text-[#9B7EBD]'
-                                      : 'bg-[#5BC0EB]/20 border-[#5BC0EB]/40 text-[#5BC0EB]'
-                                  }`}>
-                                    {relationship.type === 'agency' ? 'Agency' : 'Prime'}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Right Side: Clean Financial Flow */}
-                            <div className="flex items-center mr-15">
-                              {(() => {
-                                const awardedAmount = relationship.totalValue * 0.85;
-                                const obligationRate = relationship.contracts.reduce((sum: number, contract: any) => sum + contract.utilization, 0) / relationship.contracts.length;
-                                const obligatedAmount = awardedAmount * (obligationRate / 100);
-
-                                // Color based on obligation level
-                                const getObligationColor = () => {
-                                  if (obligationRate <= 25) return '#15803d'; // Forest green
-                                  if (obligationRate <= 50) return '#84cc16'; // Chartreuse
-                                  if (obligationRate <= 75) return '#eab308'; // Yellow
-                                  return '#dc2626'; // Red
-                                };
-
-                                return (
-                                  <>
-                                    {/* Lifetime */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-sm font-medium text-gray-500 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        ${(relationship.totalValue / 1000000).toFixed(0)}M
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Lifetime
-                                      </div>
-                                    </div>
-
-                                    {/* Subtle Separator */}
-                                    <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-                                    {/* Awarded */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-base font-bold text-white leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        ${(awardedAmount / 1000000).toFixed(0)}M
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Active
-                                      </div>
-                                    </div>
-
-                                    {/* Subtle Separator */}
-                                    <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-
-                                    {/* Utilization Percentage */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-sm font-bold leading-none" style={{ color: getObligationColor(), fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        {Math.round(obligationRate)}%
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Utilization
-                                      </div>
-                                    </div>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          </div>
-
-                          {/* Bottom Row: Timeline - Constrained to values box width */}
-                          {relationship.earliestStart && relationship.latestEnd && (() => {
-                            const today = new Date('2025-09-19');
-                            const totalDuration = relationship.latestEnd.getTime() - relationship.earliestStart.getTime();
-                            const elapsed = today.getTime() - relationship.earliestStart.getTime();
-                            const progressPercent = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
-
-                            return (
-                              <div className="mr-15 space-y-2">
-                                <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-300"
-                                    style={{
-                                      width: `${Math.max(progressPercent, 3)}%`,
-                                      backgroundColor: progressPercent <= 25 ? '#15803d' : progressPercent <= 50 ? '#84cc16' : progressPercent <= 75 ? '#eab308' : '#dc2626'
-                                    }}
-                                  />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <div className="text-xs text-gray-300" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                    <span className="text-gray-500">Performance Period:</span>
-                                    <span className="ml-2">
-                                      {relationship.earliestStart.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                                    </span>
-                                    <span className="mx-2">-</span>
-                                    <span>
-                                      {relationship.latestEnd.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                                    </span>
-                                  </div>
-                                  <span className="text-xs text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                    {Math.round(progressPercent)}% Elapsed
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
-
-                        {/* Right Arrow - Opens Award Grain Popup */}
-                        <div
-                          className="absolute right-[10px] top-1/2 transform -translate-y-1/2 cursor-pointer"
-                          onClick={(e) => openAwardGrain(relationship, e)}
-                        >
-                          <div className="w-8 h-8 bg-gray-700/50 rounded-full flex items-center justify-center hover:bg-gray-600/60 transition-colors">
-                            <svg className="w-4 h-4 text-gray-400 hover:text-gray-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {expandedRelationships.has(relationship.name) && (
-                      <div className="border-t border-gray-700/30">
-                        {relationship.contracts.map((contract: any) => renderContractDetails(contract))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {sortedInflowRelationships.primes.map((relationship) =>
+                  renderRelationshipCard(relationship, 'inflow')
+                )}
               </div>
             </div>
           </div>
 
           {/* Contract Outflows Container - Enhanced */}
-          <div className="flex-1 overflow-auto rounded-xl border border-gray-700" style={{ backgroundColor: '#223040' }}>
+          <div className="flex-1 overflow-visible rounded-xl border border-gray-700" style={{ backgroundColor: '#223040' }}>
             <div className="p-4">
 
               <div className="mb-3">
@@ -758,153 +841,9 @@ export function ActivityDetailPanel({ contractor, performanceData }: ActivityDet
               </div>
 
               <div className="space-y-2">
-                {outflowRelationships.map((relationship) => (
-                  <div key={relationship.name}
-                       style={{ backgroundColor: '#03070F' }} className="border border-gray-700/50 rounded-lg overflow-hidden hover:border-gray-600/40 transition-all group relative">
-                    {/* Color accent bar like metric cards */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[2px]" style={{ backgroundColor: '#FF4C4C' }} />
-
-                    <div
-                      className="p-2.5 transition-all"
-                    >
-
-                      {/* Redesigned Layout - Better Space Utilization */}
-                      <div className="relative">
-                        {/* Main content area */}
-                        <div className="space-y-3">
-                          {/* Layout with proper alignment */}
-                          <div className="flex justify-between">
-                            <div className="flex items-center flex-1">
-                              {/* Name and Type */}
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-base text-white font-medium">
-                                    {relationship.name}
-                                  </div>
-                                  <div className="px-1.5 py-0.5 rounded-full border bg-[#FF4C4C]/20 border-[#FF4C4C]/40 text-[#FF4C4C] text-[10px] font-medium uppercase tracking-wide">
-                                    Sub
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Right Side: Clean Financial Flow */}
-                            <div className="flex items-center mr-15">
-                              {(() => {
-                                const awardedAmount = relationship.totalValue * 0.75;
-                                const obligationRate = relationship.contracts.reduce((sum: number, contract: any) => sum + contract.utilization, 0) / relationship.contracts.length;
-                                const obligatedAmount = awardedAmount * (obligationRate / 100);
-
-                                // Color based on obligation level
-                                const getObligationColor = () => {
-                                  if (obligationRate <= 25) return '#15803d'; // Forest green
-                                  if (obligationRate <= 50) return '#84cc16'; // Chartreuse
-                                  if (obligationRate <= 75) return '#eab308'; // Yellow
-                                  return '#dc2626'; // Red
-                                };
-
-                                return (
-                                  <>
-                                    {/* Lifetime */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-sm font-medium text-gray-500 leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        ${(relationship.totalValue / 1000000).toFixed(0)}M
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Lifetime
-                                      </div>
-                                    </div>
-
-                                    {/* Subtle Separator */}
-                                    <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-                                    {/* Awarded */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-base font-bold text-white leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        ${(awardedAmount / 1000000).toFixed(0)}M
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Active
-                                      </div>
-                                    </div>
-
-                                    {/* Subtle Separator */}
-                                    <div className="w-px h-6 bg-gray-700/40 mx-2"></div>
-
-
-                                    {/* Utilization Percentage */}
-                                    <div className="text-center" style={{ width: '65px' }}>
-                                      <div className="text-sm font-bold leading-none" style={{ color: getObligationColor(), fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                        {Math.round(obligationRate)}%
-                                      </div>
-                                      <div className="text-[10px] uppercase tracking-wider text-gray-500 mt-0.5">
-                                        Utilization
-                                      </div>
-                                    </div>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          </div>
-
-                          {/* Bottom Row: Timeline - Constrained to values box width */}
-                          {relationship.earliestStart && relationship.latestEnd && (() => {
-                            const today = new Date('2025-09-19');
-                            const totalDuration = relationship.latestEnd.getTime() - relationship.earliestStart.getTime();
-                            const elapsed = today.getTime() - relationship.earliestStart.getTime();
-                            const progressPercent = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
-
-                            return (
-                              <div className="mr-15 space-y-2">
-                                <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-300"
-                                    style={{
-                                      width: `${Math.max(progressPercent, 3)}%`,
-                                      backgroundColor: progressPercent <= 25 ? '#15803d' : progressPercent <= 50 ? '#84cc16' : progressPercent <= 75 ? '#eab308' : '#dc2626'
-                                    }}
-                                  />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <div className="text-xs text-gray-300" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                    <span className="text-gray-500">Performance Period:</span>
-                                    <span className="ml-2">
-                                      {relationship.earliestStart.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                                    </span>
-                                    <span className="mx-2">-</span>
-                                    <span>
-                                      {relationship.latestEnd.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
-                                    </span>
-                                  </div>
-                                  <span className="text-xs text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                                    {Math.round(progressPercent)}% Elapsed
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
-
-                        {/* Right Arrow - Opens Award Grain Popup */}
-                        <div
-                          className="absolute right-[10px] top-1/2 transform -translate-y-1/2 cursor-pointer"
-                          onClick={(e) => openAwardGrain(relationship, e)}
-                        >
-                          <div className="w-8 h-8 bg-gray-700/50 rounded-full flex items-center justify-center hover:bg-gray-600/60 transition-colors">
-                            <svg className="w-4 h-4 text-gray-400 hover:text-gray-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {expandedRelationships.has(relationship.name) && (
-                      <div className="border-t border-gray-700/30">
-                        {relationship.contracts.map((contract: any) => renderContractDetails(contract))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {outflowRelationships.map((relationship) =>
+                  renderRelationshipCard(relationship, 'outflow')
+                )}
               </div>
             </div>
           </div>

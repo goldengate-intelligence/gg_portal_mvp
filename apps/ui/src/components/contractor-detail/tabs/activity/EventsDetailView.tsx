@@ -192,6 +192,9 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
       <div className="p-4 relative z-10">
         {/* Back Button and Header */}
         <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold tracking-wide text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
+            Awards: {relationship?.name}
+          </h3>
           <button
             onClick={onBack}
             className="flex items-center gap-2 px-3 py-2 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg transition-colors text-gray-300 hover:text-white"
@@ -199,9 +202,6 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm">Back to Activity</span>
           </button>
-          <h3 className="font-bold tracking-wide text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
-            Contract Events: {relationship?.name}
-          </h3>
         </div>
 
         {/* Events Container */}
