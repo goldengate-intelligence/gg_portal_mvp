@@ -24,7 +24,7 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
             {/* Left Container - Performance Scores */}
             <div className="rounded-xl backdrop-blur-sm p-4 relative" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs uppercase tracking-wider text-gray-500 font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
+                <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500">
                   PERFORMANCE SCORES
                 </h4>
                 <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
             {/* Right Container - Peer Group Details */}
             <div className="rounded-xl backdrop-blur-sm p-4 relative" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs uppercase tracking-wider text-gray-500 font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
+                <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500">
                   PEER GROUP DETAILS
                 </h4>
                 <div className="flex items-center gap-2">
@@ -210,7 +210,7 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
               {/* Strongest Attribute Container */}
               <div className="rounded-xl backdrop-blur-sm p-4" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
                 {/* Header */}
-                <h4 className="text-xs uppercase tracking-wider text-gray-500 mb-3 font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
+                <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500 mb-3">
                   STRONGEST ATTRIBUTE
                 </h4>
 
@@ -241,7 +241,7 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
               {/* Weakest Attribute Container */}
               <div className="rounded-xl backdrop-blur-sm p-4" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
                 {/* Header */}
-                <h4 className="text-xs uppercase tracking-wider text-gray-500 mb-3 font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
+                <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500 mb-3">
                   WEAKEST ATTRIBUTE
                 </h4>
 
