@@ -300,7 +300,7 @@ export function IntegrationTab() {
                             }}
                           >
                             <Bot className="w-4 h-4 mr-2" />
-                            Configure Integration
+                            AI Configuration
                           </Button>
                         </div>
                       </div>

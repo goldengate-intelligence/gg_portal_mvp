@@ -38,8 +38,8 @@ export function NetworkDistributionPanel({
                   Network Contracting
                 </h4>
                 <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(0,255,136,0.5)]" />
-                  <span className="text-[10px] text-green-400 font-light" style={{ fontFamily: 'Genos, sans-serif', letterSpacing: '0.0125em' }}>
+                  <span className="w-1.5 h-1.5 bg-[#22c55e] rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                  <span className="text-[10px] text-[#22c55e] font-light" style={{ fontFamily: 'Genos, sans-serif', letterSpacing: '0.0125em' }}>
                     TRACKING
                   </span>
                 </div>
@@ -53,13 +53,13 @@ export function NetworkDistributionPanel({
                   <div className="text-center">
                     <div className="text-[12px] uppercase tracking-wider text-[#9B7EBD]" style={{ fontFamily: 'Genos, sans-serif' }}>Agency Direct Awards</div>
                     <div className="py-0.5">
-                      <div className="font-bold text-green-400 leading-tight" style={{ fontSize: '38px' }}>$50M</div>
+                      <div className="font-bold text-[#22c55e] leading-tight" style={{ fontSize: '38px' }}>$50M</div>
                     </div>
                   </div>
                   <div className="text-center">
                     <div className="text-[12px] uppercase tracking-wider text-[#5BC0EB]" style={{ fontFamily: 'Genos, sans-serif' }}>Prime Sub Awards</div>
                     <div className="py-0.5">
-                      <div className="font-bold text-green-400 leading-tight" style={{ fontSize: '38px' }}>
+                      <div className="font-bold text-[#22c55e] leading-tight" style={{ fontSize: '38px' }}>
                         ${formatMoney((networkData.relationships?.asSubcontractor?.totalValue || 0) / 1000000)}M
                       </div>
                     </div>
@@ -91,7 +91,7 @@ export function NetworkDistributionPanel({
                         <div className="bg-black/40 rounded-lg p-2 border border-[#9B7EBD]/20 hover:border-[#9B7EBD]/40 transition-colors">
                           <div className="text-xs text-gray-300 font-medium">Department of Defense</div>
                           <div className="flex items-center justify-between mt-1">
-                            <div className="text-base text-green-400 font-semibold">$50M</div>
+                            <div className="text-base text-[#22c55e] font-semibold">$50M</div>
                             <div className="text-[10px] text-[#9B7EBD]">100%</div>
                           </div>
                         </div>
@@ -109,7 +109,7 @@ export function NetworkDistributionPanel({
                           <div key={`prime-${index}`} className="bg-black/40 rounded-lg p-2 border border-[#5BC0EB]/20 hover:border-[#5BC0EB]/40 transition-colors">
                             <div className="text-xs text-gray-300 font-medium">{partner.primeName}</div>
                             <div className="flex items-center justify-between mt-1">
-                              <div className="text-base text-green-400 font-semibold">
+                              <div className="text-base text-[#22c55e] font-semibold">
                                 ${formatMoney(partner.sharedRevenue / 1000000)}M
                               </div>
                               <div className="text-[10px] text-[#5BC0EB]">
@@ -157,8 +157,8 @@ export function NetworkDistributionPanel({
                   Network Locations
                 </h4>
                 <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(0,255,136,0.5)]" />
-                  <span className="text-[10px] text-green-400 font-light" style={{ fontFamily: 'Genos, sans-serif', letterSpacing: '0.0125em' }}>
+                  <span className="w-1.5 h-1.5 bg-[#22c55e] rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                  <span className="text-[10px] text-[#22c55e] font-light" style={{ fontFamily: 'Genos, sans-serif', letterSpacing: '0.0125em' }}>
                     TRACKING
                   </span>
                 </div>
@@ -213,7 +213,7 @@ export function NetworkDistributionPanel({
                         zip: '80202',
                         coords: [-104.9903, 39.7392],
                         type: 'performance',
-                        color: '#4ade80',
+                        color: '#22c55e',
                         name: 'Department of Defense',
                         location: 'Denver, CO 80202'
                       },
@@ -221,7 +221,7 @@ export function NetworkDistributionPanel({
                         zip: '80521',
                         coords: [-105.0875, 40.5853],
                         type: 'performance',
-                        color: '#4ade80',
+                        color: '#22c55e',
                         name: 'Department of Defense',
                         location: 'Fort Collins, CO 80521'
                       },
@@ -229,7 +229,7 @@ export function NetworkDistributionPanel({
                         zip: '66502',
                         coords: [-96.5560, 39.0119],
                         type: 'performance',
-                        color: '#4ade80',
+                        color: '#22c55e',
                         name: 'Department of Defense',
                         location: 'Manhattan, KS 66502'
                       },
@@ -239,7 +239,7 @@ export function NetworkDistributionPanel({
                         zip: '23185',
                         coords: [-76.4935, 37.2707],
                         type: 'performance',
-                        color: '#4ade80',
+                        color: '#22c55e',
                         name: networkData.relationships?.asSubcontractor?.partners?.[0]?.primeName || 'MegaCorp Industries',
                         location: 'Williamsburg, VA 23185'
                       },
@@ -247,7 +247,7 @@ export function NetworkDistributionPanel({
                         zip: '31905',
                         coords: [-84.9771, 32.3809],
                         type: 'performance',
-                        color: '#4ade80',
+                        color: '#22c55e',
                         name: networkData.relationships?.asSubcontractor?.partners?.[0]?.primeName || 'MegaCorp Industries',
                         location: 'Columbus, GA 31905'
                       },
@@ -255,7 +255,7 @@ export function NetworkDistributionPanel({
                         zip: '92134',
                         coords: [-117.1434, 32.7157],
                         type: 'performance',
-                        color: '#4ade80',
+                        color: '#22c55e',
                         name: networkData.relationships?.asSubcontractor?.partners?.[1]?.primeName || 'Global Defense Systems',
                         location: 'San Diego, CA 92134'
                       },
@@ -263,7 +263,7 @@ export function NetworkDistributionPanel({
                         zip: '85365',
                         coords: [-114.3935, 33.5778],
                         type: 'performance',
-                        color: '#4ade80',
+                        color: '#22c55e',
                         name: networkData.relationships?.asSubcontractor?.partners?.[1]?.primeName || 'Global Defense Systems',
                         location: 'Yuma, AZ 85365'
                       },
@@ -416,8 +416,8 @@ export function NetworkDistributionPanel({
                     <span className="text-[#FF4C4C]">Child HQ</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                    <span className="text-green-400">Place of Performance</span>
+                    <div className="w-2 h-2 rounded-full bg-[#22c55e]"></div>
+                    <span className="text-[#22c55e]">Place of Performance</span>
                   </div>
                 </div>
               </div>

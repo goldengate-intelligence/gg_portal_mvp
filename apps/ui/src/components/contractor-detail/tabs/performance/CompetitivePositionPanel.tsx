@@ -81,7 +81,7 @@ export function CompetitivePositionPanel({
           return Math.random() * 500 + 50; // 50M to 550M
         }
       })(),
-      r: 2
+      r: 4
     }));
   };
 
@@ -157,7 +157,7 @@ export function CompetitivePositionPanel({
                           return 300; // Default value in millions
                         }
                       })(),
-                      r: 4
+                      r: 8
                     }],
                     backgroundColor: 'rgba(210, 172, 56, 0.8)',
                     borderColor: '#D2AC38',
@@ -195,7 +195,7 @@ export function CompetitivePositionPanel({
                             border-radius: 6px;
                             color: white;
                             opacity: 1;
-                            pointer-events: none;
+                            pointer-events: auto;
                             position: absolute;
                             transform: translate(-50%, 0);
                             transition: all .1s ease;
@@ -205,6 +205,15 @@ export function CompetitivePositionPanel({
                             z-index: 9999;
                             min-width: 200px;
                           `;
+
+                          // Add event listeners to keep tooltip visible when hovering
+                          tooltipEl.addEventListener('mouseenter', () => {
+                            tooltipEl.style.opacity = '1';
+                          });
+
+                          tooltipEl.addEventListener('mouseleave', () => {
+                            tooltipEl.style.opacity = '0';
+                          });
                           document.body.appendChild(tooltipEl);
                         }
 
@@ -246,8 +255,11 @@ export function CompetitivePositionPanel({
                           const xValueColor = isPeerEntity ? '#FF4444' : '#FFFFFF';
                           const yValueColor = '#D2AC38';
 
+                          const clickableStyle = isPeerEntity ? 'cursor: pointer; text-decoration: underline;' : '';
+                          const clickHandler = isPeerEntity ? `onclick="window.location.href='/contractor-detail/${uei}'"` : '';
+
                           tooltipEl.innerHTML = `
-                            <div style="font-weight: bold; margin-bottom: 6px; color: #D2AC38;">${entityName}</div>
+                            <div style="font-weight: bold; margin-bottom: 6px; color: #D2AC38; ${clickableStyle}" ${clickHandler}>${entityName}</div>
                             <div style="color: #9CA3AF; font-size: 10px; margin-bottom: 8px;">${uei}</div>
                             <div style="font-size: 11px;">
                               <div style="margin-bottom: 2px; display: flex; justify-content: space-between;"><span>${xAxisLabel}:</span> <span style="color: ${xValueColor}; font-weight: bold;">${xValue}</span></div>

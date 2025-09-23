@@ -163,8 +163,8 @@ I'll help you configure Smart Search to maximize your research efficiency!
             {/* Header */}
             <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-700">
               <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-[#D2AC38]" />
-                <h3 className="text-white font-medium">Archived Chats</h3>
+                <History className="w-6 h-6 text-[#D2AC38]" />
+                <h3 className="text-white font-semibold text-lg">Archived Chats</h3>
               </div>
               <button
                 onClick={() => setShowQueryHistory(false)}

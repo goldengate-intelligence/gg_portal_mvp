@@ -404,7 +404,7 @@ export function AssetCardNew({
                       <div className="font-normal text-[#F97316]/90 text-xs">
                         {(() => {
                           // Generate award count based on contractor metrics or default
-                          const awards = contractorMetrics?.activeAwards || Math.floor(Math.random() * 5) + 2; // 2-6 awards
+                          const awards = contractorMetrics?.contractCount || Math.floor(Math.random() * 5) + 2; // 2-6 awards
 
                           // Generate work summary based on NAICS
                           const getWorkSummary = () => {
@@ -417,7 +417,7 @@ export function AssetCardNew({
                             return 'Multi-sector Operations';
                           };
 
-                          return `${awards} Award${awards !== 1 ? 's' : ''} • ${getWorkSummary()}`;
+                          return `${awards} Active Award${awards !== 1 ? 's' : ''} • ${getWorkSummary()}`;
                         })()}
                       </div>
                       <div className={`px-2 py-0.5 rounded-full text-xs transition-all duration-300 hover:scale-105 ${isDefenseContractor ? 'text-red-400 bg-red-400/10 hover:bg-red-400/20 hover:text-red-300' : 'text-teal-400 bg-teal-400/10 hover:bg-teal-400/20 hover:text-teal-300'}`}>
@@ -441,11 +441,7 @@ export function AssetCardNew({
           }`}>
                 {/* Expand/Collapse Indicator */}
                 <div
-                  className={`p-0.5 rounded cursor-pointer relative ${
-                    isModalOpen ? '' : 'hover:bg-[#D2AC38]/30 hover:scale-110 transition-all duration-300'
-                  } ${
-                    isExpanded ? 'rotate-180' : 'rotate-0'
-                  }`}
+                  className="relative"
                   onMouseEnter={(e) => {
                     e.stopPropagation();
                     if (!isModalOpen) setActiveTooltip('expand');
@@ -454,23 +450,31 @@ export function AssetCardNew({
                     e.stopPropagation();
                     if (!isModalOpen) setActiveTooltip(null);
                   }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setActiveTooltip(null);
-                    if (onToggleExpanded) onToggleExpanded();
-                  }}
                 >
-                  <svg 
-                    className="w-4 h-4 text-[#D2AC38] hover:text-[#D2AC38]/80" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+                  <div
+                    className={`p-0.5 rounded cursor-pointer ${
+                      isModalOpen ? '' : 'hover:bg-[#D2AC38]/30 hover:scale-110 transition-all duration-300'
+                    } ${
+                      isExpanded ? 'rotate-180' : 'rotate-0'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setActiveTooltip(null);
+                      if (onToggleExpanded) onToggleExpanded();
+                    }}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                    <svg
+                      className="w-4 h-4 text-[#D2AC38] hover:text-[#D2AC38]/80"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                   {activeTooltip === 'expand' && !isModalOpen && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                    <div className="absolute px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap" style={{ zIndex: 9999, top: isExpanded ? 'calc(100% + 8px)' : 'auto', bottom: isExpanded ? 'auto' : 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)' }}>
                       {isExpanded ? 'Collapse details' : 'Expand details'}
                     </div>
                   )}
@@ -500,7 +504,7 @@ export function AssetCardNew({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M8 11h6m-3-3v6"/>
                   </svg>
                   {activeTooltip === 'smart-research' && !isModalOpen && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                    <div className="absolute px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap" style={{ zIndex: 9999, bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)' }}>
                       AI engages context-driven research
                     </div>
                   )}
@@ -530,7 +534,7 @@ export function AssetCardNew({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                   {activeTooltip === 'attach' && !isModalOpen && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                    <div className="absolute px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap" style={{ zIndex: 9999, bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)' }}>
                       Attach documents for your knowledge base
                     </div>
                   )}
@@ -560,7 +564,7 @@ export function AssetCardNew({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                   </svg>
                   {activeTooltip === 'folder' && !isModalOpen && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                    <div className="absolute px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap" style={{ zIndex: 9999, bottom: 'calc(100% + 10px)', right: '0', transform: 'translateX(0)' }}>
                       View contents of your knowledge base
                     </div>
                   )}
@@ -592,7 +596,7 @@ export function AssetCardNew({
                     isPinned ? 'fill-orange-400/50' : ''
                   }`} />
                   {activeTooltip === 'pin' && !isModalOpen && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap z-[200]">
+                    <div className="absolute px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap" style={{ zIndex: 9999, bottom: 'calc(100% + 10px)', right: '0', transform: 'translateX(0)' }}>
                       {isPinned ? 'Unpin this entity' : 'Pin this entity'}
                     </div>
                   )}
