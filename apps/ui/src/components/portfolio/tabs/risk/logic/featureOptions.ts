@@ -32,32 +32,46 @@ export const featureOptions: Record<string, FeatureOption> = {
     category: 'activity'
   },
   // Performance Monitoring Features (for range-based monitoring)
-  'revenue_ttm': {
-    label: 'Revenue TTM',
-    description: 'Trailing twelve months revenue performance tracking',
+  'composite_score': {
+    label: 'Composite Score',
+    description: '80th percentile among 247 peers in Q4 with primary NAICS of 332312',
+    unit: 'pts',
+    defaultType: 'range',
+    category: 'performance'
+  },
+  'awards_captured_ttm': {
+    label: 'Awards Captured (TTM)',
+    description: 'Total value of awards captured in trailing twelve months',
     unit: '$M',
     defaultType: 'range',
     category: 'performance'
   },
-  'performance_score': {
-    label: 'Performance Score',
-    description: 'Composite performance rating based on delivery, quality, and timeline metrics',
-    unit: 'pts',
+  'estimated_revenue_ttm': {
+    label: 'Estimated Revenue (TTM)',
+    description: 'Estimated revenue for trailing twelve months',
+    unit: '$M',
+    defaultType: 'range',
+    category: 'performance'
+  },
+  'total_pipeline': {
+    label: 'Total Pipeline',
+    description: 'Total value of opportunities in sales pipeline',
+    unit: '$M',
     defaultType: 'range',
     category: 'performance'
   },
   'portfolio_duration': {
     label: 'Portfolio Duration',
-    description: 'Average duration of contracts in the entity\'s current portfolio',
+    description: 'Average duration of contracts in current portfolio',
     unit: 'yrs',
     defaultType: 'range',
     category: 'performance'
   },
-  'risk_exposure': {
-    label: 'Risk Exposure',
-    description: 'Overall risk assessment combining financial, operational, and market factors',
-    unit: 'risk',
-    defaultType: 'central_band',
+  'blended_growth': {
+    label: 'Blended Growth',
+    description: 'Blended growth rate across all business segments',
+    unit: '%',
+    defaultType: 'range',
     category: 'performance'
   },
   // Utilization Monitoring Features (for utilization-based monitoring)

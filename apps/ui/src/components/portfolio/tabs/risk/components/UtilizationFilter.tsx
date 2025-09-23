@@ -114,7 +114,7 @@ export function UtilizationFilter({
       </div>
 
       {/* Entity and Feature Selection */}
-      <div className="rounded-lg p-4 border border-gray-700 mb-6" style={{ backgroundColor: '#223040' }}>
+      <div className="rounded-lg p-4 border border-gray-700 mb-6" style={{ backgroundColor: '#111827' }}>
         <h4 className="text-sm font-medium text-gray-200 mb-3">Filter Target</h4>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -165,7 +165,7 @@ export function UtilizationFilter({
       </div>
 
       {/* Basic Central Band Controls */}
-      <div className="rounded-lg p-4 border border-gray-700 mb-6" style={{ backgroundColor: '#223040' }}>
+      <div className="rounded-lg p-4 border border-gray-700 mb-6" style={{ backgroundColor: '#111827' }}>
         <h4 className="text-sm font-medium text-gray-200 mb-3">Central Band Configuration</h4>
         <div className="space-y-3">
           <div className="flex items-center space-x-3">

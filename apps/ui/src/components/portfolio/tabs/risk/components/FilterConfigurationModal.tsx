@@ -33,7 +33,7 @@ export function FilterConfigurationModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6 pt-20">
-      <div className="bg-gray-900 border border-[#8B8EFF]/30 rounded-xl p-6 w-full max-w-5xl max-h-[85vh] overflow-y-auto my-auto">
+      <div className="border border-gray-700 rounded-xl p-6 w-full max-w-5xl max-h-[85vh] overflow-y-auto my-auto" style={{ backgroundColor: '#111827' }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -85,7 +85,7 @@ export function FilterConfigurationModal({
           </Button>
           <Button
             onClick={onSaveSettings}
-            className="flex-1 bg-[#8B8EFF]/20 hover:bg-[#8B8EFF]/30 text-[#8B8EFF] border border-[#8B8EFF]/40"
+            className="flex-1 bg-gray-600/20 hover:bg-gray-500/30 text-gray-300 border border-gray-600/40"
           >
             <Check className="w-4 h-4 mr-2" />
             Save Settings

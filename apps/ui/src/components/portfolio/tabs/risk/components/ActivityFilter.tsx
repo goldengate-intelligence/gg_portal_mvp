@@ -53,19 +53,40 @@ export function ActivityFilter({
         console.log('Created baseline and log:', { baseline, log });
       }
 
-      // Save the filter configuration
-      const newFilter: SavedActivityFilter = {
-        id: `activity-${Date.now()}`,
-        name: tempSettings.activity.name || `Activity Filter ${savedFilters.length + 1}`,
-        config: { ...tempSettings.activity },
-        createdAt: new Date()
-      };
+      // Generate filter name
+      const entityName = tempSettings.activity.entityId
+        ? portfolioAssets.find(a => a.uei === tempSettings.activity.entityId)?.companyName || 'Unknown Entity'
+        : 'All Entities';
 
-      setSavedFilters(prev => [...prev, newFilter]);
-      setActiveTab(newFilter.id);
+      const featureName = featureOptions[tempSettings.activity.feature]?.label || tempSettings.activity.feature;
+
+      if (isCreatingFilter) {
+        // Create new filter
+        const newFilter: SavedActivityFilter = {
+          id: `activity-${Date.now()}`,
+          name: `${entityName} ${featureName}`,
+          config: { ...tempSettings.activity },
+          createdAt: new Date()
+        };
+
+        setSavedFilters(prev => [...prev, newFilter]);
+        setActiveTab(newFilter.id);
+        console.log('Created new activity filter:', newFilter);
+      } else if (activeTab) {
+        // Update existing filter
+        setSavedFilters(prev => prev.map(filter =>
+          filter.id === activeTab
+            ? {
+                ...filter,
+                name: `${entityName} ${featureName}`,
+                config: { ...tempSettings.activity }
+              }
+            : filter
+        ));
+        console.log('Updated existing activity filter:', activeTab);
+      }
+
       setIsCreatingFilter(false);
-
-      console.log('Saved activity filter:', newFilter);
     } catch (error) {
       console.error('Error saving activity filter:', error);
     }
@@ -77,6 +98,7 @@ export function ActivityFilter({
       activity: { ...filter.config }
     }));
     setActiveTab(filter.id);
+    setIsCreatingFilter(false);
   };
 
   const deleteFilter = (filterId: string) => {
@@ -92,7 +114,7 @@ export function ActivityFilter({
       {savedFilters.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-gray-400 uppercase tracking-wider">Saved Activity Filters</span>
+            <span className="text-xs text-gray-400 uppercase tracking-wider">Active Filters</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {savedFilters.map((filter) => (
@@ -133,17 +155,17 @@ export function ActivityFilter({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xl font-semibold text-white">
-            {tempSettings.activity.name}
+            Activity Monitoring
           </h3>
           <div className="text-sm px-3 py-1 bg-orange-500/20 text-orange-400 rounded-lg border border-orange-500/30 font-medium">
             THRESHOLD MONITORING
           </div>
         </div>
-        <p className="text-sm text-gray-400 leading-relaxed">{tempSettings.activity.description}</p>
+        <p className="text-sm text-gray-400 leading-relaxed">Monitor selected activity types for your assets</p>
       </div>
 
       {/* Entity and Feature Selection */}
-      <div className="rounded-lg p-4 border border-gray-700 mb-6" style={{ backgroundColor: '#223040' }}>
+      <div className="rounded-lg p-4 border border-gray-700 mb-6" style={{ backgroundColor: '#111827' }}>
         <h4 className="text-sm font-medium text-gray-200 mb-3">Filter Target</h4>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -192,7 +214,7 @@ export function ActivityFilter({
       </div>
 
       {/* Alert Threshold Configuration */}
-      <div className="rounded-lg p-4 border border-gray-700 mb-6" style={{ backgroundColor: '#223040' }}>
+      <div className="rounded-lg p-4 border border-gray-700 mb-6" style={{ backgroundColor: '#111827' }}>
         <h4 className="text-sm font-medium text-gray-200 mb-3">Alert Threshold</h4>
         <div className="space-y-3">
           <div className="flex items-center space-x-3">

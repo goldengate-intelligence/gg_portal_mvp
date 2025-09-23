@@ -33,15 +33,23 @@ interface Event {
 
 interface EventsDetailViewProps {
   relationship: any;
+  type: 'inflow' | 'outflow';
   onBack: () => void;
 }
 
-export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps) {
+export function EventsDetailView({ relationship, type, onBack }: EventsDetailViewProps) {
   const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null);
-  const [expandedAwards, setExpandedAwards] = React.useState<Set<string>>(new Set());
+  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
 
-  // Mock awards data - in production this would come from props or API
-  const mockAwards: Event[] = [
+  // Terminology based on relationship type
+  const terminology = {
+    container: type === 'outflow' ? 'Unique Order Count' : 'Unique Award Count',
+    title: type === 'outflow' ? 'Vendor Orders' : 'Awards',
+    items: type === 'outflow' ? 'Orders' : 'Awards'
+  };
+
+  // Mock data - in production this would come from props or API
+  const mockEvents: Event[] = [
     {
       event_type: 'PRIME',
       event_date: '2025-09-05', // HOT - 14 days ago
@@ -202,14 +210,14 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
     return '#dc2626'; // Red (75-100%)
   };
 
-  const toggleAwardExpansion = (awardId: string) => {
-    const newExpanded = new Set(expandedAwards);
-    if (newExpanded.has(awardId)) {
-      newExpanded.delete(awardId);
+  const toggleItemExpansion = (itemId: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId);
     } else {
-      newExpanded.add(awardId);
+      newExpanded.add(itemId);
     }
-    setExpandedAwards(newExpanded);
+    setExpandedItems(newExpanded);
   };
 
   const getTemperatureStatus = (actionDate: string) => {
@@ -228,7 +236,7 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
         {/* Back Button and Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold tracking-wide text-gray-200 uppercase" style={{ fontFamily: 'Genos, sans-serif', fontSize: '18px' }}>
-            Awards: {relationship?.name}
+            {terminology.title} • {relationship?.name}
           </h3>
           <button
             onClick={onBack}
@@ -239,28 +247,28 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
           </button>
         </div>
 
-        {/* Awards Container */}
+        {/* Awards/Orders Container */}
         <div className="flex-1 overflow-auto rounded-xl border border-gray-700" style={{ backgroundColor: '#223040' }}>
           <div className="p-4">
             <div className="mb-3">
               <h5 className="text-sm font-semibold text-gray-400 uppercase tracking-wider" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                Unique Award Count • {mockAwards.length}
+                {terminology.container} • {mockEvents.length}
               </h5>
             </div>
 
             <>
               <div className="space-y-2">
-                {mockAwards
+                {mockEvents
                   .sort((a, b) => {
                     // Sort by most recent event_date first (newest to oldest)
                     const dateA = new Date(a.event_date);
                     const dateB = new Date(b.event_date);
                     return dateB.getTime() - dateA.getTime();
                   })
-                  .map((award, index) => {
-                const awardKey = award.award_piid;
-                const isExpanded = expandedAwards.has(awardKey);
-                const tempStatus = getTemperatureStatus(award.event_date);
+                  .map((event, index) => {
+                const eventKey = event.award_piid;
+                const isExpanded = expandedItems.has(eventKey);
+                const tempStatus = getTemperatureStatus(event.event_date);
 
                 return (
                   <div
@@ -277,7 +285,7 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
                     onMouseLeave={(e) => {
                       e.currentTarget.style.boxShadow = `0 0 0 1px ${tempStatus.color}40`;
                     }}
-                    onClick={() => toggleAwardExpansion(awardKey)}
+                    onClick={() => toggleItemExpansion(eventKey)}
                   >
                     {/* Header Section */}
                     <div className={`relative ${isExpanded ? 'rounded-t-xl' : 'rounded-xl'}`}>
@@ -292,20 +300,20 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
                                 className="text-[#D2AC38] leading-tight uppercase mb-0 transition-colors duration-300 cursor-default font-bold"
                                 style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '24px' }}
                               >
-                                {award.award_piid}
+                                {event.award_piid}
                               </h3>
                             </div>
 
                             {/* Last Action - UEI equivalent */}
                             <div className="uppercase tracking-wide">
                               <div className="font-medium text-gray-300/80 text-sm tracking-wider">
-                                LATEST ACTION: {formatDate(award.event_date).toUpperCase()}
+                                LATEST ACTION: {formatDate(event.event_date).toUpperCase()}
                               </div>
                               <div className="font-normal text-gray-500 text-xs">
-                                <span>NAICS:</span> {award.naics_code} • <span>PSC:</span> {award.psc_code}
+                                <span>NAICS:</span> {event.naics_code} • <span>PSC:</span> {event.psc_code}
                               </div>
                               <div className="font-normal text-[#F97316]/90 text-xs mt-1">
-                                {award.ai_description}
+                                {event.ai_description}
                               </div>
                             </div>
                           </div>
@@ -332,7 +340,7 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
                                     e.stopPropagation();
                                     e.preventDefault();
                                     setActiveTooltip(null);
-                                    toggleAwardExpansion(awardKey);
+                                    toggleItemExpansion(eventKey);
                                   }}
                                 >
                                   <svg
@@ -486,8 +494,8 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
                                 className="h-full rounded-full transition-all duration-300"
                                 style={{
                                   width: `${(() => {
-                                    const start = new Date(award.start_date);
-                                    const end = new Date(award.end_date);
+                                    const start = new Date(event.start_date);
+                                    const end = new Date(event.end_date);
                                     const today = new Date();
                                     const total = end.getTime() - start.getTime();
                                     const elapsed = Math.max(0, today.getTime() - start.getTime());
@@ -495,8 +503,8 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
                                     return Math.max(percent, 3);
                                   })()}%`,
                                   backgroundColor: (() => {
-                                    const start = new Date(award.start_date);
-                                    const end = new Date(award.end_date);
+                                    const start = new Date(event.start_date);
+                                    const end = new Date(event.end_date);
                                     const today = new Date();
                                     const total = end.getTime() - start.getTime();
                                     const elapsed = Math.max(0, today.getTime() - start.getTime());
@@ -514,17 +522,17 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
                               <div className="text-xs text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                                 <span className="text-gray-500">Performance Period:</span>
                                 <span className="ml-1">
-                                  {formatDate(award.start_date)}
+                                  {formatDate(event.start_date)}
                                 </span>
                                 <span className="mx-1">-</span>
                                 <span>
-                                  {formatDate(award.end_date)}
+                                  {formatDate(event.end_date)}
                                 </span>
                               </div>
                               <span className="text-xs text-gray-400" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                                 {(() => {
-                                  const start = new Date(award.start_date);
-                                  const end = new Date(award.end_date);
+                                  const start = new Date(event.start_date);
+                                  const end = new Date(event.end_date);
                                   const today = new Date();
                                   const total = end.getTime() - start.getTime();
                                   const elapsed = Math.max(0, today.getTime() - start.getTime());
@@ -544,20 +552,20 @@ export function EventsDetailView({ relationship, onBack }: EventsDetailViewProps
                         <div className="grid grid-cols-4 gap-4">
                           <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50">
                             <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Award Amount</span>
-                            <span className="font-bold text-xl block" style={{ color: '#F97316' }}>{formatMoney(award.event_amount)}</span>
+                            <span className="font-bold text-xl block" style={{ color: '#F97316' }}>{formatMoney(event.event_amount)}</span>
                           </div>
                           <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50">
                             <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Obligations</span>
-                            <span className="font-bold text-xl block" style={{ color: '#10B981' }}>{formatMoney(award.event_amount * 0.75)}</span>
+                            <span className="font-bold text-xl block" style={{ color: '#10B981' }}>{formatMoney(event.event_amount * 0.75)}</span>
                           </div>
                           <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50">
                             <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Utilization</span>
-                            <span className="font-bold text-xl block" style={{ color: getUtilizationColor(award.utilization) }}>{award.utilization}%</span>
+                            <span className="font-bold text-xl block" style={{ color: getUtilizationColor(event.utilization) }}>{event.utilization}%</span>
                           </div>
                           <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50">
                             <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Awardee Count</span>
                             <span className="font-bold text-xl block" style={{ color: '#FFB84D' }}>
-                              {award.event_type === 'PRIME' ? '1' : Math.floor(Math.random() * 3) + 2}
+                              {event.event_type === 'PRIME' ? '1' : Math.floor(Math.random() * 3) + 2}
                             </span>
                           </div>
                         </div>

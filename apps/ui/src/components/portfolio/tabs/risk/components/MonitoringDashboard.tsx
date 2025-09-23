@@ -40,7 +40,7 @@ export function MonitoringDashboard({
             {/* ACTIVITY - Threshold Type */}
             <div className="p-4 bg-gray-500/10 border border-gray-500/20 rounded-lg relative group hover:border-gray-400/40 transition-all">
               <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">{filterSettings.activity.name}</div>
-              <div className="text-2xl font-bold text-gray-400 mb-3">12</div>
+              <div className="text-2xl font-bold text-gray-400 mb-3 text-right">12</div>
 
               {/* Smart Filter Visualization - Threshold Type */}
               <div className="relative h-2 bg-gray-700/50 rounded-full mb-2">
@@ -68,7 +68,7 @@ export function MonitoringDashboard({
             {/* PERFORMANCE - Range Type */}
             <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg relative group hover:border-green-400/40 transition-all">
               <div className="text-xs text-green-400 mb-2 uppercase tracking-wider">{filterSettings.performance.name}</div>
-              <div className="text-2xl font-bold text-green-400 mb-3">87th</div>
+              <div className="text-2xl font-bold text-green-400 mb-3 text-right">87th</div>
 
               {/* Smart Filter Visualization - Range Type */}
               <div className="relative h-2 bg-gray-700/50 rounded-full mb-2">
@@ -107,7 +107,7 @@ export function MonitoringDashboard({
             {/* UTILIZATION - Central Band Type */}
             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg relative group hover:border-red-400/40 transition-all">
               <div className="text-xs text-red-400 mb-2 uppercase tracking-wider">{filterSettings.utilization.name}</div>
-              <div className="text-2xl font-bold text-red-400 mb-3">94%</div>
+              <div className="text-2xl font-bold text-red-400 mb-3 text-right">94%</div>
 
               {/* Smart Filter Visualization - Central Band Type */}
               <div className="relative h-2 bg-gray-700/50 rounded-full mb-2">
