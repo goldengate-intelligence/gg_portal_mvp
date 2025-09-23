@@ -409,7 +409,7 @@ export function PerformanceFilter({
                 <span className="text-right">{rangeConfig.formatValue(tempSettings.performance.optimal.min)}+</span>
               </div>
               <div className="flex justify-between text-yellow-400">
-                <span>Caution (Moderate Performance)</span>
+                <span>Caution (Borderline Performance)</span>
                 <span className="text-right">{rangeConfig.formatValue(tempSettings.performance.caution.min)}-{rangeConfig.formatValue(tempSettings.performance.optimal.min - 1)}</span>
               </div>
               <div className="flex justify-between text-red-400">

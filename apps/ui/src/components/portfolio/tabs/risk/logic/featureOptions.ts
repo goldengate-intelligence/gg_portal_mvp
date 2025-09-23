@@ -75,9 +75,16 @@ export const featureOptions: Record<string, FeatureOption> = {
     category: 'performance'
   },
   // Utilization Monitoring Features (for utilization-based monitoring)
-  'utilization': {
-    label: 'Resource Utilization',
-    description: 'Percentage of available resources currently deployed on active projects',
+  'award_utilization': {
+    label: 'Award Utilization (Inflows)',
+    description: 'Utilization rate of incoming contract awards and opportunities',
+    unit: '%',
+    defaultType: 'central_band',
+    category: 'utilization'
+  },
+  'vendor_utilization': {
+    label: 'Vendor Utilization (Outflows)',
+    description: 'Utilization rate of vendor and subcontractor relationships',
     unit: '%',
     defaultType: 'central_band',
     category: 'utilization'
