@@ -74,7 +74,7 @@ export function HeadlineMetrics() {
       description: 'Currently active'
     },
     {
-      title: 'REVENUE TTM',
+      title: 'ESTIMATED REVENUE (TTM)',
       value: '$112.5M',
       accentColor: '#42D4F4',
       count: 'Est',
@@ -83,7 +83,7 @@ export function HeadlineMetrics() {
       description: 'STRAIGHT-LINE RECOGNITION (SLR)'
     },
     {
-      title: 'PIPELINE',
+      title: 'ESTIMATED PIPELINE',
       value: '$337.5M',
       accentColor: '#8B8EFF',
       count: 'Est',

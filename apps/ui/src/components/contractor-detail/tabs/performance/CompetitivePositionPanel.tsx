@@ -26,7 +26,7 @@ export function CompetitivePositionPanel({
       'ttm_revenue': 'Estimated Revenue (TTM)',
       'lifetime_awards': 'Lifetime Awards',
       'lifetime_revenue': 'Lifetime Revenue',
-      'total_pipeline': 'Total Pipeline',
+      'total_pipeline': 'Estimated Total Pipeline',
       'portfolio_duration': 'Portfolio Duration',
       'blended_growth': 'Blended Growth'
     };
@@ -39,7 +39,7 @@ export function CompetitivePositionPanel({
       'composite_score': 'Composite Score',
       'awards_captured': 'Awards Captured (TTM)',
       'revenue': 'Estimated Revenue (TTM)',
-      'pipeline_value': 'Total Pipeline',
+      'pipeline_value': 'Estimated Total Pipeline',
       'portfolio_duration': 'Portfolio Duration',
       'blended_growth': 'Blended Growth'
     };
@@ -108,7 +108,7 @@ export function CompetitivePositionPanel({
                     <option value="ttm_revenue">Estimated Revenue (TTM)</option>
                     <option value="lifetime_awards">Lifetime Awards</option>
                     <option value="lifetime_revenue">Lifetime Revenue</option>
-                    <option value="total_pipeline">Total Pipeline</option>
+                    <option value="total_pipeline">Estimated Total Pipeline</option>
                     <option value="portfolio_duration">Portfolio Duration</option>
                     <option value="blended_growth">Blended Growth Rate</option>
                   </select>
@@ -124,7 +124,7 @@ export function CompetitivePositionPanel({
                     <option value="composite_score">Composite Score</option>
                     <option value="awards_captured">Awards Captured (TTM)</option>
                     <option value="revenue">Estimated Revenue (TTM)</option>
-                    <option value="pipeline_value">Total Pipeline</option>
+                    <option value="pipeline_value">Estimated Total Pipeline</option>
                     <option value="portfolio_duration">Portfolio Duration</option>
                     <option value="blended_growth">Blended Growth</option>
                   </select>

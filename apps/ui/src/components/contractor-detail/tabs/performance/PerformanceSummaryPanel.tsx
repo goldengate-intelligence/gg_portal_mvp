@@ -111,7 +111,7 @@ export function PerformanceSummaryPanel({ performanceData }: PerformanceSummaryP
 
                   <div className="bg-black/40 border border-gray-700/30 rounded-md p-2 relative group/subscore">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-400 uppercase tracking-wider" style={{ fontFamily: 'Genos, sans-serif' }}>TOTAL PIPELINE</span>
+                      <span className="text-xs text-gray-400 uppercase tracking-wider" style={{ fontFamily: 'Genos, sans-serif' }}>ESTIMATED TOTAL PIPELINE</span>
                       <div className="flex items-center">
                         <span className="text-xs text-gray-500 w-12 text-right">$45.2M</span>
                         <span className="text-xs text-gray-500 mx-2">|</span>

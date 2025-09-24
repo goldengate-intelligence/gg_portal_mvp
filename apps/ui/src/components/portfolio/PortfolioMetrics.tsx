@@ -139,7 +139,7 @@ export function PortfolioMetrics({ assets }: PortfolioMetricsProps) {
       description: 'Currently active'
     },
     {
-      title: 'PORTFOLIO REVENUE TTM',
+      title: 'PORTFOLIO ESTIMATED REVENUE (TTM)',
       value: totals.revenue,
       accentColor: '#42D4F4',
       count: 'Est',
@@ -148,7 +148,7 @@ export function PortfolioMetrics({ assets }: PortfolioMetricsProps) {
       description: 'STRAIGHT-LINE RECOGNITION (SLR)'
     },
     {
-      title: 'PORTFOLIO PIPELINE',
+      title: 'PORTFOLIO ESTIMATED PIPELINE',
       value: totals.pipeline,
       accentColor: '#8B8EFF',
       count: 'Est',

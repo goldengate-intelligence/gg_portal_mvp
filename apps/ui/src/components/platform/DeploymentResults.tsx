@@ -310,7 +310,7 @@ export function DeploymentResults({
                   <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-gray-700/50">
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-gray-300">Total Revenue (TTM)</span>
+                      <span className="text-sm text-gray-300">Estimated Total Revenue (TTM)</span>
                     </div>
                     <span className="text-lg font-semibold text-white">
                       {formatCurrency(contractor?.totalContractValue || 0)}

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Plane, Shield, Factory, Building, Truck, Zap, Pin } from 'lucide-react';
+import { Plane, Shield, Factory, Building, Truck, Zap, Pin, Trash2, Edit2 } from 'lucide-react';
 import { useAgentChatContext } from '../../contexts/agent-chat-context';
 import { FileUploadModal } from './FileUploadModal';
 import { KnowledgeBaseModal } from './KnowledgeBaseModal';
+import { DeleteConfirmationModal } from './components/DeleteConfirmationModal';
+import { GroupSettingsModal } from './components/GroupSettingsModal';
 import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from './services/contractorMetrics';
 import { getIndustryImage, getIndustryTag } from './logic/industryClassification';
 import { getContractorLogo } from '../contractor-detail/services/contractorLogoService';
@@ -25,6 +27,7 @@ interface AssetCardProps {
   groupMembers?: string[];
   isGroupExpanded?: boolean;
   onGroupToggle?: () => void;
+  onGroupRename?: (newName: string) => void;
   isDraggedOver?: boolean;
   isPinned?: boolean;
   onPin?: (uei: string) => void;
@@ -35,7 +38,7 @@ interface AssetCardProps {
   };
   isExpanded?: boolean;
   onToggleExpanded?: () => void;
-  onRemove?: (uei: string) => void;
+  onRemove?: () => void;
   onInsertionHover?: (type: 'before' | 'after' | 'group') => void;
   onInsertionDrop?: (type: 'before' | 'after') => void;
 }
@@ -58,6 +61,7 @@ export function AssetCardNew({
   groupMembers = [],
   isGroupExpanded = false,
   onGroupToggle,
+  onGroupRename,
   isDraggedOver = false,
   isPinned = false,
   onPin,
@@ -71,6 +75,8 @@ export function AssetCardNew({
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
   const [isKnowledgeBaseOpen, setIsKnowledgeBaseOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
   const { openWithContext } = useAgentChatContext();
   const industryImageSrc = getIndustryImage(companyName, naicsDescription);
   const primaryIndustryTag = getIndustryTag(companyName, naicsDescription);
@@ -193,9 +199,10 @@ export function AssetCardNew({
                              contractorMetrics?.primaryAgency === 'Department of Defense';
 
   // Dynamic card layout with collapsible content
-  const isModalOpen = isFileUploadOpen || isKnowledgeBaseOpen;
+  const isModalOpen = isFileUploadOpen || isKnowledgeBaseOpen || showDeleteConfirm || showGroupSettings;
 
   return (
+    <>
     <div
       className={`border ${isExpanded ? 'rounded-xl' : 'rounded-xl'} cursor-pointer overflow-visible relative ${
         isModalOpen ? '' : 'transform hover:scale-[1.02] hover:shadow-xl transition-transform duration-300 ease-in-out'
@@ -375,20 +382,23 @@ export function AssetCardNew({
                   <Pin className="w-4 h-4 text-orange-400 fill-orange-400/20" />
                 )}
                 {isGrouped && (
-                  <div
-                    className="flex items-center gap-1 px-2 py-1 bg-[#8B8EFF]/20 border border-[#8B8EFF]/40 rounded-full cursor-pointer hover:bg-[#8B8EFF]/30 transition-all duration-300 hover:scale-105 hover:border-[#8B8EFF]/60"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      if (onGroupToggle) onGroupToggle();
-                    }}
-                  >
-                    <svg className="w-4 h-4 text-[#8B8EFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span className="text-[#8B8EFF] text-xs font-medium">
-                      {groupMembers.length}
-                    </span>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="flex items-center gap-1 px-2 py-1 bg-[#8B8EFF]/20 border border-[#8B8EFF]/40 rounded-full cursor-pointer hover:bg-[#8B8EFF]/30 transition-all duration-300 hover:scale-105 hover:border-[#8B8EFF]/60"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setShowGroupSettings(true);
+                      }}
+                      title="Group settings"
+                    >
+                      <svg className="w-4 h-4 text-[#8B8EFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span className="text-[#8B8EFF] text-xs font-medium">
+                        {groupMembers.length}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -396,7 +406,42 @@ export function AssetCardNew({
               {/* UEI and NAICS Text (no bubble) */}
               <div className="uppercase tracking-wide">
                 {isGrouped ? (
-                  <span className="font-medium text-gray-300 text-xs">{groupMembers.length} Entities</span>
+                  <>
+                    <div className="font-medium text-gray-300/80 text-sm tracking-wider">{groupMembers.length} ENTITIES</div>
+                    <div className="flex items-center justify-between">
+                      <div className="font-normal text-[#F97316]/90 text-xs">
+                        {(() => {
+                          // Calculate total active awards from group members
+                          const totalAwards = groupMembers.reduce((sum, member) => {
+                            if (!member?.uei) return sum + Math.floor(Math.random() * 3) + 1;
+                            const contractorMetrics = getContractorMetrics(member.uei);
+                            return sum + (contractorMetrics?.contractCount || Math.floor(Math.random() * 3) + 1);
+                          }, 0);
+
+                          // Generate AI business summary based on group composition
+                          const getGroupBusinessSummary = () => {
+                            const industries = new Set();
+                            groupMembers.forEach(member => {
+                              const description = member?.naicsDescription?.toLowerCase() || '';
+                              if (description.includes('aircraft') || description.includes('aerospace')) industries.add('Aerospace');
+                              if (description.includes('manufacturing') || description.includes('fabricat')) industries.add('Manufacturing');
+                              if (description.includes('engineering') || description.includes('professional')) industries.add('Engineering');
+                              if (description.includes('construction') || description.includes('building')) industries.add('Construction');
+                              if (description.includes('technology') || description.includes('computer')) industries.add('Technology');
+                              if (description.includes('research') || description.includes('development')) industries.add('R&D');
+                            });
+
+                            if (industries.size === 0) return 'Diversified Operations';
+                            if (industries.size === 1) return `${Array.from(industries)[0]} Consortium`;
+                            if (industries.size === 2) return `${Array.from(industries).slice(0, 2).join(' & ')} Alliance`;
+                            return 'Multi-Sector Collective';
+                          };
+
+                          return `${totalAwards} Active Award${totalAwards !== 1 ? 's' : ''} • ${getGroupBusinessSummary()}`;
+                        })()}
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div className="font-medium text-gray-300/80 text-sm tracking-wider">{uei}</div>
@@ -434,7 +479,7 @@ export function AssetCardNew({
         </div>
 
         {/* Action Icons - Upper Right Corner */}
-        <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
+        <div className="absolute top-4 right-4 z-30 flex flex-col items-end gap-2">
           {/* Action Icons Row - unified bubble container */}
           <div className={`flex items-center px-3 py-1 bg-gray-600/20 border border-gray-600/40 rounded-full gap-2 transition-all duration-200 ${
             isModalOpen ? '' : 'hover:bg-gray-600/30 hover:border-gray-600/60'
@@ -602,6 +647,34 @@ export function AssetCardNew({
                   )}
                 </div>
 
+                {/* Delete/Archive */}
+                <div
+                  className={`p-0.5 rounded cursor-pointer relative ${
+                    isModalOpen ? '' : 'hover:bg-red-500/30 hover:scale-110 transition-all duration-300'
+                  }`}
+                  onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip('delete');
+                  }}
+                  onMouseLeave={(e) => {
+                    e.stopPropagation();
+                    if (!isModalOpen) setActiveTooltip(null);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setActiveTooltip(null);
+                    setShowDeleteConfirm(true);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300 transition-colors" />
+                  {activeTooltip === 'delete' && !isModalOpen && (
+                    <div className="absolute px-2 py-1 text-xs text-white bg-black/90 border border-gray-600 rounded pointer-events-none whitespace-nowrap" style={{ zIndex: 9999, bottom: 'calc(100% + 10px)', right: '0', transform: 'translateX(0)' }}>
+                      Delete from portfolio
+                    </div>
+                  )}
+                </div>
+
           </div>
 
         </div>
@@ -620,11 +693,11 @@ export function AssetCardNew({
                  <span className="font-bold text-xl block" style={{ color: '#FFB84D' }}>{activeAwards.value}</span>
                </div>
                <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
-                 <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Revenue (TTM)</span>
+                 <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Estimated Revenue (TTM)</span>
                  <span className="font-bold text-xl block" style={{ color: '#42D4F4' }}>{metrics.revenue}</span>
                </div>
                <div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50 hover:scale-105">
-                 <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Pipeline</span>
+                 <span className="text-gray-400 text-xs uppercase block mb-2" style={{ fontFamily: 'Genos, sans-serif' }}>Estimated Pipeline</span>
                  <span className="font-bold text-xl block" style={{ color: '#8B8EFF' }}>{metrics.pipeline}</span>
                </div>
              </div>
@@ -648,6 +721,30 @@ export function AssetCardNew({
            entityName={companyName}
            entityType="contractor"
          />
+
      </div>
+
+     {/* Delete Confirmation Modal */}
+     <DeleteConfirmationModal
+       isOpen={showDeleteConfirm}
+       companyName={companyName}
+       onConfirm={() => {
+         setShowDeleteConfirm(false);
+         if (onRemove) onRemove();
+       }}
+       onCancel={() => setShowDeleteConfirm(false)}
+     />
+
+     {/* Group Settings Modal */}
+     <GroupSettingsModal
+       isOpen={showGroupSettings}
+       groupName={companyName}
+       memberCount={groupMembers.length}
+       onRename={(newName) => {
+         if (onGroupRename) onGroupRename(newName);
+       }}
+       onCancel={() => setShowGroupSettings(false)}
+     />
+     </>
   );
 }

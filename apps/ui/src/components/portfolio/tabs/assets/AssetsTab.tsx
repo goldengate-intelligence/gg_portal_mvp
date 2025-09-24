@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { AssetCardNew } from '../../AssetCardNew';
 import { GroupNamingModal } from '../../GroupNamingModal';
 import { GroupDetailView } from '../../GroupDetailView';
-import { Trash2 } from 'lucide-react';
+import { GroupDeleteModal } from '../../components/GroupDeleteModal';
+import { DeleteConfirmationModal } from '../../components/DeleteConfirmationModal';
 import { getContractorMetrics, getContractorMetricsByName, getDefaultMetrics } from '../../services/contractorMetrics';
 
 // Design Framework Components - Indigo Theme
@@ -107,6 +108,10 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
   const [draggedAsset, setDraggedAsset] = useState<string | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<GroupAsset | null>(null);
   const [insertionIndex, setInsertionIndex] = useState<number | null>(null);
+
+  // Group deletion modal states
+  const [showGroupDeleteOptions, setShowGroupDeleteOptions] = useState<string | null>(null);
+  const [showGroupPortfolioDeleteConfirm, setShowGroupPortfolioDeleteConfirm] = useState<string | null>(null);
 
   // Helper functions for financial calculations
   const parseFinancialValue = (value: string): number => {
@@ -537,6 +542,55 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
     setAssets(assets.filter(asset => asset.id !== assetId));
   };
 
+  const handleDeleteFromPortfolio = (memberUei: string) => {
+    // Remove the asset from the entire portfolio by UEI
+    setAssets(assets.filter(asset => {
+      // For individual assets, check UEI
+      if (!('type' in asset)) {
+        return asset.uei !== memberUei;
+      }
+      // For groups, check if the UEI is in member assets and remove it
+      if (asset.type === 'group') {
+        const updatedMemberAssets = asset.memberAssets.filter(member => member.uei !== memberUei);
+        // If group would have less than 2 members, dissolve it
+        if (updatedMemberAssets.length < 2) {
+          return false; // Remove the group entirely
+        }
+        // Otherwise, update the group's member assets
+        asset.memberAssets = updatedMemberAssets;
+        asset.entityCount = updatedMemberAssets.length;
+      }
+      return true;
+    }));
+  };
+
+  // Group deletion modal handlers
+  const handleGroupRemoveOnly = (memberUei: string) => {
+    setShowGroupDeleteOptions(null);
+    if (selectedGroup) {
+      handleRemoveGroupMember(memberUei);
+    }
+  };
+
+  const handleGroupDeleteFromPortfolio = (memberUei: string) => {
+    setShowGroupDeleteOptions(null);
+    setShowGroupPortfolioDeleteConfirm(memberUei);
+  };
+
+  const handleGroupPortfolioConfirm = (memberUei: string) => {
+    setShowGroupPortfolioDeleteConfirm(null);
+    // Remove from group first
+    handleRemoveGroupMember(memberUei);
+    // Then delete from entire portfolio
+    handleDeleteFromPortfolio(memberUei);
+  };
+
+  const getCompanyNameByUei = (uei: string): string => {
+    if (!selectedGroup) return '';
+    const member = selectedGroup.memberAssets.find(m => m.uei === uei);
+    return member?.companyName || '';
+  };
+
   const handlePin = (uei: string) => {
     console.log('=== PIN OPERATION START ===');
     console.log('UEI to pin:', uei);
@@ -673,12 +727,42 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
   // If we're viewing a group detail, render that instead
   if (selectedGroup) {
     return (
-      <GroupDetailView
-        group={selectedGroup}
-        onBack={handleBackFromGroup}
-        onRemoveMember={handleRemoveGroupMember}
-        onUpdateGroup={handleUpdateGroup}
-      />
+      <>
+        <GroupDetailView
+          group={selectedGroup}
+          onBack={handleBackFromGroup}
+          onRemoveMember={handleRemoveGroupMember}
+          onUpdateGroup={handleUpdateGroup}
+          onDeleteFromPortfolio={handleDeleteFromPortfolio}
+          showDeleteOptions={showGroupDeleteOptions}
+          showPortfolioDeleteConfirm={showGroupPortfolioDeleteConfirm}
+          onShowDeleteOptions={setShowGroupDeleteOptions}
+          onCloseDeleteOptions={() => setShowGroupDeleteOptions(null)}
+          onShowPortfolioDeleteConfirm={setShowGroupPortfolioDeleteConfirm}
+          onClosePortfolioDeleteConfirm={() => setShowGroupPortfolioDeleteConfirm(null)}
+        />
+
+        {/* Group Delete Options Modal - Rendered at top level */}
+        {showGroupDeleteOptions && (
+          <GroupDeleteModal
+            isOpen={true}
+            companyName={getCompanyNameByUei(showGroupDeleteOptions)}
+            onRemoveFromGroup={() => handleGroupRemoveOnly(showGroupDeleteOptions)}
+            onDeleteFromPortfolio={() => handleGroupDeleteFromPortfolio(showGroupDeleteOptions)}
+            onCancel={() => setShowGroupDeleteOptions(null)}
+          />
+        )}
+
+        {/* Portfolio Delete Confirmation Modal - Rendered at top level */}
+        {showGroupPortfolioDeleteConfirm && (
+          <DeleteConfirmationModal
+            isOpen={true}
+            companyName={getCompanyNameByUei(showGroupPortfolioDeleteConfirm)}
+            onConfirm={() => handleGroupPortfolioConfirm(showGroupPortfolioDeleteConfirm)}
+            onCancel={() => setShowGroupPortfolioDeleteConfirm(null)}
+          />
+        )}
+      </>
     );
   }
 

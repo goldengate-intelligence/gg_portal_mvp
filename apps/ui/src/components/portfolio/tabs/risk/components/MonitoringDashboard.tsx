@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '../../../../ui/button';
-import { Bot, Settings, Shield, ChevronRight } from 'lucide-react';
+import { Bot, Settings, Shield, ChevronRight, ArrowLeft, Database, BarChart3, Download, ToggleLeft, ToggleRight, ChevronUp, ChevronDown, TrendingUp, TrendingDown, Award, AlertTriangle, Zap, Target } from 'lucide-react';
 import type { FilterSettings } from '../types';
 import { ChartStyleContainer } from '../ui/ChartStyleContainer';
+import { featureOptions } from '../logic/featureOptions';
 
 interface MonitoringDashboardProps {
   filterSettings: FilterSettings;
@@ -16,51 +17,568 @@ export function MonitoringDashboard({
   onShowFilterSettings
 }: MonitoringDashboardProps) {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [activeSpreadsheet, setActiveSpreadsheet] = useState<string | null>(null);
+  const [showScores, setShowScores] = useState(false);
+  const [showColors, setShowColors] = useState(false);
+  const [sortColumn, setSortColumn] = useState<string>('Portfolio');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const toggleCard = (cardType: string) => {
-    setExpandedCard(expandedCard === cardType ? null : cardType);
+    setActiveSpreadsheet(cardType);
   };
 
-  // Portfolio breakdown data
-  const activityFeatures = ['New Awards', 'Modifications', 'Pipeline Activity', 'Award Velocity', 'Contract Extensions', 'All Procurement Events'];
-  const performanceFeatures = ['Composite Score', 'Revenue Performance', 'Growth Rate', 'Market Share', 'Efficiency Rating', 'Innovation Index'];
-  const utilizationFeatures = ['Award Utilization', 'Resource Efficiency', 'Capacity Planning', 'Workforce Optimization'];
-
-  // Mock portfolio entities and their data
-  const portfolioEntities = [
-    { name: 'Lockheed Martin', uei: 'ABC123DEF456' },
-    { name: 'Boeing', uei: 'GHI789JKL012' },
-    { name: 'Raytheon', uei: 'MNO345PQR678' },
-    { name: 'General Dynamics', uei: 'STU901VWX234' },
-    { name: 'Northrop Grumman', uei: 'YZA567BCD890' },
-  ];
-
-  // Mock activity data (events count)
-  const activityData = {
-    'Lockheed Martin': [487, 89, 156, 23, 45, 800],
-    'Boeing': [234, 67, 98, 19, 32, 450],
-    'Raytheon': [156, 34, 78, 12, 28, 308],
-    'General Dynamics': [198, 45, 67, 15, 21, 346],
-    'Northrop Grumman': [172, 38, 89, 18, 35, 352],
+  const handleBackToMonitoring = () => {
+    setActiveSpreadsheet(null);
+    setShowScores(false); // Reset to values when going back
+    setShowColors(false); // Reset colors when going back
   };
 
-  // Mock performance data (scores)
-  const performanceData = {
-    'Lockheed Martin': [85.2, 91.4, 78.6, 82.1, 88.9, 79.3],
-    'Boeing': [72.8, 85.2, 69.4, 75.6, 81.2, 74.8],
-    'Raytheon': [78.9, 82.1, 74.5, 79.8, 85.6, 77.2],
-    'General Dynamics': [81.3, 88.7, 76.2, 83.4, 87.1, 80.5],
-    'Northrop Grumman': [79.6, 86.3, 72.8, 81.9, 84.7, 78.9],
+  const toggleScoresValues = () => {
+    setShowScores(!showScores);
   };
 
-  // Mock utilization data (percentages)
-  const utilizationData = {
-    'Lockheed Martin': [94.2, 87.5, 91.8, 89.6],
-    'Boeing': [82.1, 79.3, 85.7, 81.4],
-    'Raytheon': [88.9, 84.2, 87.6, 86.1],
-    'General Dynamics': [91.3, 88.8, 89.4, 90.1],
-    'Northrop Grumman': [85.7, 82.9, 86.3, 84.8],
+  const toggleColors = () => {
+    setShowColors(!showColors);
   };
+
+  // Get color for score based on type and value - using exact colors from contractor-detail performance
+  const getScoreColor = (type: string, score: number) => {
+    if (type === 'performance') {
+      if (score >= 90) return '#15803d'; // Dark green - Elite (matches score 91)
+      if (score >= 75) return '#84cc16'; // Chartreuse/Lime green - Strong (matches scores 85, 82, 80, 76)
+      if (score >= 60) return '#eab308'; // Yellow - Caution (matches score 68)
+      return '#ef4444'; // Red - Critical
+    } else if (type === 'utilization') {
+      // Utilization uses 25% quartiles: red, yellow, chartreuse, green
+      if (score >= 75) return '#15803d'; // Green - Top quartile (75-100)
+      if (score >= 50) return '#84cc16'; // Chartreuse - Third quartile (50-74)
+      if (score >= 25) return '#eab308'; // Yellow - Second quartile (25-49)
+      return '#ef4444'; // Red - Bottom quartile (0-24)
+    }
+    return '#6b7280'; // Default gray
+  };
+
+  // Portfolio Data Service - pulls from actual asset cards
+  const portfolioDataService = {
+    getPortfolioAssets: () => [
+      {
+        id: 'TFL123456789',
+        companyName: 'Trio Fabrication LLC',
+        naicsDescription: 'Fabricated Plate Work Manufacturing',
+        marketType: 'defense' as const,
+        uei: 'TFL123456789',
+        activeAwards: { value: '$125M' },
+        location: 'Houston, TX',
+        employeeCount: '250-500',
+        yearsInBusiness: 12,
+        primaryContact: 'John Smith, VP Operations'
+      },
+      {
+        id: 'RTX987654321',
+        companyName: 'Raytheon Technologies Corporation',
+        naicsDescription: 'Guided Missile and Space Vehicle Manufacturing',
+        marketType: 'defense' as const,
+        uei: 'RTX987654321',
+        activeAwards: { value: '$2.1B' },
+        location: 'Waltham, MA',
+        employeeCount: '10,000+',
+        yearsInBusiness: 98,
+        primaryContact: 'Sarah Johnson, Director Defense Systems'
+      },
+      {
+        id: 'BAE456789123',
+        companyName: 'BAE Systems Inc',
+        naicsDescription: 'Search Detection Navigation Guidance Aeronautical Systems',
+        marketType: 'defense' as const,
+        uei: 'BAE456789123',
+        activeAwards: { value: '$1.8B' },
+        location: 'Arlington, VA',
+        employeeCount: '5,000-10,000',
+        yearsInBusiness: 45,
+        primaryContact: 'Michael Davis, Program Manager'
+      },
+      {
+        id: 'ACI789123456',
+        companyName: 'Applied Composites Inc',
+        naicsDescription: 'Laminated Plastics Plate Sheet and Shape Manufacturing',
+        marketType: 'civilian' as const,
+        uei: 'ACI789123456',
+        activeAwards: { value: '$180M' },
+        location: 'Seattle, WA',
+        employeeCount: '500-1,000',
+        yearsInBusiness: 23,
+        primaryContact: 'Lisa Chen, Operations Director'
+      },
+      {
+        id: 'MSF456789012',
+        companyName: 'MedStar Federal',
+        naicsDescription: 'Health Care and Social Assistance',
+        marketType: 'civilian' as const,
+        uei: 'MSF456789012',
+        activeAwards: { value: '$350M' },
+        location: 'Washington, DC',
+        employeeCount: '1,000-5,000',
+        yearsInBusiness: 15,
+        primaryContact: 'Dr. Robert Wilson, Chief Medical Officer'
+      },
+      {
+        id: 'ITC234567890',
+        companyName: 'InfoTech Consulting Group',
+        naicsDescription: 'Professional, Scientific, and Technical Services',
+        marketType: 'civilian' as const,
+        uei: 'ITC234567890',
+        activeAwards: { value: '$85M' },
+        location: 'Austin, TX',
+        employeeCount: '100-250',
+        yearsInBusiness: 8,
+        primaryContact: 'Amanda Rodriguez, CTO'
+      },
+      {
+        id: 'GCE567890123',
+        companyName: 'GreenPoint Construction & Engineering',
+        naicsDescription: 'Construction of Buildings',
+        marketType: 'civilian' as const,
+        uei: 'GCE567890123',
+        activeAwards: { value: '$220M' },
+        location: 'Denver, CO',
+        employeeCount: '500-1,000',
+        yearsInBusiness: 18,
+        primaryContact: 'Mark Thompson, Project Director'
+      },
+      {
+        id: 'TSI890123456',
+        companyName: 'TechSolutions International',
+        naicsDescription: 'Computer Systems Design Services',
+        marketType: 'defense' as const,
+        uei: 'TSI890123456',
+        activeAwards: { value: '$420M' },
+        location: 'Reston, VA',
+        employeeCount: '1,000-5,000',
+        yearsInBusiness: 25,
+        primaryContact: 'Jennifer Liu, VP Engineering'
+      }
+    ],
+
+    parseAwardValue: (value: string): number => {
+      const cleanValue = value.replace(/[^\d.]/g, '');
+      const multiplier = value.includes('B') ? 1000000000 : 1000000;
+      return parseFloat(cleanValue) * multiplier;
+    },
+
+    getAssetsByAwardValue: (sortOrder: 'asc' | 'desc' = 'desc') => {
+      const assets = portfolioDataService.getPortfolioAssets();
+      return assets.sort((a, b) => {
+        const aValue = portfolioDataService.parseAwardValue(a.activeAwards.value);
+        const bValue = portfolioDataService.parseAwardValue(b.activeAwards.value);
+        return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
+      });
+    },
+
+    getTotalPortfolioValue: (): number => {
+      const assets = portfolioDataService.getPortfolioAssets();
+      return assets.reduce((total, asset) =>
+        total + portfolioDataService.parseAwardValue(asset.activeAwards.value), 0
+      );
+    },
+
+    getAssetCount: (): number => {
+      return portfolioDataService.getPortfolioAssets().length;
+    }
+  };
+
+  // Use the service to get portfolio assets
+  const portfolioAssets = portfolioDataService.getAssetsByAwardValue('desc');
+
+  // Get top and bottom performers based on scores
+  const getTopBottomPerformers = (type: string) => {
+    const featureKeys = getFeatureKeys(type);
+    const assetsWithScores = portfolioAssets.map(asset => {
+      let totalScore = 0;
+      let scoreCount = 0;
+
+      featureKeys.forEach(() => {
+        const score = 60 + Math.random() * 35;
+        totalScore += score;
+        scoreCount++;
+      });
+
+      return {
+        ...asset,
+        avgScore: totalScore / scoreCount
+      };
+    });
+
+    const sorted = assetsWithScores.sort((a, b) => b.avgScore - a.avgScore);
+    return {
+      strongest: sorted.slice(0, 2), // Top 2
+      weakest: sorted.slice(-2).reverse() // Bottom 2, reversed so worst is first
+    };
+  };
+
+
+  // Get columns from feature options based on category
+  const getSpreadsheetColumns = (type: string) => {
+    return Object.entries(featureOptions)
+      .filter(([key, option]) => option.category === type)
+      .map(([key, option]) => option.label);
+  };
+
+  // Get feature keys for data generation
+  const getFeatureKeys = (type: string) => {
+    return Object.entries(featureOptions)
+      .filter(([key, option]) => option.category === type)
+      .map(([key]) => key);
+  };
+
+  // Column sorting handler
+  const handleColumnSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
+
+  // Reset colors when switching to activity (which doesn't support colors)
+  React.useEffect(() => {
+    if (activeSpreadsheet === 'activity') {
+      setShowColors(false);
+    }
+  }, [activeSpreadsheet]);
+
+  // Generate spreadsheet data using real portfolio assets with proper feature-based columns
+  const generateSpreadsheetData = (type: string) => {
+    let sortedAssets = [...portfolioAssets];
+    const featureKeys = getFeatureKeys(type);
+
+    const spreadsheetData = sortedAssets.map(asset => {
+      const data = [asset.companyName];
+      const awardValue = portfolioDataService.parseAwardValue(asset.activeAwards.value);
+
+      featureKeys.forEach((featureKey) => {
+        const feature = featureOptions[featureKey];
+        const scoreValue = 60 + Math.random() * 35;
+
+        if (showScores) {
+          // Score mode (0-100 scale)
+          const score = scoreValue.toFixed(1);
+          data.push({ value: score, score: scoreValue });
+        } else {
+          // Value mode - use actual units from feature definition
+          let value;
+          switch (feature.unit) {
+            case '$M':
+              value = '$' + (awardValue / 1000000 * (0.5 + Math.random() * 1.5)).toFixed(1) + 'M';
+              break;
+            case 'yrs':
+              value = (2 + Math.random() * 4).toFixed(1) + ' yrs';
+              break;
+            case '%':
+              value = (Math.random() * 100).toFixed(1) + '%';
+              break;
+            case 'awards':
+            case 'obligations':
+            case 'subawards':
+            case 'relationships':
+            case 'events':
+              value = Math.floor(awardValue / 10000000 * (0.5 + Math.random() * 1.5)).toLocaleString();
+              break;
+            case 'pts':
+              value = scoreValue.toFixed(1);
+              break;
+            default:
+              value = (Math.random() * 100).toFixed(1);
+          }
+          data.push({ value, score: scoreValue });
+        }
+      });
+
+      return { data, asset, sortValue: awardValue };
+    });
+
+    // Apply sorting
+    if (sortColumn === 'Portfolio') {
+      spreadsheetData.sort((a, b) => {
+        const comparison = a.asset.companyName.localeCompare(b.asset.companyName);
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+    } else {
+      const columns = ['Portfolio', ...getSpreadsheetColumns(type)];
+      const columnIndex = columns.indexOf(sortColumn);
+      if (columnIndex > 0) {
+        spreadsheetData.sort((a, b) => {
+          const aValue = typeof a.data[columnIndex] === 'object' ? a.data[columnIndex].score : parseFloat(a.data[columnIndex]?.toString().replace(/[^0-9.-]/g, '') || '0');
+          const bValue = typeof b.data[columnIndex] === 'object' ? b.data[columnIndex].score : parseFloat(b.data[columnIndex]?.toString().replace(/[^0-9.-]/g, '') || '0');
+          const comparison = aValue - bValue;
+          return sortDirection === 'asc' ? comparison : -comparison;
+        });
+      }
+    }
+
+    return spreadsheetData.map(item => item.data);
+  };
+
+  const getSpreadsheetConfig = (type: string) => {
+    switch (type) {
+      case 'performance':
+        return {
+          title: 'Portfolio Performance Monitoring',
+          color: 'cyan',
+          bgColor: 'bg-cyan-500/10',
+          borderColor: 'border-cyan-500/20',
+          textColor: 'text-cyan-400'
+        };
+      case 'activity':
+        return {
+          title: 'Portfolio Activity Monitoring',
+          color: 'orange',
+          bgColor: 'bg-orange-500/10',
+          borderColor: 'border-orange-500/20',
+          textColor: 'text-orange-400'
+        };
+      case 'utilization':
+        return {
+          title: 'Portfolio Utilization Monitoring',
+          color: 'indigo',
+          bgColor: 'bg-indigo-500/10',
+          borderColor: 'border-indigo-500/20',
+          textColor: 'text-indigo-400'
+        };
+      default:
+        return {
+          title: 'Portfolio Monitoring',
+          color: 'gray',
+          bgColor: 'bg-gray-500/10',
+          borderColor: 'border-gray-500/20',
+          textColor: 'text-gray-400'
+        };
+    }
+  };
+  // If activeSpreadsheet is set, show the spreadsheet view
+  if (activeSpreadsheet) {
+    const columns = getSpreadsheetColumns(activeSpreadsheet);
+    const data = generateSpreadsheetData(activeSpreadsheet);
+    const config = getSpreadsheetConfig(activeSpreadsheet);
+    const performers = getTopBottomPerformers(activeSpreadsheet);
+
+    return (
+      <div className="min-h-[500px] flex justify-center">
+        <div className="w-full max-w-4xl">
+          {/* Back Button */}
+          <div className="mb-4">
+            <button
+              onClick={handleBackToMonitoring}
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Monitoring Dashboard
+            </button>
+          </div>
+
+          {/* Main Container with Highlights and Spreadsheet */}
+          <div className="rounded-xl">
+            <div className="rounded-xl p-4" style={{ backgroundColor: '#223040' }}>
+              <div className="relative h-full">
+                {/* Title */}
+                <div className="absolute top-0 left-0 z-10">
+                  <h3 className="font-sans text-xs uppercase tracking-wider text-gray-500">
+                    {config.title}
+                  </h3>
+                </div>
+
+                {/* Live Indicator */}
+                <div className="absolute top-0 right-0 z-10 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(0,255,136,0.5)]" />
+                  <span className="text-[10px] text-green-400 tracking-wider font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
+                    LIVE
+                  </span>
+                </div>
+
+                {/* Highlight Panels */}
+                <div className="pt-8 mb-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    {/* Strongest Performers */}
+                    <div className="relative">
+                      <div className={`rounded-lg p-4 border-2 bg-gradient-to-br from-${config.color}-500/20 to-${config.color}-600/10 ${config.borderColor} hover:border-${config.color}-400/60 transition-all duration-300`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`p-2 rounded-lg bg-gradient-to-br from-${config.color}-500/30 to-${config.color}-600/20`}>
+                              <TrendingUp className={`w-5 h-5 ${config.textColor}`} />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-white text-sm">Portfolio Leaders</h4>
+                              <p className="text-xs text-gray-400">Top {activeSpreadsheet} performers</p>
+                            </div>
+                          </div>
+                          <Zap className={`w-4 h-4 ${config.textColor} animate-pulse`} />
+                        </div>
+
+                        <div className="space-y-2">
+                          {performers.strongest.map((asset, index) => (
+                            <div key={asset.id} className={`flex items-center justify-between p-2 rounded bg-${config.color}-500/10 hover:bg-${config.color}-500/20 transition-colors cursor-pointer`}>
+                              <div className="flex items-center gap-2">
+                                <div className={`w-6 h-6 rounded-full bg-gradient-to-br from-${config.color}-400 to-${config.color}-500 flex items-center justify-center text-xs font-bold text-black`}>
+                                  {index + 1}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-white">{asset.companyName}</div>
+                                  <div className="text-xs text-gray-400">{asset.naicsDescription.slice(0, 30)}...</div>
+                                </div>
+                              </div>
+                              <div className={`text-sm font-bold ${config.textColor}`}>
+                                {asset.avgScore.toFixed(1)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Weakest Performers */}
+                    <div className="relative">
+                      <div className="rounded-lg p-4 border-2 bg-gradient-to-br from-red-500/20 to-orange-600/10 border-red-500/20 hover:border-red-400/60 transition-all duration-300">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-red-500/30 to-orange-600/20">
+                              <TrendingDown className="w-5 h-5 text-red-400" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-white text-sm">Growth Opportunities</h4>
+                              <p className="text-xs text-gray-400">Focus areas for improvement</p>
+                            </div>
+                          </div>
+                          <Target className="w-4 h-4 text-red-400" />
+                        </div>
+
+                        <div className="space-y-2">
+                          {performers.weakest.map((asset, index) => (
+                            <div key={asset.id} className="flex items-center justify-between p-2 rounded bg-red-500/10 hover:bg-red-500/20 transition-colors cursor-pointer">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-red-400 to-red-500 flex items-center justify-center text-xs font-bold text-white">
+                                  <AlertTriangle className="w-3 h-3" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-white">{asset.companyName}</div>
+                                  <div className="text-xs text-gray-400">{asset.naicsDescription.slice(0, 30)}...</div>
+                                </div>
+                              </div>
+                              <div className="text-sm font-bold text-red-400">
+                                {asset.avgScore.toFixed(1)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Export Button and Toggles */}
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-medium text-gray-300">Detailed Data View</h4>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={toggleScoresValues}
+                      className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                    >
+                      {showScores ? <ToggleRight className="w-3 h-3" /> : <ToggleLeft className="w-3 h-3" />}
+                      {showScores ? 'Scores' : 'Values'}
+                    </button>
+                    {(activeSpreadsheet === 'performance' || activeSpreadsheet === 'utilization') && (
+                      <button
+                        onClick={toggleColors}
+                        className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                      >
+                        {showColors ? <ToggleRight className="w-3 h-3" /> : <ToggleLeft className="w-3 h-3" />}
+                        Colors
+                      </button>
+                    )}
+                    <button className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-gray-300 transition-colors">
+                      <Download className="w-3 h-3" />
+                      Export
+                    </button>
+                  </div>
+                </div>
+
+                {/* Spreadsheet Content */}
+                <div>
+                  <div className="border border-gray-700 rounded-lg bg-gray-800">
+
+                    {/* Spreadsheet Table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[10px]">
+                        <thead className="bg-gray-900/50">
+                          <tr>
+                            <th
+                              className="text-left p-1.5 text-gray-300 font-medium border-b border-gray-700/50 text-[10px] cursor-pointer hover:text-white transition-colors"
+                              onClick={() => handleColumnSort('Portfolio')}
+                            >
+                              <div className="flex items-center gap-1">
+                                Portfolio
+                                {sortColumn === 'Portfolio' && (
+                                  sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                                )}
+                              </div>
+                            </th>
+                            {columns.map((column, index) => (
+                              <th
+                                key={index}
+                                className={`text-center p-1.5 ${config.textColor} font-medium border-b border-gray-700/50 min-w-[90px] text-[10px] cursor-pointer hover:text-white transition-colors`}
+                                onClick={() => handleColumnSort(column)}
+                              >
+                                <div className="flex items-center justify-center gap-1">
+                                  {column}
+                                  {sortColumn === column && (
+                                    sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                                  )}
+                                </div>
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.map((row, rowIndex) => (
+                            <tr key={rowIndex} className={`
+                              ${rowIndex % 2 === 0 ? 'bg-gray-900/80' : 'bg-gray-700/40'}
+                              hover:bg-gray-600/50 transition-colors border-b border-gray-800/30
+                            `}>
+                              <td className="p-1.5 text-white font-medium text-[10px]">
+                                {row[0]}
+                              </td>
+                              {row.slice(1).map((cell, cellIndex) => {
+                                const cellValue = typeof cell === 'object' ? cell.value : cell;
+                                const cellScore = typeof cell === 'object' ? cell.score : parseFloat(cellValue?.toString().replace(/[^0-9.-]/g, '') || '0');
+                                const textColor = showColors && (activeSpreadsheet === 'performance' || activeSpreadsheet === 'utilization')
+                                  ? getScoreColor(activeSpreadsheet, cellScore)
+                                  : '#e5e7eb';
+
+                                return (
+                                  <td
+                                    key={cellIndex}
+                                    className="p-1.5 text-center text-[10px]"
+                                    style={{ color: textColor }}
+                                  >
+                                    {cellValue}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ChartStyleContainer>
       <div className="relative h-full">
@@ -84,63 +602,27 @@ export function MonitoringDashboard({
           {/* Enhanced Monitoring Grid - 3 Full Width Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
             {/* ACTIVITY - Expandable Compact Grid */}
-            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg relative group hover:border-orange-400/40 transition-all">
+            <div
+              className="bg-orange-500/10 border border-orange-500/20 rounded-lg relative group hover:border-orange-400/60 hover:bg-orange-500/15 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-orange-500/20 hover:scale-[1.02]"
+              onClick={() => toggleCard('activity')}
+            >
               {/* Header */}
-              <div className="p-4 border-b border-orange-500/20">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs text-orange-400 uppercase tracking-wider">Portfolio Activity</div>
-                  <button
-                    onClick={() => toggleCard('activity')}
-                    className="text-gray-400 hover:text-orange-400 transition-colors"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+              <div className="p-6">
+                <div className="text-center">
+                  <div className="text-sm text-orange-400 uppercase tracking-widest font-medium mb-4">Activity</div>
+                  <div className="text-4xl font-bold text-orange-400 mb-2 group-hover:text-orange-300 transition-colors">1,247</div>
+                  <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors mb-3">Total Events (12 months)</div>
+                  <div className="text-xs text-orange-400 font-light tracking-wider">
+                    {expandedCard === 'activity' ? 'collapse' : 'view details'}
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-orange-400 mt-2">1,247</div>
-                <div className="text-xs text-gray-400">Total Events (12 months)</div>
               </div>
 
               {/* Portfolio Activity Breakdown */}
               {expandedCard === 'activity' ? (
                 <div className="p-4">
                   <div className="text-sm font-medium text-gray-200 mb-3">Portfolio Activity Breakdown</div>
-
-                  {/* Spreadsheet-style table */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-gray-600/30">
-                          <th className="text-left p-2 text-gray-400 font-medium">Entity</th>
-                          {activityFeatures.map((feature) => (
-                            <th key={feature} className="text-center p-2 text-orange-400 font-medium min-w-[80px]">
-                              {feature}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {portfolioEntities.map((entity) => (
-                          <tr key={entity.uei} className="border-b border-gray-700/20 hover:bg-orange-500/5">
-                            <td className="p-2 text-gray-300 font-medium">{entity.name}</td>
-                            {activityData[entity.name].map((value, index) => (
-                              <td key={index} className="p-2 text-center text-gray-200">
-                                {value.toLocaleString()}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                        {/* Portfolio Total Row */}
-                        <tr className="border-t-2 border-orange-500/30 bg-orange-500/10">
-                          <td className="p-2 text-orange-400 font-bold">Portfolio Total</td>
-                          {activityFeatures.map((_, index) => (
-                            <td key={index} className="p-2 text-center text-orange-400 font-bold">
-                              {portfolioEntities.reduce((sum, entity) => sum + activityData[entity.name][index], 0).toLocaleString()}
-                            </td>
-                          ))}
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                  <div className="text-xs text-gray-400 mb-2">Click "view details" to see full spreadsheet</div>
                 </div>
               ) : (
                 <div className="p-4">
@@ -156,69 +638,33 @@ export function MonitoringDashboard({
             </div>
 
             {/* PERFORMANCE - Expandable Compact Grid */}
-            <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg relative group hover:border-cyan-400/40 transition-all">
+            <div
+              className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg relative group hover:border-cyan-400/60 hover:bg-cyan-500/15 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-cyan-500/20 hover:scale-[1.02]"
+              onClick={() => toggleCard('performance')}
+            >
               {/* Header */}
-              <div className="p-4 border-b border-cyan-500/20">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs text-cyan-400 uppercase tracking-wider">Portfolio Performance</div>
-                  <button
-                    onClick={() => toggleCard('performance')}
-                    className="text-gray-400 hover:text-cyan-400 transition-colors"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+              <div className="p-6">
+                <div className="text-center">
+                  <div className="text-sm text-cyan-400 uppercase tracking-widest font-medium mb-4">Performance</div>
+                  <div className="text-4xl font-bold text-cyan-400 mb-2 group-hover:text-cyan-300 transition-colors">78.4</div>
+                  <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors mb-3">Value-Weighted Performance (Active Awards)</div>
+                  <div className="text-xs text-cyan-400 font-light tracking-wider">
+                    {expandedCard === 'performance' ? 'collapse' : 'view details'}
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-cyan-400 mt-2">78.4</div>
-                <div className="text-xs text-gray-400">Aggregate Performance Score</div>
               </div>
 
               {/* Portfolio Performance Breakdown */}
               {expandedCard === 'performance' ? (
                 <div className="p-4">
                   <div className="text-sm font-medium text-gray-200 mb-3">Portfolio Performance Breakdown</div>
-
-                  {/* Spreadsheet-style table */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-gray-600/30">
-                          <th className="text-left p-2 text-gray-400 font-medium">Entity</th>
-                          {performanceFeatures.map((feature) => (
-                            <th key={feature} className="text-center p-2 text-cyan-400 font-medium min-w-[80px]">
-                              {feature}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {portfolioEntities.map((entity) => (
-                          <tr key={entity.uei} className="border-b border-gray-700/20 hover:bg-cyan-500/5">
-                            <td className="p-2 text-gray-300 font-medium">{entity.name}</td>
-                            {performanceData[entity.name].map((value, index) => (
-                              <td key={index} className="p-2 text-center text-gray-200">
-                                {value.toFixed(1)}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                        {/* Portfolio Average Row */}
-                        <tr className="border-t-2 border-cyan-500/30 bg-cyan-500/10">
-                          <td className="p-2 text-cyan-400 font-bold">Portfolio Average</td>
-                          {performanceFeatures.map((_, index) => (
-                            <td key={index} className="p-2 text-center text-cyan-400 font-bold">
-                              {(portfolioEntities.reduce((sum, entity) => sum + performanceData[entity.name][index], 0) / portfolioEntities.length).toFixed(1)}
-                            </td>
-                          ))}
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                  <div className="text-xs text-gray-400 mb-2">Click "view details" to see full spreadsheet</div>
                 </div>
               ) : (
                 <div className="p-4">
-                  {/* Performance Gradient Scale */}
+                  {/* Performance Gradient Scale - Adjusted for actual performance thresholds */}
                   <div className="relative h-2 bg-gray-700/50 rounded-full mb-2">
-                    <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500/80 via-yellow-500/80 via-[#7ED321]/80 to-green-500/80 rounded-full w-full"></div>
+                    <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500/80 via-[#eab308]/80 via-[#84cc16]/80 to-[#15803d]/80 rounded-full w-full"></div>
                     <div
                       className="absolute top-0 h-full w-1.5 bg-white rounded-full shadow-md border border-gray-400"
                       style={{ left: '78%' }}
@@ -232,63 +678,27 @@ export function MonitoringDashboard({
             </div>
 
             {/* UTILIZATION - Expandable Compact Grid */}
-            <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg relative group hover:border-indigo-400/40 transition-all">
+            <div
+              className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg relative group hover:border-indigo-400/60 hover:bg-indigo-500/15 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-indigo-500/20 hover:scale-[1.02]"
+              onClick={() => toggleCard('utilization')}
+            >
               {/* Header */}
-              <div className="p-4 border-b border-indigo-500/20">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs text-indigo-400 uppercase tracking-wider">Portfolio Utilization</div>
-                  <button
-                    onClick={() => toggleCard('utilization')}
-                    className="text-gray-400 hover:text-indigo-400 transition-colors"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+              <div className="p-6">
+                <div className="text-center">
+                  <div className="text-sm text-indigo-400 uppercase tracking-widest font-medium mb-4">Utilization</div>
+                  <div className="text-4xl font-bold text-indigo-400 mb-2 group-hover:text-indigo-300 transition-colors">87.2%</div>
+                  <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors mb-3">Value-Weighted Utilization (Active Awards)</div>
+                  <div className="text-xs text-indigo-400 font-light tracking-wider">
+                    {expandedCard === 'utilization' ? 'collapse' : 'view details'}
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-indigo-400 mt-2">87.2%</div>
-                <div className="text-xs text-gray-400">Aggregate Utilization (Inflows)</div>
               </div>
 
               {/* Portfolio Utilization Breakdown */}
               {expandedCard === 'utilization' ? (
                 <div className="p-4">
                   <div className="text-sm font-medium text-gray-200 mb-3">Portfolio Utilization Breakdown</div>
-
-                  {/* Spreadsheet-style table */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-gray-600/30">
-                          <th className="text-left p-2 text-gray-400 font-medium">Entity</th>
-                          {utilizationFeatures.map((feature) => (
-                            <th key={feature} className="text-center p-2 text-indigo-400 font-medium min-w-[80px]">
-                              {feature}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {portfolioEntities.map((entity) => (
-                          <tr key={entity.uei} className="border-b border-gray-700/20 hover:bg-indigo-500/5">
-                            <td className="p-2 text-gray-300 font-medium">{entity.name}</td>
-                            {utilizationData[entity.name].map((value, index) => (
-                              <td key={index} className="p-2 text-center text-gray-200">
-                                {value.toFixed(1)}%
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                        {/* Portfolio Average Row */}
-                        <tr className="border-t-2 border-indigo-500/30 bg-indigo-500/10">
-                          <td className="p-2 text-indigo-400 font-bold">Portfolio Average</td>
-                          {utilizationFeatures.map((_, index) => (
-                            <td key={index} className="p-2 text-center text-indigo-400 font-bold">
-                              {(portfolioEntities.reduce((sum, entity) => sum + utilizationData[entity.name][index], 0) / portfolioEntities.length).toFixed(1)}%
-                            </td>
-                          ))}
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                  <div className="text-xs text-gray-400 mb-2">Click "view details" to see full spreadsheet</div>
                 </div>
               ) : (
                 <div className="p-4">

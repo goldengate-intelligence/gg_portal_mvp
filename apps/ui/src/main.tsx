@@ -16,6 +16,7 @@ import RegisterRoute from './routes/register.tsx'
 import DashboardRoute from './routes/dashboard.tsx'
 import PlatformRoute from './routes/platform.tsx'
 import { discoveryRoute, contractorDetailRoute, portfolioRoute } from './routes/platform-routes.tsx'
+import { portfolioPerformanceRoute, portfolioActivityRoute, portfolioUtilizationRoute } from './routes/platform/monitoring.tsx'
 import { settingsRoutes } from './routes/settings-routes.tsx'
 
 import Header from './components/Header'
@@ -97,6 +98,10 @@ const routeTree = rootRoute.addChildren([
   discoveryRoute(rootRoute),
   contractorDetailRoute(rootRoute),
   portfolioRoute(rootRoute),
+  // Portfolio monitoring routes
+  portfolioPerformanceRoute(rootRoute),
+  portfolioActivityRoute(rootRoute),
+  portfolioUtilizationRoute(rootRoute),
   // Settings routes
   ...settingsRoutes.map(route => route(rootRoute)),
   FormSimpleDemo(rootRoute),
