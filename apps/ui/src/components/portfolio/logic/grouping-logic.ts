@@ -4,7 +4,7 @@
  * Handles asset grouping, ungrouping, and group management operations.
  */
 
-import { PortfolioAsset, GroupAsset } from '../services/portfolio-data';
+import { PortfolioAsset, GroupAsset, portfolioDataService } from '../services/portfolio-data';
 
 export interface GroupingOperation {
   type: 'create' | 'add_to_existing' | 'remove_from_group' | 'rename_group' | 'delete_group';
@@ -51,7 +51,6 @@ class PortfolioGroupingLogic {
       }
 
       // Create group using portfolio data service
-      const { portfolioDataService } = await import('../services/portfolio-data');
       const newGroup = portfolioDataService.createAssetGroup(assetsToGroup, groupName);
 
       return {
@@ -110,7 +109,6 @@ class PortfolioGroupingLogic {
       }
 
       // Update group with new members
-      const { portfolioDataService } = await import('../services/portfolio-data');
       const updatedGroup = portfolioDataService.updateAssetGroup(targetGroup, {
         memberAssets: [...targetGroup.memberAssets, ...assetsToAdd]
       });
@@ -189,7 +187,6 @@ class PortfolioGroupingLogic {
       }
 
       // Update group with remaining members
-      const { portfolioDataService } = await import('../services/portfolio-data');
       const updatedGroup = portfolioDataService.updateAssetGroup(targetGroup, {
         memberAssets: remainingMembers
       });
@@ -222,7 +219,6 @@ class PortfolioGroupingLogic {
       const updatedAssets = assets.map(asset => {
         if (asset.id === groupId && 'type' in asset) {
           const group = asset as GroupAsset;
-          const { portfolioDataService } = require('../services/portfolio-data');
           return portfolioDataService.updateAssetGroup(group, { groupName: newName });
         }
         return asset;
