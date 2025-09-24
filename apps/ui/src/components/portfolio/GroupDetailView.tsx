@@ -83,64 +83,67 @@ export function GroupDetailView({
   return (
     <div className="min-h-[500px] flex justify-center">
       <div className="w-full max-w-4xl">
-        {/* Back Button */}
-        <div className="mb-4">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Portfolio
-          </button>
-        </div>
-
-        {/* Main Container with Purple Panel */}
+        {/* Outer Purple Panel wrapping everything */}
         <div className="border border-[#8B8EFF]/30 rounded-xl hover:border-[#8B8EFF]/50 transition-all duration-500">
-          <div className="rounded-xl p-4" style={{ backgroundColor: '#223040' }}>
-            <div className="relative h-full">
-              {/* Title */}
-              <div className="absolute top-0 left-0 z-10">
-                <h3 className="font-sans text-xs uppercase tracking-wider text-gray-500">
-                  Group Members
-                </h3>
-              </div>
+          <div className="p-4">
+            {/* Back Button */}
+            <div className="mb-4">
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Portfolio
+              </button>
+            </div>
 
-              {/* Live Indicator */}
-              <div className="absolute top-0 right-0 z-10 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(0,255,136,0.5)]" />
-                <span className="text-[10px] text-green-400 tracking-wider font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
-                  LIVE
-                </span>
-              </div>
+            {/* Main Container */}
+            <div className="rounded-xl p-4" style={{ backgroundColor: '#223040' }}>
+              <div className="relative h-full">
+                {/* Title */}
+                <div className="absolute top-0 left-0 z-10">
+                  <h3 className="font-sans text-xs uppercase tracking-wider text-gray-500">
+                    Group Members
+                  </h3>
+                </div>
 
-              {/* Group Member Cards */}
-              <div className="pt-8">
-                <div className="grid grid-cols-1 gap-4">
-                  {members.map((member) => (
-                    <div
-                      key={member.id}
-                      className="relative transition-all duration-300 group opacity-100 scale-100 translate-x-0"
-                    >
-                      <AssetCardNew
-                        companyName={member.companyName}
-                        naicsDescription={member.naicsDescription}
-                        marketType={member.marketType}
-                        uei={member.uei}
-                        activeAwards={member.activeAwards}
-                        onClick={() => {
-                          window.location.href = `/platform/contractor-detail/${member.uei}`;
-                        }}
-                        onRemove={() => handleMemberDelete(member.uei)}
-                      />
-                    </div>
-                  ))}
+                {/* Live Indicator */}
+                <div className="absolute top-0 right-0 z-10 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(0,255,136,0.5)]" />
+                  <span className="text-[10px] text-green-400 tracking-wider font-light" style={{ fontFamily: 'Genos, sans-serif' }}>
+                    LIVE
+                  </span>
+                </div>
 
-                  {members.length === 0 && (
-                    <div className="text-center py-12">
-                      <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-400">No members in this group</p>
-                    </div>
-                  )}
+                {/* Group Member Cards */}
+                <div className="pt-8">
+                  <div className="grid grid-cols-1 gap-4">
+                    {members.map((member) => (
+                      <div
+                        key={member.id}
+                        className="relative transition-all duration-300 group opacity-100 scale-100 translate-x-0"
+                      >
+                        <AssetCardNew
+                          companyName={member.companyName}
+                          naicsDescription={member.naicsDescription}
+                          marketType={member.marketType}
+                          uei={member.uei}
+                          activeAwards={member.activeAwards}
+                          onClick={() => {
+                            window.location.href = `/platform/contractor-detail/${member.uei}`;
+                          }}
+                          onRemove={() => handleMemberDelete(member.uei)}
+                        />
+                      </div>
+                    ))}
+
+                    {members.length === 0 && (
+                      <div className="text-center py-12">
+                        <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                        <p className="text-gray-400">No members in this group</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

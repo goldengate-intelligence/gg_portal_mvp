@@ -591,6 +591,22 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
     return member?.companyName || '';
   };
 
+  // Group rename handler
+  const handleGroupRename = (assetId: string, newName: string) => {
+    setAssets(prevAssets =>
+      prevAssets.map(asset => {
+        if (asset.id === assetId && 'type' in asset && asset.type === 'group') {
+          return {
+            ...asset,
+            companyName: newName,
+            groupName: newName
+          };
+        }
+        return asset;
+      })
+    );
+  };
+
   const handlePin = (uei: string) => {
     console.log('=== PIN OPERATION START ===');
     console.log('UEI to pin:', uei);
@@ -821,6 +837,7 @@ export function AssetsTab({ assets, setAssets }: AssetsTabProps) {
                           onPin={handlePin}
                           aggregatedMetrics={'type' in asset && asset.type === 'group' ? (asset as GroupAsset).aggregatedMetrics : undefined}
                           isExpanded={expandedAssets.has(getAssetIdentifier(asset))}
+                          onGroupRename={'type' in asset && asset.type === 'group' ? (newName: string) => handleGroupRename(asset.id, newName) : undefined}
                           onToggleExpanded={() => handleToggleExpanded(getAssetIdentifier(asset))}
                           onRemove={() => handleRemoveAsset(asset.id)}
                           onInsertionHover={handleCardInsertionHover(index)}
