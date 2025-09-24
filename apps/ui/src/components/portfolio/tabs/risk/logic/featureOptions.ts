@@ -31,6 +31,13 @@ export const featureOptions: Record<string, FeatureOption> = {
     defaultType: 'threshold',
     category: 'activity'
   },
+  'all_procurement_events': {
+    label: 'All Procurement Events',
+    description: 'Monitor all procurement-related activities and events (12 months)',
+    unit: 'events',
+    defaultType: 'threshold',
+    category: 'activity'
+  },
   // Performance Monitoring Features (for range-based monitoring)
   'composite_score': {
     label: 'Composite Score',

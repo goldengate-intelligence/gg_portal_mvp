@@ -3,35 +3,35 @@ import type { FilterSettings, TempSettings, ActiveMonitor } from '../types';
 import { portfolioAssets } from '../logic/portfolioAssets';
 import { featureOptions } from '../logic/featureOptions';
 
-// Default filter configurations
+// Default filter configurations - Portfolio Level
 const defaultFilterSettings: FilterSettings = {
   activity: {
     type: 'threshold',
     redThreshold: 10,
     feature: 'new_awards',
     entityId: '',
-    name: 'Activity Monitoring',
-    description: 'Threshold monitoring of selected event types.'
+    name: 'Portfolio Activity Monitoring',
+    description: 'Portfolio-wide threshold monitoring of activity events.'
   },
   performance: {
     type: 'range',
     optimal: { min: 80, max: 100 },
     caution: { min: 60, max: 80 },
     critical: { min: 0, max: 60 },
-    feature: 'performance_score',
+    feature: 'composite_score',
     entityId: '',
-    name: 'Performance Monitoring',
-    description: 'Portfolio performance ranking'
+    name: 'Portfolio Performance Monitoring',
+    description: 'Portfolio-wide performance ranking and scoring'
   },
   utilization: {
     type: 'central_band',
     optimal: { min: 60, max: 75 },
     caution: { min: 45, max: 90 },
     critical: { min: 0, max: 100 },
-    feature: 'utilization',
+    feature: 'award_utilization',
     entityId: '',
-    name: 'Utilization Monitoring',
-    description: 'Optimal utilization range with buffer zones'
+    name: 'Portfolio Utilization Monitoring',
+    description: 'Portfolio-wide utilization tracking with optimal ranges'
   },
 };
 

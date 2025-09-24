@@ -112,18 +112,58 @@ export function PerformanceFilter({
   }, [filterMode, tempSettings.performance.feature]);
 
   const handleSaveFilter = () => {
-    const newFilter: SavedPerformanceFilter = {
-      id: `performance-${Date.now()}`,
-      name: tempSettings.performance.name || `Performance Filter ${savedFilters.length + 1}`,
-      config: { ...tempSettings.performance },
-      createdAt: new Date()
+    const entityId = tempSettings.performance.entityId || 'all_entities';
+    const feature = tempSettings.performance.feature || 'composite_score';
+
+    // Generate filter name
+    const entityName = entityId === 'all_entities'
+      ? 'All Entities'
+      : portfolioAssets.find(a => a.uei === entityId)?.companyName || 'Unknown Entity';
+    const featureName = featureOptions[feature]?.label || feature;
+    const filterName = `${entityName} ${featureName}`;
+
+    // Check if a filter with this entity/feature combo already exists
+    const existingFilterIndex = savedFilters.findIndex(filter =>
+      filter.config.entityId === entityId && filter.config.feature === feature
+    );
+
+    const filterConfig = {
+      ...tempSettings.performance,
+      entityId,
+      feature
     };
 
-    setSavedFilters(prev => [...prev, newFilter]);
-    setActiveTab(newFilter.id);
-    setIsCreatingFilter(false);
+    if (existingFilterIndex !== -1) {
+      // Update existing filter
+      const updatedFilter = {
+        ...savedFilters[existingFilterIndex],
+        name: filterName,
+        config: filterConfig,
+        createdAt: new Date()
+      };
 
-    console.log('Saved performance filter:', newFilter);
+      setSavedFilters(prev =>
+        prev.map((filter, index) =>
+          index === existingFilterIndex ? updatedFilter : filter
+        )
+      );
+      setActiveTab(updatedFilter.id);
+      console.log('Updated existing performance filter:', updatedFilter);
+    } else {
+      // Create new filter
+      const newFilter: SavedPerformanceFilter = {
+        id: `performance-${entityId}-${feature}-${Date.now()}`,
+        name: filterName,
+        config: filterConfig,
+        createdAt: new Date()
+      };
+
+      setSavedFilters(prev => [...prev, newFilter]);
+      setActiveTab(newFilter.id);
+      console.log('Created new performance filter:', newFilter);
+    }
+
+    setIsCreatingFilter(false);
   };
 
   const loadFilter = (filter: SavedPerformanceFilter) => {
@@ -203,46 +243,6 @@ export function PerformanceFilter({
 
   return (
     <div className="border border-gray-700/30 rounded-xl p-6 bg-cyan-900/40">
-      {/* Saved Filters Tabs */}
-      {savedFilters.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-gray-400 uppercase tracking-wider">Saved Performance Filters</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {savedFilters.map((filter) => (
-              <div
-                key={filter.id}
-                onClick={() => loadFilter(filter)}
-                className={`px-3 py-2 text-xs rounded-lg border transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === filter.id
-                    ? 'bg-cyan-500/30 text-cyan-300 border-cyan-400/50'
-                    : 'bg-cyan-500/10 text-cyan-400/70 border-cyan-500/20 hover:bg-cyan-500/20'
-                }`}
-              >
-                <span>{filter.name}</span>
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteFilter(filter.id);
-                  }}
-                  className="ml-1 text-red-400 hover:text-red-300 cursor-pointer"
-                  role="button"
-                  title="Delete filter"
-                >
-                  ×
-                </span>
-              </div>
-            ))}
-            <div
-              onClick={() => setIsCreatingFilter(true)}
-              className="px-3 py-2 text-xs rounded-lg border border-dashed border-cyan-500/30 text-cyan-400/70 hover:bg-cyan-500/10 transition-all cursor-pointer"
-            >
-              + New Filter
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Header Section */}
       <div className="mb-6">

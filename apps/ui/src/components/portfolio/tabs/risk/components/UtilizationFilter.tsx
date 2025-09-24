@@ -29,18 +29,42 @@ export function UtilizationFilter({
   const [monitoringType, setMonitoringType] = useState<'central_band' | 'linear'>('central_band');
 
   const handleSaveFilter = () => {
-    const newFilter: SavedUtilizationFilter = {
-      id: `utilization-${Date.now()}`,
-      name: tempSettings.utilization.name || `Utilization Filter ${savedFilters.length + 1}`,
-      config: { ...tempSettings.utilization },
-      createdAt: new Date()
-    };
+    const entityId = tempSettings.utilization.entityId || 'all_entities';
+    const feature = tempSettings.utilization.feature || 'award_utilization';
 
-    setSavedFilters(prev => [...prev, newFilter]);
-    setActiveTab(newFilter.id);
+    // Check if a filter with this entity/feature combo already exists
+    const existingFilterIndex = savedFilters.findIndex(filter =>
+      filter.config.entityId === entityId && filter.config.feature === feature
+    );
+
+    if (existingFilterIndex !== -1) {
+      // Update existing filter
+      const updatedFilter: SavedUtilizationFilter = {
+        ...savedFilters[existingFilterIndex],
+        name: tempSettings.utilization.name || `${entityId === 'all_entities' ? 'All Entities' : portfolioAssets.find(a => a.uei === entityId)?.companyName || entityId} ${tempSettings.utilization.name || 'Utilization'}`,
+        config: { ...tempSettings.utilization },
+        createdAt: new Date()
+      };
+
+      setSavedFilters(prev => prev.map((filter, index) =>
+        index === existingFilterIndex ? updatedFilter : filter
+      ));
+      setActiveTab(updatedFilter.id);
+    } else {
+      // Create new filter
+      const newFilter: SavedUtilizationFilter = {
+        id: `utilization-${Date.now()}`,
+        name: tempSettings.utilization.name || `${entityId === 'all_entities' ? 'All Entities' : portfolioAssets.find(a => a.uei === entityId)?.companyName || entityId} ${tempSettings.utilization.name || 'Utilization'}`,
+        config: { ...tempSettings.utilization },
+        createdAt: new Date()
+      };
+
+      setSavedFilters(prev => [...prev, newFilter]);
+      setActiveTab(newFilter.id);
+    }
+
     setIsCreatingFilter(false);
-
-    console.log('Saved utilization filter:', newFilter);
+    console.log('Saved utilization filter with entity/feature combo logic');
   };
 
   const loadFilter = (filter: SavedUtilizationFilter) => {
@@ -60,46 +84,6 @@ export function UtilizationFilter({
 
   return (
     <div className="border border-gray-700/30 rounded-xl p-6 bg-indigo-900/40">
-      {/* Saved Filters Tabs */}
-      {savedFilters.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-gray-400 uppercase tracking-wider">Saved Utilization Filters</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {savedFilters.map((filter) => (
-              <div
-                key={filter.id}
-                onClick={() => loadFilter(filter)}
-                className={`px-3 py-2 text-xs rounded-lg border transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === filter.id
-                    ? 'bg-indigo-500/30 text-indigo-300 border-indigo-400/50'
-                    : 'bg-indigo-500/10 text-indigo-400/70 border-indigo-500/20 hover:bg-indigo-500/20'
-                }`}
-              >
-                <span>{filter.name}</span>
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteFilter(filter.id);
-                  }}
-                  className="ml-1 text-red-400 hover:text-red-300 cursor-pointer"
-                  role="button"
-                  title="Delete filter"
-                >
-                  ×
-                </span>
-              </div>
-            ))}
-            <div
-              onClick={() => setIsCreatingFilter(true)}
-              className="px-3 py-2 text-xs rounded-lg border border-dashed border-indigo-500/30 text-indigo-400/70 hover:bg-indigo-500/10 transition-all cursor-pointer"
-            >
-              + New Filter
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Header Section */}
       <div className="mb-6">
@@ -191,151 +175,231 @@ export function UtilizationFilter({
         </div>
       </div>
 
-      {/* Enhanced Central Band Controls */}
+      {/* Dynamic Range Controls */}
       <div className="rounded-lg p-4 border border-gray-700 mb-6" style={{ backgroundColor: '#111827' }}>
         <div className="flex justify-between items-center mb-3">
-          <h4 className="text-sm font-medium text-gray-200">Central Band Configuration</h4>
+          <h4 className="text-sm font-medium text-gray-200">{monitoringType === 'central_band' ? 'Central Band Configuration' : 'Range Configuration'}</h4>
           <span className="text-xs text-gray-400 uppercase tracking-wider">Percentage</span>
         </div>
-        <div className="space-y-4">
-          {/* Optimal Band Controls */}
-          <div>
-            <div className="flex items-center space-x-3 mb-2">
-              <span className="text-xs text-green-400 w-20">OPTIMAL</span>
-              <span className="text-xs text-gray-500">
-                {tempSettings.utilization.optimal.min}% - {tempSettings.utilization.optimal.max}%
-              </span>
+        {monitoringType === 'central_band' ? (
+          <div className="space-y-4">
+            {/* Optimal Band Controls */}
+            <div>
+              <div className="flex items-center space-x-3 mb-2">
+                <span className="text-xs text-green-400 w-20">OPTIMAL</span>
+                <span className="text-xs text-gray-500">
+                  {tempSettings.utilization.optimal.min}% - {tempSettings.utilization.optimal.max}%
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-green-400 w-16">MIN</span>
+                  <input
+                    type="range"
+                    min="40"
+                    max="80"
+                    value={tempSettings.utilization.optimal.min}
+                    onChange={(e) => {
+                      const newOptimalMin = parseInt(e.target.value);
+                      setTempSettings(prev => ({
+                        ...prev,
+                        utilization: {
+                          ...prev.utilization,
+                          optimal: { ...prev.utilization.optimal, min: newOptimalMin },
+                          caution: {
+                            ...prev.utilization.caution,
+                            min: Math.min(prev.utilization.caution.min, newOptimalMin - 5),
+                            max: Math.max(prev.utilization.caution.max, newOptimalMin)
+                          }
+                        }
+                      }));
+                    }}
+                    className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-400"
+                  />
+                  <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.optimal.min}%</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-green-400 w-16">MAX</span>
+                  <input
+                    type="range"
+                    min="60"
+                    max="95"
+                    value={tempSettings.utilization.optimal.max}
+                    onChange={(e) => {
+                      const newOptimalMax = parseInt(e.target.value);
+                      setTempSettings(prev => ({
+                        ...prev,
+                        utilization: {
+                          ...prev.utilization,
+                          optimal: { ...prev.utilization.optimal, max: newOptimalMax },
+                          caution: {
+                            ...prev.utilization.caution,
+                            min: Math.min(prev.utilization.caution.min, newOptimalMax),
+                            max: Math.max(prev.utilization.caution.max, newOptimalMax + 5)
+                          }
+                        }
+                      }));
+                    }}
+                    className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-400"
+                  />
+                  <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.optimal.max}%</span>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-green-400 w-16">MIN</span>
-                <input
-                  type="range"
-                  min="40"
-                  max="80"
-                  value={tempSettings.utilization.optimal.min}
-                  onChange={(e) => {
-                    const newOptimalMin = parseInt(e.target.value);
-                    setTempSettings(prev => ({
+
+            {/* Caution Band Controls */}
+            <div>
+              <div className="flex items-center space-x-3 mb-2">
+                <span className="text-xs text-yellow-400 w-20">CAUTION</span>
+                <span className="text-xs text-gray-500">
+                  {tempSettings.utilization.caution.min}% - {tempSettings.utilization.caution.max}%
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-yellow-400 w-16">MIN</span>
+                  <input
+                    type="range"
+                    min="10"
+                    max={tempSettings.utilization.optimal.min - 1}
+                    value={tempSettings.utilization.caution.min}
+                    onChange={(e) => setTempSettings(prev => ({
                       ...prev,
                       utilization: {
                         ...prev.utilization,
-                        optimal: { ...prev.utilization.optimal, min: newOptimalMin },
-                        caution: {
-                          ...prev.utilization.caution,
-                          min: Math.min(prev.utilization.caution.min, newOptimalMin - 5),
-                          max: Math.max(prev.utilization.caution.max, newOptimalMin)
-                        }
+                        caution: { ...prev.utilization.caution, min: parseInt(e.target.value) }
                       }
-                    }));
-                  }}
-                  className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-400"
-                />
-                <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.optimal.min}%</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-green-400 w-16">MAX</span>
-                <input
-                  type="range"
-                  min="60"
-                  max="95"
-                  value={tempSettings.utilization.optimal.max}
-                  onChange={(e) => {
-                    const newOptimalMax = parseInt(e.target.value);
-                    setTempSettings(prev => ({
+                    }))}
+                    className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400"
+                  />
+                  <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.caution.min}%</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-yellow-400 w-16">MAX</span>
+                  <input
+                    type="range"
+                    min={tempSettings.utilization.optimal.max + 1}
+                    max="98"
+                    value={tempSettings.utilization.caution.max}
+                    onChange={(e) => setTempSettings(prev => ({
                       ...prev,
                       utilization: {
                         ...prev.utilization,
-                        optimal: { ...prev.utilization.optimal, max: newOptimalMax },
-                        caution: {
-                          ...prev.utilization.caution,
-                          min: Math.min(prev.utilization.caution.min, newOptimalMax),
-                          max: Math.max(prev.utilization.caution.max, newOptimalMax + 5)
-                        }
+                        caution: { ...prev.utilization.caution, max: parseInt(e.target.value) }
                       }
-                    }));
-                  }}
-                  className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-400"
-                />
-                <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.optimal.max}%</span>
+                    }))}
+                    className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400"
+                  />
+                  <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.caution.max}%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Visual Band Breakdown */}
+            <div className="border-t border-gray-600/30 pt-3 mt-4">
+              <div className="text-xs space-y-1">
+                <div className="flex justify-between text-red-400">
+                  <span>Critical (Under-utilization)</span>
+                  <span className="text-right">0%-{tempSettings.utilization.caution.min - 1}%</span>
+                </div>
+                <div className="flex justify-between text-yellow-400">
+                  <span>Caution (Low Monitoring Zone)</span>
+                  <span className="text-right">{tempSettings.utilization.caution.min}%-{tempSettings.utilization.optimal.min - 1}%</span>
+                </div>
+                <div className="flex justify-between text-green-400">
+                  <span>Optimal (Target Zone)</span>
+                  <span className="text-right">{tempSettings.utilization.optimal.min}%-{tempSettings.utilization.optimal.max}%</span>
+                </div>
+                <div className="flex justify-between text-yellow-400">
+                  <span>Caution (High Monitoring Zone)</span>
+                  <span className="text-right">{tempSettings.utilization.optimal.max + 1}%-{tempSettings.utilization.caution.max}%</span>
+                </div>
+                <div className="flex justify-between text-red-400">
+                  <span>Critical (Over-utilization)</span>
+                  <span className="text-right">{tempSettings.utilization.caution.max + 1}%+</span>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Caution Band Controls */}
-          <div>
-            <div className="flex items-center space-x-3 mb-2">
-              <span className="text-xs text-yellow-400 w-20">CAUTION</span>
-              <span className="text-xs text-gray-500">
-                {tempSettings.utilization.caution.min}% - {tempSettings.utilization.caution.max}%
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-yellow-400 w-16">MIN</span>
-                <input
-                  type="range"
-                  min="10"
-                  max={tempSettings.utilization.optimal.min - 1}
-                  value={tempSettings.utilization.caution.min}
-                  onChange={(e) => setTempSettings(prev => ({
+        ) : (
+          // Linear Range Configuration (similar to Performance Filter)
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <span className="text-xs text-green-400 w-20">OPTIMAL {'>'}</span>
+              <input
+                type="range"
+                min="60"
+                max="95"
+                value={tempSettings.utilization.optimal.min}
+                onChange={(e) => {
+                  const newOptimalValue = parseInt(e.target.value);
+                  setTempSettings(prev => ({
                     ...prev,
                     utilization: {
                       ...prev.utilization,
-                      caution: { ...prev.utilization.caution, min: parseInt(e.target.value) }
+                      optimal: { ...prev.utilization.optimal, min: newOptimalValue },
+                      caution: {
+                        ...prev.utilization.caution,
+                        min: Math.min(prev.utilization.caution.min, newOptimalValue - 1),
+                        max: Math.max(prev.utilization.caution.max, newOptimalValue)
+                      },
+                      critical: {
+                        ...prev.utilization.critical,
+                        max: Math.min(prev.utilization.critical.max, newOptimalValue - 1)
+                      }
                     }
-                  }))}
-                  className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400"
-                />
-                <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.caution.min}%</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-yellow-400 w-16">MAX</span>
-                <input
-                  type="range"
-                  min={tempSettings.utilization.optimal.max + 1}
-                  max="98"
-                  value={tempSettings.utilization.caution.max}
-                  onChange={(e) => setTempSettings(prev => ({
+                  }));
+                }}
+                className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-400"
+              />
+              <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.optimal.min}%</span>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <span className="text-xs text-yellow-400 w-20">CAUTION {'>'}</span>
+              <input
+                type="range"
+                min="20"
+                max={tempSettings.utilization.optimal.min - 1}
+                value={tempSettings.utilization.caution.min}
+                onChange={(e) => {
+                  const newCautionValue = parseInt(e.target.value);
+                  setTempSettings(prev => ({
                     ...prev,
                     utilization: {
                       ...prev.utilization,
-                      caution: { ...prev.utilization.caution, max: parseInt(e.target.value) }
+                      caution: { ...prev.utilization.caution, min: newCautionValue },
+                      critical: {
+                        ...prev.utilization.critical,
+                        max: Math.min(prev.utilization.critical.max, newCautionValue - 1)
+                      }
                     }
-                  }))}
-                  className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400"
-                />
-                <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.caution.max}%</span>
-              </div>
+                  }));
+                }}
+                className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400"
+              />
+              <span className="text-sm text-gray-400 w-12 text-right">{tempSettings.utilization.caution.min}%</span>
             </div>
-          </div>
 
-          {/* Visual Band Breakdown */}
-          <div className="border-t border-gray-600/30 pt-3 mt-4">
-            <div className="text-xs space-y-1">
-              <div className="flex justify-between text-red-400">
-                <span>Critical (Under-utilization)</span>
-                <span className="text-right">0%-{tempSettings.utilization.caution.min - 1}%</span>
-              </div>
-              <div className="flex justify-between text-yellow-400">
-                <span>Caution (Low Monitoring Zone)</span>
-                <span className="text-right">{tempSettings.utilization.caution.min}%-{tempSettings.utilization.optimal.min - 1}%</span>
-              </div>
-              <div className="flex justify-between text-green-400">
-                <span>Optimal (Target Zone)</span>
-                <span className="text-right">{tempSettings.utilization.optimal.min}%-{tempSettings.utilization.optimal.max}%</span>
-              </div>
-              <div className="flex justify-between text-yellow-400">
-                <span>Caution (High Monitoring Zone)</span>
-                <span className="text-right">{tempSettings.utilization.optimal.max + 1}%-{tempSettings.utilization.caution.max}%</span>
-              </div>
-              <div className="flex justify-between text-red-400">
-                <span>Critical (Over-utilization)</span>
-                <span className="text-right">{tempSettings.utilization.caution.max + 1}%+</span>
+            {/* Linear Range Breakdown */}
+            <div className="border-t border-gray-600/30 pt-3 mt-4">
+              <div className="text-xs space-y-1">
+                <div className="flex justify-between text-green-400">
+                  <span>Optimal (High Utilization)</span>
+                  <span className="text-right">{tempSettings.utilization.optimal.min}%+</span>
+                </div>
+                <div className="flex justify-between text-yellow-400">
+                  <span>Caution (Borderline Utilization)</span>
+                  <span className="text-right">{tempSettings.utilization.caution.min}%-{tempSettings.utilization.optimal.min - 1}%</span>
+                </div>
+                <div className="flex justify-between text-red-400">
+                  <span>Critical (Low Utilization)</span>
+                  <span className="text-right">0%-{tempSettings.utilization.critical.max}%</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Save Button */}

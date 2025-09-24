@@ -31,6 +31,9 @@ export function ActivityFilter({
 
   const handleSaveFilter = async () => {
     try {
+      const entityId = tempSettings.activity.entityId || 'all_entities';
+      const feature = tempSettings.activity.feature || 'new_awards';
+
       // Create baseline for activity monitoring
       const entity = portfolioAssets.find(a => a.uei === tempSettings.activity.entityId);
 
@@ -54,36 +57,53 @@ export function ActivityFilter({
       }
 
       // Generate filter name
-      const entityName = tempSettings.activity.entityId
-        ? portfolioAssets.find(a => a.uei === tempSettings.activity.entityId)?.companyName || 'Unknown Entity'
-        : 'All Entities';
+      const entityName = entityId === 'all_entities'
+        ? 'All Entities'
+        : portfolioAssets.find(a => a.uei === entityId)?.companyName || entityId;
 
-      const featureName = featureOptions[tempSettings.activity.feature]?.label || tempSettings.activity.feature;
+      const featureName = featureOptions[feature]?.label || feature;
 
-      if (isCreatingFilter) {
+      // Check if a filter with this entity/feature combo already exists
+      const existingFilterIndex = savedFilters.findIndex(filter =>
+        filter.config.entityId === entityId && filter.config.feature === feature
+      );
+
+      if (existingFilterIndex !== -1) {
+        // Update existing filter
+        const configToSave = {
+          ...tempSettings.activity,
+          entityId,
+          feature
+        };
+
+        const updatedFilter: SavedActivityFilter = {
+          ...savedFilters[existingFilterIndex],
+          name: `${entityName} ${featureName}`,
+          config: configToSave,
+          createdAt: new Date()
+        };
+
+        setSavedFilters(prev => prev.map((filter, index) =>
+          index === existingFilterIndex ? updatedFilter : filter
+        ));
+        setActiveTab(updatedFilter.id);
+      } else {
         // Create new filter
+        const configToSave = {
+          ...tempSettings.activity,
+          entityId,
+          feature
+        };
+
         const newFilter: SavedActivityFilter = {
           id: `activity-${Date.now()}`,
           name: `${entityName} ${featureName}`,
-          config: { ...tempSettings.activity },
+          config: configToSave,
           createdAt: new Date()
         };
 
         setSavedFilters(prev => [...prev, newFilter]);
         setActiveTab(newFilter.id);
-        console.log('Created new activity filter:', newFilter);
-      } else if (activeTab) {
-        // Update existing filter
-        setSavedFilters(prev => prev.map(filter =>
-          filter.id === activeTab
-            ? {
-                ...filter,
-                name: `${entityName} ${featureName}`,
-                config: { ...tempSettings.activity }
-              }
-            : filter
-        ));
-        console.log('Updated existing activity filter:', activeTab);
       }
 
       setIsCreatingFilter(false);
@@ -110,46 +130,6 @@ export function ActivityFilter({
 
   return (
     <div className="border border-gray-700/30 rounded-xl p-6 bg-orange-900/40">
-      {/* Saved Filters Tabs */}
-      {savedFilters.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-gray-400 uppercase tracking-wider">Active Filters</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {savedFilters.map((filter) => (
-              <div
-                key={filter.id}
-                onClick={() => loadFilter(filter)}
-                className={`px-3 py-2 text-xs rounded-lg border transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === filter.id
-                    ? 'bg-orange-500/30 text-orange-300 border-orange-400/50'
-                    : 'bg-orange-500/10 text-orange-400/70 border-orange-500/20 hover:bg-orange-500/20'
-                }`}
-              >
-                <span>{filter.name}</span>
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteFilter(filter.id);
-                  }}
-                  className="ml-1 text-red-400 hover:text-red-300 cursor-pointer"
-                  role="button"
-                  title="Delete filter"
-                >
-                  ×
-                </span>
-              </div>
-            ))}
-            <div
-              onClick={() => setIsCreatingFilter(true)}
-              className="px-3 py-2 text-xs rounded-lg border border-dashed border-orange-500/30 text-orange-400/70 hover:bg-orange-500/10 transition-all cursor-pointer"
-            >
-              + New Filter
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Header Section */}
       <div className="mb-6">
