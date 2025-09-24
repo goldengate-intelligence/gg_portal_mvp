@@ -4,6 +4,7 @@ import { Bot, Settings, Shield, ChevronRight, ArrowLeft, Database, BarChart3, Do
 import type { FilterSettings } from '../types';
 import { ChartStyleContainer } from '../ui/ChartStyleContainer';
 import { featureOptions } from '../logic/featureOptions';
+import { getContractorMetrics, getAllContractorMetrics } from '../../../services/contractorMetrics';
 
 interface MonitoringDashboardProps {
   filterSettings: FilterSettings;
@@ -58,106 +59,108 @@ export function MonitoringDashboard({
     return '#6b7280'; // Default gray
   };
 
-  // Portfolio Data Service - pulls from actual asset cards
+  // Helper functions for company data (using Trio as reference framework)
+  const getCompanyNAICS = (uei: string) => {
+    const naicsMap: Record<string, string> = {
+      'TFL123456789': 'Fabricated Plate Work Manufacturing',
+      'RTX987654321': 'Guided Missile and Space Vehicle Manufacturing',
+      'BAE456789123': 'Search Detection Navigation Guidance Aeronautical Systems',
+      'ACI789123456': 'Laminated Plastics Plate Sheet and Shape Manufacturing',
+      'MSF456789012': 'Health Care and Social Assistance',
+      'ITC234567890': 'Professional, Scientific, and Technical Services',
+      'GCE567890123': 'Construction of Buildings',
+      'QSL890123456': 'Transportation and Warehousing',
+      'NGE123456780': 'Environmental Consulting Services'
+    };
+    return naicsMap[uei] || 'Professional Services';
+  };
+
+  const getMarketType = (primaryAgency?: string) => {
+    return primaryAgency === 'Defense' ? 'defense' : 'civilian';
+  };
+
+  const getCompanyLocation = (uei: string) => {
+    const locationMap: Record<string, string> = {
+      'TFL123456789': 'Houston, TX',
+      'RTX987654321': 'Waltham, MA',
+      'BAE456789123': 'Arlington, VA',
+      'ACI789123456': 'Seattle, WA',
+      'MSF456789012': 'Washington, DC',
+      'ITC234567890': 'Austin, TX',
+      'GCE567890123': 'Denver, CO',
+      'QSL890123456': 'Norfolk, VA',
+      'NGE123456780': 'Portland, OR'
+    };
+    return locationMap[uei] || 'Washington, DC';
+  };
+
+  const getEmployeeCount = (uei: string) => {
+    const employeeMap: Record<string, string> = {
+      'TFL123456789': '250-500',
+      'RTX987654321': '10,000+',
+      'BAE456789123': '5,000-10,000',
+      'ACI789123456': '500-1,000',
+      'MSF456789012': '1,000-5,000',
+      'ITC234567890': '100-250',
+      'GCE567890123': '500-1,000',
+      'QSL890123456': '100-500',
+      'NGE123456780': '50-100'
+    };
+    return employeeMap[uei] || '250-500';
+  };
+
+  const getYearsInBusiness = (uei: string) => {
+    const yearsMap: Record<string, number> = {
+      'TFL123456789': 12,
+      'RTX987654321': 98,
+      'BAE456789123': 45,
+      'ACI789123456': 23,
+      'MSF456789012': 15,
+      'ITC234567890': 8,
+      'GCE567890123': 18,
+      'QSL890123456': 14,
+      'NGE123456780': 9
+    };
+    return yearsMap[uei] || 10;
+  };
+
+  const getPrimaryContact = (uei: string) => {
+    const contactMap: Record<string, string> = {
+      'TFL123456789': 'John Smith, VP Operations',
+      'RTX987654321': 'Sarah Johnson, Director Defense Systems',
+      'BAE456789123': 'Michael Davis, Program Manager',
+      'ACI789123456': 'Lisa Chen, Operations Director',
+      'MSF456789012': 'Dr. Robert Wilson, Chief Medical Officer',
+      'ITC234567890': 'Amanda Rodriguez, CTO',
+      'GCE567890123': 'Mark Thompson, Project Director',
+      'QSL890123456': 'David Kim, VP Logistics',
+      'NGE123456780': 'Maria Santos, Environmental Director'
+    };
+    return contactMap[uei] || 'Contact Representative';
+  };
+
+  // Portfolio Data Service - pulls from actual contractorMetrics service (Trio Fabrication framework)
   const portfolioDataService = {
-    getPortfolioAssets: () => [
-      {
-        id: 'TFL123456789',
-        companyName: 'Trio Fabrication LLC',
-        naicsDescription: 'Fabricated Plate Work Manufacturing',
-        marketType: 'defense' as const,
-        uei: 'TFL123456789',
-        activeAwards: { value: '$125M' },
-        location: 'Houston, TX',
-        employeeCount: '250-500',
-        yearsInBusiness: 12,
-        primaryContact: 'John Smith, VP Operations'
-      },
-      {
-        id: 'RTX987654321',
-        companyName: 'Raytheon Technologies Corporation',
-        naicsDescription: 'Guided Missile and Space Vehicle Manufacturing',
-        marketType: 'defense' as const,
-        uei: 'RTX987654321',
-        activeAwards: { value: '$2.1B' },
-        location: 'Waltham, MA',
-        employeeCount: '10,000+',
-        yearsInBusiness: 98,
-        primaryContact: 'Sarah Johnson, Director Defense Systems'
-      },
-      {
-        id: 'BAE456789123',
-        companyName: 'BAE Systems Inc',
-        naicsDescription: 'Search Detection Navigation Guidance Aeronautical Systems',
-        marketType: 'defense' as const,
-        uei: 'BAE456789123',
-        activeAwards: { value: '$1.8B' },
-        location: 'Arlington, VA',
-        employeeCount: '5,000-10,000',
-        yearsInBusiness: 45,
-        primaryContact: 'Michael Davis, Program Manager'
-      },
-      {
-        id: 'ACI789123456',
-        companyName: 'Applied Composites Inc',
-        naicsDescription: 'Laminated Plastics Plate Sheet and Shape Manufacturing',
-        marketType: 'civilian' as const,
-        uei: 'ACI789123456',
-        activeAwards: { value: '$180M' },
-        location: 'Seattle, WA',
-        employeeCount: '500-1,000',
-        yearsInBusiness: 23,
-        primaryContact: 'Lisa Chen, Operations Director'
-      },
-      {
-        id: 'MSF456789012',
-        companyName: 'MedStar Federal',
-        naicsDescription: 'Health Care and Social Assistance',
-        marketType: 'civilian' as const,
-        uei: 'MSF456789012',
-        activeAwards: { value: '$350M' },
-        location: 'Washington, DC',
-        employeeCount: '1,000-5,000',
-        yearsInBusiness: 15,
-        primaryContact: 'Dr. Robert Wilson, Chief Medical Officer'
-      },
-      {
-        id: 'ITC234567890',
-        companyName: 'InfoTech Consulting Group',
-        naicsDescription: 'Professional, Scientific, and Technical Services',
-        marketType: 'civilian' as const,
-        uei: 'ITC234567890',
-        activeAwards: { value: '$85M' },
-        location: 'Austin, TX',
-        employeeCount: '100-250',
-        yearsInBusiness: 8,
-        primaryContact: 'Amanda Rodriguez, CTO'
-      },
-      {
-        id: 'GCE567890123',
-        companyName: 'GreenPoint Construction & Engineering',
-        naicsDescription: 'Construction of Buildings',
-        marketType: 'civilian' as const,
-        uei: 'GCE567890123',
-        activeAwards: { value: '$220M' },
-        location: 'Denver, CO',
-        employeeCount: '500-1,000',
-        yearsInBusiness: 18,
-        primaryContact: 'Mark Thompson, Project Director'
-      },
-      {
-        id: 'TSI890123456',
-        companyName: 'TechSolutions International',
-        naicsDescription: 'Computer Systems Design Services',
-        marketType: 'defense' as const,
-        uei: 'TSI890123456',
-        activeAwards: { value: '$420M' },
-        location: 'Reston, VA',
-        employeeCount: '1,000-5,000',
-        yearsInBusiness: 25,
-        primaryContact: 'Jennifer Liu, VP Engineering'
-      }
-    ],
+    getPortfolioAssets: () => {
+      const allMetrics = getAllContractorMetrics();
+      return Object.values(allMetrics).map(metrics => ({
+        id: metrics.uei,
+        companyName: metrics.companyName,
+        naicsDescription: getCompanyNAICS(metrics.uei),
+        marketType: getMarketType(metrics.primaryAgency) as 'defense' | 'civilian',
+        uei: metrics.uei,
+        activeAwards: { value: metrics.activeAwards },
+        location: getCompanyLocation(metrics.uei),
+        employeeCount: getEmployeeCount(metrics.uei),
+        yearsInBusiness: getYearsInBusiness(metrics.uei),
+        primaryContact: getPrimaryContact(metrics.uei),
+        lifetimeAwards: metrics.lifetimeAwards,
+        revenue: metrics.revenue,
+        pipeline: metrics.pipeline,
+        contractCount: metrics.contractCount,
+        primaryAgency: metrics.primaryAgency
+      }));
+    },
 
     parseAwardValue: (value: string): number => {
       const cleanValue = value.replace(/[^\d.]/g, '');
@@ -189,15 +192,62 @@ export function MonitoringDashboard({
   // Use the service to get portfolio assets
   const portfolioAssets = portfolioDataService.getAssetsByAwardValue('desc');
 
-  // Get top and bottom performers based on scores
+  // Generate scores based on actual contractor metrics (using Trio as reference)
+  const generateMetricsBasedScore = (asset: any, featureKey: string) => {
+    const metrics = getContractorMetrics(asset.uei);
+    if (!metrics) return 75; // Default score
+
+    const feature = featureOptions[featureKey];
+    let baseScore = 75;
+
+    // Calculate scores based on actual metrics, with Trio as the reference framework
+    const awardValue = portfolioDataService.parseAwardValue(metrics.activeAwards);
+    const pipelineValue = portfolioDataService.parseAwardValue(metrics.pipeline);
+    const revenueValue = portfolioDataService.parseAwardValue(metrics.revenue);
+
+    // Trio Fabrication reference values for scoring
+    const trioAwards = 125000000; // $125M
+    const trioPipeline = 280000000; // $280M
+    const trioRevenue = 125000000; // $125M
+
+    switch (feature.category) {
+      case 'performance':
+        // Performance based on revenue and awards relative to Trio
+        const revenueRatio = revenueValue / trioRevenue;
+        const awardRatio = awardValue / trioAwards;
+        baseScore = Math.min(95, Math.max(50, 75 + (revenueRatio + awardRatio - 2) * 15));
+        break;
+
+      case 'activity':
+        // Activity based on contract count and award velocity
+        const contractRatio = metrics.contractCount / 92; // Trio has 92 contracts
+        baseScore = Math.min(95, Math.max(50, 70 + contractRatio * 20));
+        break;
+
+      case 'utilization':
+        // Utilization based on pipeline efficiency
+        const pipelineRatio = pipelineValue / awardValue;
+        const trioRatio = trioPipeline / trioAwards; // ~2.24
+        baseScore = Math.min(95, Math.max(45, 75 - Math.abs(pipelineRatio - trioRatio) * 10));
+        break;
+    }
+
+    // Add feature-specific variations
+    const featureHash = featureKey.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
+    const variation = (featureHash % 10) - 5; // -5 to +5 variation
+
+    return Math.min(95, Math.max(45, baseScore + variation));
+  };
+
+  // Get top and bottom performers based on consistent scores
   const getTopBottomPerformers = (type: string) => {
     const featureKeys = getFeatureKeys(type);
     const assetsWithScores = portfolioAssets.map(asset => {
       let totalScore = 0;
       let scoreCount = 0;
 
-      featureKeys.forEach(() => {
-        const score = 60 + Math.random() * 35;
+      featureKeys.forEach((featureKey) => {
+        const score = generateMetricsBasedScore(asset, featureKey);
         totalScore += score;
         scoreCount++;
       });
@@ -258,38 +308,88 @@ export function MonitoringDashboard({
 
       featureKeys.forEach((featureKey) => {
         const feature = featureOptions[featureKey];
-        const scoreValue = 60 + Math.random() * 35;
+        const scoreValue = generateMetricsBasedScore(asset, featureKey);
+        const metrics = getContractorMetrics(asset.uei);
 
         if (showScores) {
           // Score mode (0-100 scale)
           const score = scoreValue.toFixed(1);
           data.push({ value: score, score: scoreValue });
         } else {
-          // Value mode - use actual units from feature definition
+          // Value mode - use actual metrics where possible, otherwise calculated values
           let value;
-          switch (feature.unit) {
-            case '$M':
-              value = '$' + (awardValue / 1000000 * (0.5 + Math.random() * 1.5)).toFixed(1) + 'M';
-              break;
-            case 'yrs':
-              value = (2 + Math.random() * 4).toFixed(1) + ' yrs';
-              break;
-            case '%':
-              value = (Math.random() * 100).toFixed(1) + '%';
-              break;
-            case 'awards':
-            case 'obligations':
-            case 'subawards':
-            case 'relationships':
-            case 'events':
-              value = Math.floor(awardValue / 10000000 * (0.5 + Math.random() * 1.5)).toLocaleString();
-              break;
-            case 'pts':
-              value = scoreValue.toFixed(1);
-              break;
-            default:
-              value = (Math.random() * 100).toFixed(1);
+
+          if (metrics) {
+            // Use real metrics data for key performance indicators
+            switch (featureKey) {
+              case 'awards_captured_ttm':
+                value = metrics.activeAwards;
+                break;
+              case 'estimated_revenue_ttm':
+                value = metrics.revenue;
+                break;
+              case 'total_pipeline':
+                value = metrics.pipeline;
+                break;
+              case 'portfolio_duration':
+                value = (asset.yearsInBusiness * 0.3).toFixed(1) + ' yrs';
+                break;
+              case 'blended_growth':
+                const growthRate = ((portfolioDataService.parseAwardValue(metrics.pipeline) / portfolioDataService.parseAwardValue(metrics.activeAwards) - 1) * 50).toFixed(1);
+                value = growthRate + '%';
+                break;
+              case 'new_awards':
+              case 'new_obligations':
+              case 'new_subawards':
+              case 'new_relationships':
+              case 'all_procurement_events':
+                value = Math.floor(metrics.contractCount * (scoreValue / 75)).toLocaleString();
+                break;
+              case 'award_utilization':
+              case 'vendor_utilization':
+                value = scoreValue.toFixed(1) + '%';
+                break;
+              default:
+                // Fallback to score-based calculation
+                const scoreMultiplier = scoreValue / 80;
+                switch (feature.unit) {
+                  case '$M':
+                    value = '$' + (awardValue / 1000000 * scoreMultiplier * 0.8).toFixed(1) + 'M';
+                    break;
+                  case 'yrs':
+                    value = (2 + scoreMultiplier * 3).toFixed(1) + ' yrs';
+                    break;
+                  case '%':
+                    value = scoreValue.toFixed(1) + '%';
+                    break;
+                  case 'pts':
+                    value = scoreValue.toFixed(1);
+                    break;
+                  default:
+                    value = scoreValue.toFixed(1);
+                }
+            }
+          } else {
+            // Fallback to score-based calculation for unknown contractors
+            const scoreMultiplier = scoreValue / 80;
+            switch (feature.unit) {
+              case '$M':
+                value = '$' + (awardValue / 1000000 * scoreMultiplier * 0.8).toFixed(1) + 'M';
+                break;
+              case 'yrs':
+                value = (2 + scoreMultiplier * 3).toFixed(1) + ' yrs';
+                break;
+              case '%':
+                value = scoreValue.toFixed(1) + '%';
+                break;
+              case 'pts':
+                value = scoreValue.toFixed(1);
+                break;
+              default:
+                value = scoreValue.toFixed(1);
+            }
           }
+
           data.push({ value, score: scoreValue });
         }
       });
