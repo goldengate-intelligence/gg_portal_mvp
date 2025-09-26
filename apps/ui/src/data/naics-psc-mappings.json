@@ -4109,7 +4109,7 @@
           "psc_3_char": "511",
           "psc_3_char_description": "Hand Tools, Edged",
           "psc_4_char": "5110",
-          "psc_4_char_description": "EDGED"
+          "psc_4_char_description": "Hand Tools, Edged, Non-Powered"
         },
         {
           "psc_2_char": "51",
@@ -12007,7 +12007,7 @@
           "psc_3_char": "511",
           "psc_3_char_description": "Hand Tools, Edged",
           "psc_4_char": "5110",
-          "psc_4_char_description": "EDGED"
+          "psc_4_char_description": "Hand Tools, Edged, Non-Powered"
         },
         {
           "psc_2_char": "51",
@@ -22877,7 +22877,7 @@
           "psc_3_char": "511",
           "psc_3_char_description": "Hand Tools, Edged",
           "psc_4_char": "5110",
-          "psc_4_char_description": "EDGED"
+          "psc_4_char_description": "Hand Tools, Edged, Non-Powered"
         },
         {
           "psc_2_char": "51",
@@ -35621,7 +35621,7 @@
           "psc_3_char": "511",
           "psc_3_char_description": "Hand Tools, Edged",
           "psc_4_char": "5110",
-          "psc_4_char_description": "EDGED"
+          "psc_4_char_description": "Hand Tools, Edged, Non-Powered"
         },
         {
           "psc_2_char": "51",
@@ -49661,7 +49661,7 @@
           "psc_3_char": "511",
           "psc_3_char_description": "Hand Tools, Edged",
           "psc_4_char": "5110",
-          "psc_4_char_description": "EDGED"
+          "psc_4_char_description": "Hand Tools, Edged, Non-Powered"
         },
         {
           "psc_2_char": "51",
@@ -49748,6 +49748,35 @@
           "psc_3_char_description": "Prefabricated Structures",
           "psc_4_char": "5670",
           "psc_4_char_description": "PREFABRICATED"
+        }
+      ]
+    },
+    "332312": {
+      "naics_2_char": "33",
+      "naics_2_description": "Manufacturing",
+      "naics_3_char": "332",
+      "naics_3_description": "Fabricated Metal Product Manufacturing",
+      "naics_4_char": "3323",
+      "naics_4_description": "Architectural and Structural Metals Manufacturing",
+      "naics_5_char": "33231",
+      "naics_5_description": "Plate Work and Fabricated Structural Product Manufacturing",
+      "naics_6_char": "332312",
+      "naics_6_description": "Fabricated Structural Metal Manufacturing",
+      "keywords": [
+        "FABRICATED STRUCTURAL METAL",
+        "Structural Metal",
+        "Metal Fabrication",
+        "Steel Fabrication",
+        "Metal Structures"
+      ],
+      "pscMappings": [
+        {
+          "psc_2_char": "56",
+          "psc_2_char_description": "BUILDING MATERIALS AND STRUCTURAL COMPONENTS",
+          "psc_3_char": "567",
+          "psc_3_char_description": "Structural Metal Products",
+          "psc_4_char": "5670",
+          "psc_4_char_description": "Structural Metal Products"
         }
       ]
     },
@@ -61975,7 +62004,7 @@
       "psc_3_char": "511",
       "psc_3_char_description": "Hand Tools, Edged",
       "psc_4_char": "5110",
-      "psc_4_char_description": "EDGED",
+      "psc_4_char_description": "Hand Tools, Edged, Non-Powered",
       "naicsCode": "332216",
       "keywords": [
         "HAND TOOLS",
@@ -65738,7 +65767,7 @@
       "psc_3_char": "511",
       "psc_3_char_description": "Hand Tools, Edged",
       "psc_4_char": "5110",
-      "psc_4_char_description": "EDGED",
+      "psc_4_char_description": "Hand Tools, Edged, Non-Powered",
       "naicsCode": "332216",
       "keywords": [
         "HAND TOOLS",
@@ -74055,7 +74084,7 @@
       "psc_3_char": "511",
       "psc_3_char_description": "Hand Tools, Edged",
       "psc_4_char": "5110",
-      "psc_4_char_description": "EDGED",
+      "psc_4_char_description": "Hand Tools, Edged, Non-Powered",
       "naicsCode": "332216",
       "keywords": [
         "HAND TOOLS",

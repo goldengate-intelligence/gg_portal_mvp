@@ -30,6 +30,7 @@
     "health": "../scripts/dev.sh health"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.63.1",
     "@better-auth/client": "^0.0.2-alpha.3",
     "@elysiajs/bearer": "^1.0.2",
     "@elysiajs/cors": "^1.0.2",

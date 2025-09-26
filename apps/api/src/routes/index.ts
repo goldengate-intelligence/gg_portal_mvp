@@ -6,6 +6,7 @@ import contractorsRoutes from "./contractors";
 import contractorProfilesRoutes from "./contractor-profiles";
 import contractorListsRoutes from "./contractor-lists";
 import { analyticsRoutes } from "./analytics";
+import aiClassifyRoutes from "./ai-classify";
 // import userRoutes from "./users";
 
 export const apiRoutes = new Elysia({ prefix: "/api/v1" })
@@ -15,7 +16,8 @@ export const apiRoutes = new Elysia({ prefix: "/api/v1" })
   .use(contractorsRoutes)
   .use(contractorProfilesRoutes)
   .use(contractorListsRoutes)
-  .use(analyticsRoutes);
+  .use(analyticsRoutes)
+  .use(aiClassifyRoutes);
   // .use(userRoutes);
 
 export default apiRoutes;
