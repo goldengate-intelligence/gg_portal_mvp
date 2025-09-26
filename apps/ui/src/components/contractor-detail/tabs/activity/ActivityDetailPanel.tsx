@@ -6,11 +6,19 @@ import { ActivityInflows } from "./components/ActivityInflows";
 import { ActivityOutflows } from "./components/ActivityOutflows";
 import { useActivityState } from "./hooks/useActivityState";
 import { useContractData } from "./hooks/useContractData";
-import type { ActivityDetailPanelProps } from "./types";
+import type { ActivityEvent } from "../network/types";
+import type { UniversalMetrics } from "../../services/unified-data-adapter";
+
+interface ActivityDetailPanelProps {
+	activityEvents: ActivityEvent[];
+	metrics: UniversalMetrics;
+	isLoading?: boolean;
+}
 
 export function ActivityDetailPanel({
-	contractor,
-	performanceData,
+	activityEvents,
+	metrics,
+	isLoading,
 }: ActivityDetailPanelProps) {
 	const {
 		showAwardCardView,
@@ -27,7 +35,7 @@ export function ActivityDetailPanel({
 		closeObligationCardView,
 	} = useActivityState();
 
-	const { sortedInflowRelationships, outflowRelationships } = useContractData();
+	const { sortedInflowRelationships, outflowRelationships } = useContractData(activityEvents);
 
 	// Handle tooltip setting for specific card keys
 	const handleSetActiveTooltip = (cardKey: string, tooltip: string | null) => {

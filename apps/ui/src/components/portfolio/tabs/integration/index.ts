@@ -1,1 +1,1 @@
-export { IntegrationTab } from './IntegrationTab';
+export { IntegrationTab } from "./IntegrationTab";

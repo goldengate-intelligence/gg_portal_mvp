@@ -12,8 +12,12 @@ import {
 import React from "react";
 import { CONTRACTOR_DETAIL_COLORS } from "../../../../logic/utils";
 import { Card } from "../../../ui/card";
+import { NAICSPSCDisplay } from "../../../shared/NAICSPSCDisplay";
 
 interface Event {
+	AWARD_KEY: string;
+	EVENT_DATE: string;
+	award_key: string;
 	event_type: "PRIME" | "SUBAWARD";
 	event_date: string;
 	recipient_name: string;
@@ -48,6 +52,7 @@ interface AwardCardViewProps {
 	onOpenObligationCardView: (contractId: string, contractTitle: string, originContainer?: "inflow" | "outflow") => void;
 }
 
+
 export function AwardCardView({
 	relationship,
 	type,
@@ -75,6 +80,9 @@ export function AwardCardView({
 	// Mock data - in production this would come from props or API
 	const mockObligations: Event[] = [
 		{
+			AWARD_KEY: "CONTRACT_AWARD_W912HZ24F0123",
+			EVENT_DATE: "2025-09-05",
+			award_key: "CONTRACT_AWARD_W912HZ24F0123",
 			event_type: "PRIME",
 			event_date: "2025-09-05", // HOT - 14 days ago
 			recipient_name: "Trio Fabrication LLC",
@@ -103,6 +111,9 @@ export function AwardCardView({
 				"Advanced fabrication of structural components for military vehicle armor systems",
 		},
 		{
+			AWARD_KEY: "CONTRACT_AWARD_W912HZ25C0087",
+			EVENT_DATE: "2025-07-10",
+			award_key: "CONTRACT_AWARD_W912HZ25C0087",
 			event_type: "PRIME",
 			event_date: "2025-07-10", // WARM - 71 days ago
 			recipient_name: "Trio Fabrication LLC",
@@ -131,6 +142,9 @@ export function AwardCardView({
 				"Modification to expand manufacturing capacity for armor plate production",
 		},
 		{
+			AWARD_KEY: "PRIME_AWARD_N00024-23-C-4567",
+			EVENT_DATE: "2023-11-15",
+			award_key: "PRIME_AWARD_N00024-23-C-4567",
 			event_type: "SUBAWARD",
 			event_date: "2023-11-15", // COLD - 673 days ago
 			recipient_name: "Texas Materials Inc",
@@ -159,6 +173,9 @@ export function AwardCardView({
 				"Supply of ready-mix concrete for foundation and structural components",
 		},
 		{
+			AWARD_KEY: "PRIME_AWARD_FA8650-25-D-2841",
+			EVENT_DATE: "2025-09-01",
+			award_key: "PRIME_AWARD_FA8650-25-D-2841",
 			event_type: "SUBAWARD",
 			event_date: "2025-09-01", // HOT - 18 days ago
 			recipient_name: "Advanced Component Solutions",
@@ -187,6 +204,9 @@ export function AwardCardView({
 				"Manufacturing precision aircraft components and avionics housings",
 		},
 		{
+			AWARD_KEY: "PRIME_AWARD_SP0600-24-D-9156",
+			EVENT_DATE: "2024-12-20",
+			award_key: "PRIME_AWARD_SP0600-24-D-9156",
 			event_type: "SUBAWARD",
 			event_date: "2024-12-20", // WARM - 273 days ago
 			recipient_name: "Precision Engineering Corp",
@@ -247,6 +267,24 @@ export function AwardCardView({
 			newExpanded.add(itemId);
 		}
 		setExpandedItems(newExpanded);
+	};
+
+	// Get the latest action date for a specific award key
+	const getLatestActionDate = (awardKey: string) => {
+		// In production, this would group all ActivityEvents by AWARD_KEY and get MAX(EVENT_DATE)
+		// For now with mock data, we'll simulate this logic
+		const eventsForAward = mockObligations.filter(event =>
+			event.AWARD_KEY === awardKey || event.award_piid === awardKey
+		);
+
+		if (eventsForAward.length === 0) return new Date().toISOString();
+
+		// Get the most recent event date for this award
+		const latestDate = eventsForAward
+			.map(event => new Date(event.EVENT_DATE || event.event_date))
+			.sort((a, b) => b.getTime() - a.getTime())[0];
+
+		return latestDate.toISOString().split('T')[0]; // Return YYYY-MM-DD format
 	};
 
 	const getTemperatureStatus = (actionDate: string) => {
@@ -311,9 +349,10 @@ export function AwardCardView({
 										return dateB.getTime() - dateA.getTime();
 									})
 									.map((event, index) => {
-										const eventKey = event.award_piid;
+										const eventKey = event.AWARD_KEY;
 										const isExpanded = expandedItems.has(eventKey);
-										const tempStatus = getTemperatureStatus(event.event_date);
+										const latestActionDate = getLatestActionDate(eventKey);
+										const tempStatus = getTemperatureStatus(latestActionDate);
 
 										return (
 											<div
@@ -355,7 +394,7 @@ export function AwardCardView({
 																			fontSize: "24px",
 																		}}
 																	>
-																		{event.award_piid}
+																		{event.AWARD_KEY}
 																	</h3>
 																</div>
 
@@ -363,15 +402,9 @@ export function AwardCardView({
 																<div className="uppercase tracking-wide">
 																	<div className="font-medium text-gray-300/80 text-sm tracking-wider">
 																		LATEST ACTION:{" "}
-																		{formatDate(event.event_date).toUpperCase()}
+																		{formatDate(latestActionDate).toUpperCase()}
 																	</div>
-																	<div className="font-normal text-gray-500 text-xs">
-																		<span>NAICS:</span> {event.naics_code} •{" "}
-																		<span>PSC:</span> {event.psc_code}
-																	</div>
-																	<div className="font-normal text-[#F97316]/90 text-xs mt-1">
-																		{event.ai_description}
-																	</div>
+																	<NAICSPSCDisplay naicsCode={event.naics_code} pscCode={event.psc_code} />
 																</div>
 															</div>
 

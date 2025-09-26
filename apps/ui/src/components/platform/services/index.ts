@@ -1,2 +1,2 @@
-export * from './contractor-profile-transform';
-export * from './contractor-transform';
+export * from "./contractor-profile-transform";
+export * from "./contractor-transform";

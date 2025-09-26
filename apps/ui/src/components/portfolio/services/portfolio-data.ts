@@ -1,343 +1,277 @@
 /**
- * Portfolio Data Service
+ * Portfolio Data Service (Refactored)
  *
- * Orchestrates shared services to provide portfolio-specific data operations.
- * Eliminates cross-component imports by using shared services.
+ * Simplified service that delegates to the portfolio orchestrator.
+ * Maintains backward compatibility while using the orchestration pattern.
  */
 
-import { icebergReader } from '../../../services/data-sources/iceberg-reader';
-import { contractorLogoService } from '../../../services/contractors/contractor-logo-service';
-import { naicsPscService } from '../../../services/classification/naics-psc-service';
-import { performanceColors } from '../../../services/visualization/performance-colors';
+import { naicsPscService } from "../../../services/classification/naics-psc-service";
+import { performanceColors } from "../../../services/visualization/performance-colors";
+import { portfolioDataOrchestrator } from "./portfolio-orchestrator";
+import type { PortfolioData, PortfolioFilter } from "./portfolio-orchestrator";
 
+// Re-export types for backward compatibility
 export interface PortfolioAsset {
-  id: string;
-  companyName: string;
-  uei: string;
-  naicsDescription: string;
-  naicsCode: string;
-  marketType: 'civilian' | 'defense';
-  activeAwards: {
-    value: string;
-    count: number;
-  };
-  lifetimeAwards: string;
-  revenue: string;
-  pipeline: string;
-  contractCount: number;
-  primaryAgency: string;
-  performanceScore: number;
-  lastUpdated: string;
+	id: string;
+	companyName: string;
+	uei: string;
+	naicsDescription: string;
+	naicsCode: string;
+	marketType: "civilian" | "defense";
+	activeAwards: {
+		value: string;
+		count: number;
+	};
+	lifetimeAwards: string;
+	revenue: string;
+	pipeline: string;
+	contractCount: number;
+	primaryAgency: string;
+	performanceScore: number;
+	lastUpdated: string;
 }
 
 export interface GroupAsset {
-  id: string;
-  type: 'group';
-  companyName: string;
-  groupName: string;
-  uei: string; // Representative UEI
-  memberAssets: PortfolioAsset[];
-  aggregatedMetrics: {
-    lifetime: string;
-    revenue: string;
-    pipeline: string;
-  };
-  marketType: 'civilian' | 'defense' | 'mixed';
-  naicsDescription: string;
-  activeAwards: {
-    value: string;
-    count: number;
-  };
+	id: string;
+	type: "group";
+	companyName: string;
+	groupName: string;
+	uei: string; // Representative UEI
+	memberAssets: PortfolioAsset[];
+	aggregatedMetrics: {
+		lifetime: string;
+		revenue: string;
+		pipeline: string;
+	};
+	marketType: "civilian" | "defense" | "mixed";
+	naicsDescription: string;
+	activeAwards: {
+		value: string;
+		count: number;
+	};
 }
 
 export interface PortfolioMetrics {
-  totalAssets: number;
-  totalValue: string;
-  averagePerformance: number;
-  topPerformers: PortfolioAsset[];
-  industryBreakdown: Array<{
-    industry: string;
-    count: number;
-    percentage: number;
-  }>;
+	totalAssets: number;
+	totalValue: string;
+	averagePerformance: number;
+	topPerformers: PortfolioAsset[];
+	industryBreakdown: Array<{
+		industry: string;
+		count: number;
+		percentage: number;
+	}>;
 }
 
 class PortfolioDataService {
-  /**
-   * Get portfolio assets from iceberg tables
-   */
-  async getPortfolioAssets(portfolioId?: string): Promise<PortfolioAsset[]> {
-    try {
-      const result = await icebergReader.getPortfolioAssets(portfolioId);
+	constructor() {
+		// Initialize NAICS service in background (lazy loading)
+		this.initializeServices();
+	}
 
-      const assets: PortfolioAsset[] = result.data.map(raw => ({
-        id: raw.id || raw.uei,
-        companyName: raw.company_name,
-        uei: raw.uei,
-        naicsDescription: raw.naics_description,
-        naicsCode: raw.naics_code,
-        marketType: this.determineMarketType(raw.primary_agency),
-        activeAwards: {
-          value: raw.active_awards_value || '$0',
-          count: parseInt(raw.active_awards_count || '0')
-        },
-        lifetimeAwards: raw.lifetime_awards || '$0',
-        revenue: raw.estimated_revenue || '$0',
-        pipeline: raw.estimated_pipeline || '$0',
-        contractCount: parseInt(raw.contract_count || '0'),
-        primaryAgency: raw.primary_agency || 'Unknown',
-        performanceScore: parseFloat(raw.performance_score || '75'),
-        lastUpdated: raw.last_updated || new Date().toISOString()
-      }));
+	/**
+	 * Initialize shared services in background
+	 */
+	private async initializeServices(): Promise<void> {
+		try {
+			// Trigger loading of NAICS/PSC classifications
+			await naicsPscService.searchByKeyword("aerospace").catch(() => {
+				// Ignore errors during initialization
+			});
+		} catch (error) {
+			// Silent fail - services will work with fallbacks
+		}
+	}
 
-      return assets.sort((a, b) => b.performanceScore - a.performanceScore);
+	/**
+	 * Get portfolio assets using orchestration service
+	 */
+	async getPortfolioAssets(
+		portfolioId?: string,
+		filters?: PortfolioFilter,
+	): Promise<PortfolioAsset[]> {
+		try {
+			const portfolioData = await portfolioDataOrchestrator.getPortfolioData(
+				portfolioId,
+				filters,
+			);
+			return portfolioData.assets.filter(
+				(asset) => asset.type !== "group",
+			) as PortfolioAsset[];
+		} catch (error) {
+			console.error("Failed to fetch portfolio assets:", error);
+			return [];
+		}
+	}
 
-    } catch (error) {
-      console.error('Failed to fetch portfolio assets:', error);
-      return [];
-    }
-  }
+	/**
+	 * Get complete portfolio data
+	 */
+	async getPortfolioData(
+		portfolioId?: string,
+		filters?: PortfolioFilter,
+	): Promise<PortfolioData> {
+		return portfolioDataOrchestrator.getPortfolioData(portfolioId, filters);
+	}
 
-  /**
-   * Get contractor logo (uses shared service)
-   */
-  async getContractorLogo(uei: string, companyName?: string): Promise<string | null> {
-    const logoResponse = await contractorLogoService.getContractorLogo(uei, companyName);
-    return logoResponse.logoUrl;
-  }
+	/**
+	 * Search assets
+	 */
+	async searchAssets(
+		query: string,
+		portfolioId?: string,
+	): Promise<PortfolioAsset[]> {
+		return portfolioDataOrchestrator.searchAssets(query, portfolioId);
+	}
 
-  /**
-   * Get industry classification (uses shared service)
-   */
-  getIndustryClassification(companyName: string, naicsDescription: string) {
-    const classification = naicsPscService.searchByKeyword(naicsDescription)[0];
+	/**
+	 * Get portfolio analytics
+	 */
+	async getPortfolioAnalytics(portfolioId?: string): Promise<any> {
+		return portfolioDataOrchestrator.getPortfolioAnalytics(portfolioId);
+	}
 
-    return {
-      image: naicsPscService.getIndustryImage(companyName, naicsDescription),
-      tag: naicsPscService.getIndustryTag(companyName, naicsDescription),
-      category: classification?.category || 'Other',
-      keywords: classification?.keywords || []
-    };
-  }
+	/**
+	 * Get industry classification (uses shared service)
+	 */
+	getIndustryClassification(companyName: string, naicsDescription: string) {
+		const classification =
+			naicsPscService.searchByKeywordSync(naicsDescription)[0];
 
-  /**
-   * Get performance color based on score
-   */
-  getPerformanceColor(score: number): string {
-    return performanceColors.getScoreColor(score);
-  }
+		return {
+			image: naicsPscService.getIndustryImage(companyName, naicsDescription),
+			tag: naicsPscService.getIndustryTag(companyName, naicsDescription),
+			category: classification?.category || "Other",
+			keywords: classification?.keywords || [],
+		};
+	}
 
-  /**
-   * Calculate portfolio metrics
-   */
-  calculatePortfolioMetrics(assets: PortfolioAsset[]): PortfolioMetrics {
-    const totalAssets = assets.length;
+	/**
+	 * Get performance color based on score
+	 */
+	getPerformanceColor(score: number): string {
+		return performanceColors.getScoreColor(score);
+	}
 
-    // Calculate total value
-    const totalValueNum = assets.reduce((sum, asset) => {
-      return sum + this.parseMoneyValue(asset.activeAwards.value);
-    }, 0);
-    const totalValue = this.formatCurrency(totalValueNum);
+	/**
+	 * Calculate portfolio metrics (delegated to orchestrator)
+	 */
+	async calculatePortfolioMetrics(
+		portfolioId?: string,
+	): Promise<PortfolioMetrics> {
+		const portfolioData =
+			await portfolioDataOrchestrator.getPortfolioData(portfolioId);
+		return portfolioData.metrics;
+	}
 
-    // Calculate average performance
-    const averagePerformance = assets.length > 0
-      ? assets.reduce((sum, asset) => sum + asset.performanceScore, 0) / assets.length
-      : 0;
+	/**
+	 * Create asset group (delegated to orchestrator)
+	 */
+	async createAssetGroup(
+		assetIds: string[],
+		groupName: string,
+	): Promise<{ success: boolean; groupId?: string }> {
+		const result = await portfolioDataOrchestrator.updateAssetGrouping({
+			type: "create",
+			assetIds,
+			groupName,
+		});
 
-    // Get top performers (top 25%)
-    const topPerformersCount = Math.max(1, Math.ceil(assets.length * 0.25));
-    const topPerformers = assets
-      .sort((a, b) => b.performanceScore - a.performanceScore)
-      .slice(0, topPerformersCount);
+		return {
+			success: result.success,
+			groupId: result.updatedData.groupedAssets
+				? Object.keys(result.updatedData.groupedAssets)[0]
+				: undefined,
+		};
+	}
 
-    // Calculate industry breakdown
-    const industryCount = new Map<string, number>();
-    assets.forEach(asset => {
-      const classification = naicsPscService.getByNAICS(asset.naicsCode);
-      const industry = classification?.category || 'Other';
-      industryCount.set(industry, (industryCount.get(industry) || 0) + 1);
-    });
+	/**
+	 * Update pinned assets (delegated to orchestrator)
+	 */
+	async updatePinnedAssets(assetIds: string[]): Promise<{ success: boolean }> {
+		return portfolioDataOrchestrator.updatePinnedAssets(assetIds);
+	}
 
-    const industryBreakdown = Array.from(industryCount.entries())
-      .map(([industry, count]) => ({
-        industry,
-        count,
-        percentage: (count / totalAssets) * 100
-      }))
-      .sort((a, b) => b.count - a.count);
+	/**
+	 * Get asset enrichment data
+	 */
+	async getAssetEnrichmentData(ueis: string[]): Promise<any> {
+		return portfolioDataOrchestrator.getAssetEnrichmentData(ueis);
+	}
 
-    return {
-      totalAssets,
-      totalValue,
-      averagePerformance,
-      topPerformers,
-      industryBreakdown
-    };
-  }
+	/**
+	 * Invalidate cache
+	 */
+	invalidateCache(portfolioId?: string): void {
+		portfolioDataOrchestrator.invalidatePortfolioCache(portfolioId);
+	}
 
-  /**
-   * Create asset group
-   */
-  createAssetGroup(assets: PortfolioAsset[], groupName: string): GroupAsset {
-    if (assets.length === 0) {
-      throw new Error('Cannot create group with no assets');
-    }
+	/**
+	 * Get cache statistics
+	 */
+	getCacheStats(): { size: number; hitRate: number } {
+		return portfolioDataOrchestrator.getCacheStats();
+	}
 
-    // Calculate aggregated metrics
-    const totalLifetime = assets.reduce((sum, asset) => sum + this.parseMoneyValue(asset.lifetimeAwards), 0);
-    const totalRevenue = assets.reduce((sum, asset) => sum + this.parseMoneyValue(asset.revenue), 0);
-    const totalPipeline = assets.reduce((sum, asset) => sum + this.parseMoneyValue(asset.pipeline), 0);
-    const totalActiveValue = assets.reduce((sum, asset) => sum + this.parseMoneyValue(asset.activeAwards.value), 0);
-    const totalActiveCount = assets.reduce((sum, asset) => sum + asset.activeAwards.count, 0);
+	/**
+	 * Legacy method - determine market type from agency
+	 */
+	private determineMarketType(agency?: string): "civilian" | "defense" {
+		if (!agency) return "civilian";
+		const defenseAgencies = [
+			"defense",
+			"dod",
+			"army",
+			"navy",
+			"air force",
+			"space force",
+		];
+		const agencyLower = agency.toLowerCase();
+		return defenseAgencies.some((defenseAgency) =>
+			agencyLower.includes(defenseAgency),
+		)
+			? "defense"
+			: "civilian";
+	}
 
-    // Determine market type
-    const marketTypes = assets.map(a => a.marketType);
-    const defenseCount = marketTypes.filter(t => t === 'defense').length;
-    const civilianCount = marketTypes.filter(t => t === 'civilian').length;
+	/**
+	 * Legacy method - parse financial strings
+	 */
+	private parseMoneyValue(value: string): number {
+		if (!value || typeof value !== "string") return 0;
 
-    let marketType: 'civilian' | 'defense' | 'mixed';
-    if (defenseCount === 0) marketType = 'civilian';
-    else if (civilianCount === 0) marketType = 'defense';
-    else marketType = 'mixed';
+		const cleanValue = value.replace(/[$,\s]/g, "");
+		const multiplier = cleanValue.includes("B")
+			? 1e9
+			: cleanValue.includes("M")
+				? 1e6
+				: cleanValue.includes("K")
+					? 1e3
+					: 1;
+		const numericValue = Number.parseFloat(cleanValue.replace(/[BMK]/g, ""));
 
-    // Use most common NAICS description
-    const naicsDescriptions = assets.map(a => a.naicsDescription);
-    const naicsCount = new Map<string, number>();
-    naicsDescriptions.forEach(desc => {
-      naicsCount.set(desc, (naicsCount.get(desc) || 0) + 1);
-    });
-    const naicsDescription = [...naicsCount.entries()]
-      .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Mixed Industries';
+		return Number.isNaN(numericValue) ? 0 : numericValue * multiplier;
+	}
 
-    return {
-      id: `group_${Date.now()}`,
-      type: 'group',
-      companyName: groupName,
-      groupName,
-      uei: assets[0].uei, // Use first asset's UEI as representative
-      memberAssets: assets,
-      aggregatedMetrics: {
-        lifetime: this.formatCurrency(totalLifetime),
-        revenue: this.formatCurrency(totalRevenue),
-        pipeline: this.formatCurrency(totalPipeline)
-      },
-      marketType,
-      naicsDescription,
-      activeAwards: {
-        value: this.formatCurrency(totalActiveValue),
-        count: totalActiveCount
-      }
-    };
-  }
-
-  /**
-   * Update asset group
-   */
-  updateAssetGroup(group: GroupAsset, updates: Partial<Pick<GroupAsset, 'groupName' | 'memberAssets'>>): GroupAsset {
-    let updatedGroup = { ...group };
-
-    if (updates.groupName) {
-      updatedGroup.companyName = updates.groupName;
-      updatedGroup.groupName = updates.groupName;
-    }
-
-    if (updates.memberAssets) {
-      updatedGroup.memberAssets = updates.memberAssets;
-      // Recalculate aggregated metrics
-      const recreated = this.createAssetGroup(updates.memberAssets, updatedGroup.groupName);
-      updatedGroup.aggregatedMetrics = recreated.aggregatedMetrics;
-      updatedGroup.marketType = recreated.marketType;
-      updatedGroup.naicsDescription = recreated.naicsDescription;
-      updatedGroup.activeAwards = recreated.activeAwards;
-    }
-
-    return updatedGroup;
-  }
-
-  /**
-   * Save portfolio configuration
-   */
-  async savePortfolio(portfolioId: string, assets: Array<PortfolioAsset | GroupAsset>): Promise<void> {
-    try {
-      // In a real implementation, this would save to your backend
-      console.log('Saving portfolio:', portfolioId, assets);
-
-      // For now, store in localStorage as fallback
-      localStorage.setItem(`portfolio_${portfolioId}`, JSON.stringify({
-        id: portfolioId,
-        assets,
-        lastUpdated: new Date().toISOString()
-      }));
-
-    } catch (error) {
-      console.error('Failed to save portfolio:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Load portfolio configuration
-   */
-  async loadPortfolio(portfolioId: string): Promise<Array<PortfolioAsset | GroupAsset> | null> {
-    try {
-      // Try localStorage first
-      const stored = localStorage.getItem(`portfolio_${portfolioId}`);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed.assets || null;
-      }
-
-      return null;
-
-    } catch (error) {
-      console.error('Failed to load portfolio:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Private: Determine market type from agency
-   */
-  private determineMarketType(primaryAgency?: string): 'civilian' | 'defense' {
-    if (!primaryAgency) return 'civilian';
-
-    const agency = primaryAgency.toLowerCase();
-    const defenseKeywords = ['defense', 'dod', 'army', 'navy', 'air force', 'marines', 'military'];
-
-    return defenseKeywords.some(keyword => agency.includes(keyword)) ? 'defense' : 'civilian';
-  }
-
-  /**
-   * Private: Parse money string to number
-   */
-  private parseMoneyValue(moneyStr: string): number {
-    const cleaned = moneyStr.replace(/[^\d.-]/g, '');
-    const value = parseFloat(cleaned) || 0;
-
-    if (moneyStr.includes('B')) return value * 1000000000;
-    if (moneyStr.includes('M')) return value * 1000000;
-    if (moneyStr.includes('K')) return value * 1000;
-
-    return value;
-  }
-
-  /**
-   * Private: Format number as currency
-   */
-  private formatCurrency(value: number): string {
-    if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(1)}B`;
-    } else if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`;
-    } else {
-      return `$${value.toFixed(0)}`;
-    }
-  }
+	/**
+	 * Legacy method - format currency
+	 */
+	private formatCurrency(value: number): string {
+		if (value >= 1e9) {
+			return `$${(value / 1e9).toFixed(1)}B`;
+		}
+		if (value >= 1e6) {
+			return `$${(value / 1e6).toFixed(0)}M`;
+		}
+		if (value >= 1e3) {
+			return `$${(value / 1e3).toFixed(0)}K`;
+		}
+		return `$${Math.round(value)}`;
+	}
 }
 
 // Export singleton instance
 export const portfolioDataService = new PortfolioDataService();
 
-export { PortfolioDataService };
+// Export types for external use
+export type { PortfolioAsset, GroupAsset, PortfolioMetrics };

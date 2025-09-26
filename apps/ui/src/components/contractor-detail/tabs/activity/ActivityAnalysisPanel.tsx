@@ -10,15 +10,19 @@ import {
 } from "lucide-react";
 import React from "react";
 import { CONTRACTOR_DETAIL_COLORS } from "../../../../logic/utils";
+import type { ActivityEvent } from "../network/types";
+import type { UniversalMetrics } from "../../services/unified-data-adapter";
 
 interface ActivityAnalysisPanelProps {
-	contractor: any;
-	performanceData: any;
+	activityEvents: ActivityEvent[];
+	metrics: UniversalMetrics;
+	isLoading?: boolean;
 }
 
 export function ActivityAnalysisPanel({
-	contractor,
-	performanceData,
+	activityEvents,
+	metrics,
+	isLoading,
 }: ActivityAnalysisPanelProps) {
 	// Mock partner intelligence data - in production this would come from analysis engine
 	const partnerIntelligence = {
@@ -47,8 +51,10 @@ export function ActivityAnalysisPanel({
 		},
 	};
 
-	// Net flow calculation and color logic
-	const netFlowValue = 101; // In millions
+	// Calculate actual net flow from unified metrics
+	const inflowValue = (metrics?.ttm?.awards || 0); // TTM awards in millions
+	const outflowValue = (metrics?.ttm?.subcontracting || 0); // TTM subcontracting in millions
+	const netFlowValue = inflowValue - outflowValue; // Net flow
 	const getNetFlowColor = () => {
 		if (netFlowValue > 0) return "#10B981"; // Emerald green for positive
 		if (netFlowValue < 0) return "#FF4C4C"; // Red for negative
@@ -131,7 +137,7 @@ export function ActivityAnalysisPanel({
 								<div className="absolute inset-0 bg-[#10B981]/5" />
 								<div className="relative z-10">
 									<div className="text-2xl font-bold text-[#10B981] mb-1">
-										$140M
+										${inflowValue.toFixed(1)}M
 									</div>
 									<div className="text-xs text-gray-400 uppercase">Awards</div>
 								</div>
@@ -140,10 +146,10 @@ export function ActivityAnalysisPanel({
 								<div className="absolute inset-0 bg-[#10B981]/5" />
 								<div className="relative z-10">
 									<div className="text-2xl font-bold text-[#10B981] mb-1">
-										28%
+										{metrics?.portfolio?.inflowRelationships || 0}
 									</div>
 									<div className="text-xs text-gray-400 uppercase">
-										Value-Weighted Utilization
+										Inflow Relationships
 									</div>
 								</div>
 							</div>
@@ -155,7 +161,7 @@ export function ActivityAnalysisPanel({
 								<div className="absolute inset-0 bg-[#FF4C4C]/5" />
 								<div className="relative z-10">
 									<div className="text-2xl font-bold text-[#FF4C4C] mb-1">
-										$39M
+										${outflowValue.toFixed(1)}M
 									</div>
 									<div className="text-xs text-gray-400 uppercase">Awards</div>
 								</div>
@@ -164,10 +170,10 @@ export function ActivityAnalysisPanel({
 								<div className="absolute inset-0 bg-[#FF4C4C]/5" />
 								<div className="relative z-10">
 									<div className="text-2xl font-bold text-[#FF4C4C] mb-1">
-										32%
+										{metrics?.portfolio?.outflowRelationships || 0}
 									</div>
 									<div className="text-xs text-gray-400 uppercase">
-										Value-Weighted Utilization
+										Outflow Relationships
 									</div>
 								</div>
 							</div>

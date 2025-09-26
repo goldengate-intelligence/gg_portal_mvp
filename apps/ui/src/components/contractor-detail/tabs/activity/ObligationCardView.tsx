@@ -12,8 +12,10 @@ import {
 import React from "react";
 import { CONTRACTOR_DETAIL_COLORS } from "../../../../logic/utils";
 import { Card } from "../../../ui/card";
+import { NAICSPSCDisplay } from "../../../shared/NAICSPSCDisplay";
 
 interface Event {
+	event_id: string;
 	event_type: "PRIME" | "SUBAWARD";
 	event_date: string;
 	recipient_name: string;
@@ -48,6 +50,7 @@ interface ObligationCardViewProps {
 	originContainer?: "inflow" | "outflow";
 }
 
+
 export function ObligationCardView({
 	contractId,
 	contractTitle,
@@ -71,6 +74,7 @@ export function ObligationCardView({
 	const mockObligations: Event[] = originContainer === "outflow" ? [
 		// OUTFLOW specific obligations - different data
 		{
+			event_id: `${contractId}-OUT-TX-001`,
 			event_type: "SUBAWARD",
 			event_date: "2025-08-20", // Different dates
 			recipient_name: "Outflow Vendor LLC",
@@ -98,6 +102,7 @@ export function ObligationCardView({
 			ai_description: "Outflow engineering support services for naval systems",
 		},
 		{
+			event_id: `${contractId}-OUT-TX-002`,
 			event_type: "SUBAWARD",
 			event_date: "2025-07-15",
 			recipient_name: "California Tech Solutions",
@@ -127,6 +132,7 @@ export function ObligationCardView({
 	] : [
 		// INFLOW specific obligations - different data
 		{
+			event_id: `${contractId}-IN-TX-001`,
 			event_type: "PRIME",
 			event_date: "2025-09-10", // Different dates
 			recipient_name: "Trio Fabrication LLC",
@@ -154,6 +160,7 @@ export function ObligationCardView({
 			ai_description: "Inflow prime contract for structural metal fabrication",
 		},
 		{
+			event_id: `${contractId}-IN-TX-002`,
 			event_type: "PRIME",
 			event_date: "2025-06-25",
 			recipient_name: "Trio Fabrication LLC",
@@ -181,6 +188,7 @@ export function ObligationCardView({
 			ai_description: "Inflow contract modification for expanded manufacturing capacity",
 		},
 		{
+			event_id: `${contractId}-IN-TX-003`,
 			event_type: "SUBAWARD",
 			event_date: "2025-05-18",
 			recipient_name: "Denver Materials Corp",
@@ -304,7 +312,7 @@ export function ObligationCardView({
 									return dateB.getTime() - dateA.getTime();
 								})
 								.map((event, index) => {
-									const eventKey = event.award_piid;
+									const eventKey = event.EVENT_ID;
 									const isExpanded = expandedItems.has(eventKey);
 									const tempStatus = getTemperatureStatus(event.event_date);
 
@@ -348,7 +356,7 @@ export function ObligationCardView({
 																		fontSize: "24px",
 																	}}
 																>
-																	{event.award_piid}
+																	{event.EVENT_ID}
 																</h3>
 															</div>
 
@@ -358,13 +366,7 @@ export function ObligationCardView({
 																	LATEST ACTION:{" "}
 																	{formatDate(event.event_date).toUpperCase()}
 																</div>
-																<div className="font-normal text-gray-500 text-xs">
-																	<span>NAICS:</span> {event.naics_code} •{" "}
-																	<span>PSC:</span> {event.psc_code}
-																</div>
-																<div className="font-normal text-[#F97316]/90 text-xs mt-1">
-																	{event.ai_description}
-																</div>
+																<NAICSPSCDisplay naicsCode={event.naics_code} pscCode={event.psc_code} />
 															</div>
 														</div>
 
