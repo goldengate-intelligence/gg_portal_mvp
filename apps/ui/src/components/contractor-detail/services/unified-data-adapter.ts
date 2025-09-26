@@ -8,6 +8,11 @@
  */
 
 import { snowflakeApi } from "../../../services/data-sources/snowflake-api";
+import { mockUnifiedApi } from "./mockUnifiedData";
+
+// Use mock API in development
+const isDevelopment = import.meta.env.MODE === 'development' || !import.meta.env.VITE_SNOWFLAKE_API_URL;
+const apiService = isDevelopment ? mockUnifiedApi : snowflakeApi;
 import type { ActivityEvent } from "../tabs/network/types";
 
 export interface MonthlyMetricsData {
@@ -93,7 +98,10 @@ export interface UniversalMetrics {
   };
 
   // Entity classification
-  entityClassification: 'PRIMARY_PRIME' | 'PRIMARY_SUB' | 'HYBRID' | 'PRIME_WITH_SUBS' | 'SUBSIDIARY';
+  entityClassification: 'Pure Prime' | 'Pure Sub' | 'Iceberg Sub' | 'Teaming Prime' | 'Hybrid';
+
+  // Agency focus
+  isDefense: boolean;
 
   // Time in system
   monthsInSystem: number;
@@ -132,7 +140,7 @@ export interface PeerComparisonData {
   // Market position
   marketShare: number;
   sizeQuartile: number;
-  performanceTier: 'Top 10%' | 'Top 25%' | 'Top 50%' | 'Bottom 50%';
+  performanceTier: string; // 'Top 10%', 'Top 25%', or 'Xth percentile'
   performanceClassification: 'Elite' | 'Strong' | 'Stable' | 'Emerging' | 'Insufficient Data';
 }
 
@@ -226,12 +234,15 @@ class UnifiedDataAdapter {
         PSC_CODE,
         AWARD_TYPE
       FROM USAS_V1.UI_CD_ACTIVITY.FACT_CONTRACTOR_ACTIVITY_EVENTS
-      WHERE CONTRACTOR_UEI = ?
+      WHERE CONTRACTOR_UEI = $uei
       ORDER BY EVENT_DATE DESC
       LIMIT 10000
     `;
 
-    const result = await snowflakeApi.executeQuery(query, [contractorUEI]);
+    const result = await apiService.executeQuery({
+      sql: query,
+      parameters: { uei: contractorUEI }
+    });
     return result.data || [];
   }
 
@@ -248,7 +259,7 @@ class UnifiedDataAdapter {
         awards_ttm_millions,
         revenue_ttm_millions,
         subcontracting_ttm_millions,
-        calculated_pipeline_ttm_millions,
+        calculated_pipeline_millions,
         lifetime_awards_millions,
         revenue_lifetime_millions,
         ttm_awards_count,
@@ -263,15 +274,19 @@ class UnifiedDataAdapter {
         inflow_relationship_count,
         outflow_relationship_count,
         entity_classification,
+        is_defense,
         months_in_system,
         is_performing
       FROM USAS_V1.UI_CD_ACTIVITY.UNIVERSAL_CONTRACTOR_METRICS_MONTHLY
-      WHERE recipient_uei = ?
+      WHERE recipient_uei = $uei
       ORDER BY snapshot_month DESC
       LIMIT 1
     `;
 
-    const result = await snowflakeApi.executeQuery(query, [contractorUEI]);
+    const result = await apiService.executeQuery({
+      sql: query,
+      parameters: { uei: contractorUEI }
+    });
     const data = result.data?.[0];
 
     if (!data) {
@@ -294,7 +309,7 @@ class UnifiedDataAdapter {
       lifetime: {
         awards: data.lifetime_awards_millions || 0,
         revenue: data.revenue_lifetime_millions || 0,
-        calculatedPipeline: data.calculated_pipeline_ttm_millions || 0,
+        calculatedPipeline: data.calculated_pipeline_millions || 0,
         awardsCount: data.lifetime_awards_count || 0
       },
       active: {
@@ -312,7 +327,8 @@ class UnifiedDataAdapter {
         inflowRelationships: data.inflow_relationship_count || 0,
         outflowRelationships: data.outflow_relationship_count || 0
       },
-      entityClassification: data.entity_classification || 'PRIMARY_PRIME',
+      entityClassification: data.entity_classification || 'Pure Prime',
+      isDefense: data.is_defense || false,
       monthsInSystem: data.months_in_system || 0,
       isPerforming: data.is_performing || false
     };
@@ -328,12 +344,15 @@ class UnifiedDataAdapter {
         awards_monthly_millions,
         revenue_monthly_millions
       FROM USAS_V1.UI_CD_ACTIVITY.UNIVERSAL_CONTRACTOR_METRICS_MONTHLY
-      WHERE recipient_uei = ?
+      WHERE recipient_uei = $uei
         AND snapshot_month >= '2015-10-31'
       ORDER BY snapshot_month ASC
     `;
 
-    const result = await snowflakeApi.executeQuery(query, [contractorUEI]);
+    const result = await apiService.executeQuery({
+      sql: query,
+      parameters: { uei: contractorUEI }
+    });
     return result.data || [];
   }
 
@@ -364,12 +383,15 @@ class UnifiedDataAdapter {
         peer_performance_tier,
         performance_classification
       FROM USAS_V1.UI_CD_PERFORMANCE.UNIVERSAL_PEER_COMPARISONS_MONTHLY
-      WHERE recipient_uei = ?
+      WHERE recipient_uei = $uei
       ORDER BY snapshot_month DESC
       LIMIT 1
     `;
 
-    const result = await snowflakeApi.executeQuery(query, [contractorUEI]);
+    const result = await apiService.executeQuery({
+      sql: query,
+      parameters: { uei: contractorUEI }
+    });
     const data = result.data?.[0];
 
     if (!data) {
@@ -401,7 +423,7 @@ class UnifiedDataAdapter {
       },
       marketShare: data.peer_market_share_percent || 0,
       sizeQuartile: data.size_quartile || 4,
-      performanceTier: data.peer_performance_tier || 'Bottom 50%',
+      performanceTier: data.peer_performance_tier || '0th percentile',
       performanceClassification: data.performance_classification || 'Insufficient Data'
     };
   }
@@ -444,7 +466,8 @@ class UnifiedDataAdapter {
         inflowRelationships: 0,
         outflowRelationships: 0
       },
-      entityClassification: 'PRIMARY_PRIME',
+      entityClassification: 'Pure Prime',
+      isDefense: false,
       monthsInSystem: 0,
       isPerforming: false
     };
