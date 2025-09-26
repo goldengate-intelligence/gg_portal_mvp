@@ -68,13 +68,17 @@ export function PortfolioSnapshotPanel({
 		const naicsValues = new Map<string, number>();
 		activityEvents.forEach(event => {
 			// Filter for active contracts (current performing)
-			const startDate = new Date(event.AWARD_START_DATE);
-			const endDate = new Date(event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE);
+			const startDate = new Date(event.start_date || event.AWARD_START_DATE);
+			const endDate = new Date(event.end_date || event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE);
 			const now = new Date();
 
-			if (event.NAICS_CODE && startDate <= now && endDate >= now && event.AWARD_TOTAL_VALUE) {
-				const currentValue = naicsValues.get(event.NAICS_CODE) || 0;
-				naicsValues.set(event.NAICS_CODE, currentValue + (event.AWARD_TOTAL_VALUE || 0));
+			// Handle both lowercase and uppercase field variations
+			const naicsCode = event.NAICS_CODE || event.naics_code;
+			const eventAmount = event.EVENT_AMOUNT || event.event_amount || event.AWARD_TOTAL_VALUE;
+
+			if (naicsCode && startDate <= now && endDate >= now && eventAmount) {
+				const currentValue = naicsValues.get(naicsCode) || 0;
+				naicsValues.set(naicsCode, currentValue + eventAmount);
 			}
 		});
 		const topNaics = Array.from(naicsValues.entries()).sort((a, b) => b[1] - a[1])[0];
@@ -88,13 +92,17 @@ export function PortfolioSnapshotPanel({
 		const pscValues = new Map<string, number>();
 		activityEvents.forEach(event => {
 			// Filter for active contracts (current performing)
-			const startDate = new Date(event.AWARD_START_DATE);
-			const endDate = new Date(event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE);
+			const startDate = new Date(event.start_date || event.AWARD_START_DATE);
+			const endDate = new Date(event.end_date || event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE);
 			const now = new Date();
 
-			if (event.PSC_CODE && startDate <= now && endDate >= now && event.AWARD_TOTAL_VALUE) {
-				const currentValue = pscValues.get(event.PSC_CODE) || 0;
-				pscValues.set(event.PSC_CODE, currentValue + (event.AWARD_TOTAL_VALUE || 0));
+			// Handle both lowercase and uppercase field variations
+			const pscCode = event.PSC_CODE || event.psc_code;
+			const eventAmount = event.EVENT_AMOUNT || event.event_amount || event.AWARD_TOTAL_VALUE;
+
+			if (pscCode && startDate <= now && endDate >= now && eventAmount) {
+				const currentValue = pscValues.get(pscCode) || 0;
+				pscValues.set(pscCode, currentValue + eventAmount);
 			}
 		});
 		const topPsc = Array.from(pscValues.entries()).sort((a, b) => b[1] - a[1])[0];

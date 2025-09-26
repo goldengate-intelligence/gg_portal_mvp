@@ -46,7 +46,7 @@ export function ExecutiveSummaryPanel({
 						style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}
 					>
 						{/* Left side - Image with gradient */}
-						<div className="relative overflow-hidden" style={{ width: "40%" }}>
+						<div className="relative overflow-hidden" style={{ width: "30%" }}>
 							<div
 								className="w-full h-full bg-cover bg-center bg-no-repeat"
 								style={{
