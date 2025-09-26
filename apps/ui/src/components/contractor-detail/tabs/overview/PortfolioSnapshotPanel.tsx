@@ -4,7 +4,6 @@ import { CONTRACTOR_DETAIL_COLORS } from "../../../../logic/utils";
 import { Card } from "../../../ui/card";
 import type { ActivityEvent } from "../network/types";
 import type { UniversalMetrics } from "../../services/unified-data-adapter";
-import { useNAICSDescription, usePSCDescription } from "../../../../services/reference-data";
 
 // Simple display component to replace SimpleDisplay
 function SimpleDisplay({
@@ -66,23 +65,37 @@ export function PortfolioSnapshotPanel({
 		if (!activityEvents?.length) return "--";
 
 		const naicsValues = new Map<string, number>();
-		activityEvents.forEach(event => {
-			// Filter for active contracts (current performing)
-			const startDate = new Date(event.start_date || event.AWARD_START_DATE);
-			const endDate = new Date(event.end_date || event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE);
-			const now = new Date();
+		const allNaicsValues = new Map<string, number>(); // Fallback for all contracts
 
-			// Handle both lowercase and uppercase field variations
-			const naicsCode = event.NAICS_CODE || event.naics_code;
+		activityEvents.forEach(event => {
+			// Handle multiple possible NAICS field variations
+			const naicsCode = event.NAICS_CODE || event.naics_code || event.NAICS || event.naics;
 			const eventAmount = event.EVENT_AMOUNT || event.event_amount || event.AWARD_TOTAL_VALUE;
 
-			if (naicsCode && startDate <= now && endDate >= now && eventAmount) {
-				const currentValue = naicsValues.get(naicsCode) || 0;
-				naicsValues.set(naicsCode, currentValue + eventAmount);
+			if (naicsCode && eventAmount) {
+				// Add to all contracts
+				const allCurrentValue = allNaicsValues.get(naicsCode) || 0;
+				allNaicsValues.set(naicsCode, allCurrentValue + eventAmount);
+
+				// Filter for active contracts (current performing)
+				const startDate = new Date(event.start_date || event.AWARD_START_DATE);
+				const endDate = new Date(event.end_date || event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE);
+				const now = new Date();
+
+				// Check if dates are valid and if contract is active
+				if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) &&
+				    startDate <= now && endDate >= now) {
+					const currentValue = naicsValues.get(naicsCode) || 0;
+					naicsValues.set(naicsCode, currentValue + eventAmount);
+				}
 			}
 		});
-		const topNaics = Array.from(naicsValues.entries()).sort((a, b) => b[1] - a[1])[0];
-		return topNaics?.[0] || "--";
+
+		// Try active contracts first, fall back to all contracts
+		const activeTopNaics = Array.from(naicsValues.entries()).sort((a, b) => b[1] - a[1])[0];
+		const allTopNaics = Array.from(allNaicsValues.entries()).sort((a, b) => b[1] - a[1])[0];
+
+		return activeTopNaics?.[0] || allTopNaics?.[0] || "--";
 	};
 
 	const getTopPSC = () => {
@@ -90,23 +103,37 @@ export function PortfolioSnapshotPanel({
 		if (!activityEvents?.length) return "--";
 
 		const pscValues = new Map<string, number>();
-		activityEvents.forEach(event => {
-			// Filter for active contracts (current performing)
-			const startDate = new Date(event.start_date || event.AWARD_START_DATE);
-			const endDate = new Date(event.end_date || event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE);
-			const now = new Date();
+		const allPscValues = new Map<string, number>(); // Fallback for all contracts
 
-			// Handle both lowercase and uppercase field variations
-			const pscCode = event.PSC_CODE || event.psc_code;
+		activityEvents.forEach(event => {
+			// Handle multiple possible PSC field variations
+			const pscCode = event.PSC_CODE || event.psc_code || event.PSC || event.psc;
 			const eventAmount = event.EVENT_AMOUNT || event.event_amount || event.AWARD_TOTAL_VALUE;
 
-			if (pscCode && startDate <= now && endDate >= now && eventAmount) {
-				const currentValue = pscValues.get(pscCode) || 0;
-				pscValues.set(pscCode, currentValue + eventAmount);
+			if (pscCode && eventAmount) {
+				// Add to all contracts
+				const allCurrentValue = allPscValues.get(pscCode) || 0;
+				allPscValues.set(pscCode, allCurrentValue + eventAmount);
+
+				// Filter for active contracts (current performing)
+				const startDate = new Date(event.start_date || event.AWARD_START_DATE);
+				const endDate = new Date(event.end_date || event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE);
+				const now = new Date();
+
+				// Check if dates are valid and if contract is active
+				if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) &&
+				    startDate <= now && endDate >= now) {
+					const currentValue = pscValues.get(pscCode) || 0;
+					pscValues.set(pscCode, currentValue + eventAmount);
+				}
 			}
 		});
-		const topPsc = Array.from(pscValues.entries()).sort((a, b) => b[1] - a[1])[0];
-		return topPsc?.[0] || "--";
+
+		// Try active contracts first, fall back to all contracts
+		const activeTopPsc = Array.from(pscValues.entries()).sort((a, b) => b[1] - a[1])[0];
+		const allTopPsc = Array.from(allPscValues.entries()).sort((a, b) => b[1] - a[1])[0];
+
+		return activeTopPsc?.[0] || allTopPsc?.[0] || "--";
 	};
 
 	const getPortfolioDuration = () => {
@@ -120,9 +147,6 @@ export function PortfolioSnapshotPanel({
 
 	const topNAICS = getTopNAICS();
 	const topPSC = getTopPSC();
-
-	// Use reference data hooks - only for NAICS
-	const { description: naicsDescription } = useNAICSDescription(topNAICS);
 
 	return (
 		<Card
@@ -143,17 +167,10 @@ export function PortfolioSnapshotPanel({
 							label="TOP CLIENT"
 							value={getTopClient()}
 						/>
-						<div>
-							<SimpleDisplay
-								label="TOP NAICS"
-								value={topNAICS}
-							/>
-							{naicsDescription && (
-								<p className="text-xs text-gray-400 mt-1 px-3 italic">
-									{naicsDescription}
-								</p>
-							)}
-						</div>
+						<SimpleDisplay
+							label="TOP NAICS"
+							value={topNAICS}
+						/>
 						<SimpleDisplay
 							label="TOP PSC"
 							value={topPSC}

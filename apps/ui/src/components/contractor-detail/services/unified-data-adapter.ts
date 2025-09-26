@@ -68,6 +68,14 @@ export interface UniversalMetrics {
     awardsCount: number;
   };
 
+  // 90-day totals
+  ninetyDay: {
+    awards: number;
+    revenue: number;
+    subcontracting: number;
+    awardsCount: number;
+  };
+
   // Lifetime totals (aggregate obligation amounts)
   lifetime: {
     awards: number;
@@ -163,27 +171,29 @@ class UnifiedDataAdapter {
     }
 
     try {
-      // Fetch all data in parallel - optimized for contractor detail single-page loading
-      const [activityEvents, metrics, monthlyHistory, peerData] = await Promise.all([
-        this.fetchActivityEvents(contractorUEI),
-        this.fetchUniversalMetrics(contractorUEI),
-        this.fetchMonthlyHistory(contractorUEI),
-        this.fetchPeerComparison(contractorUEI)
+      // Fetch all data in parallel with individual error handling to prevent cascade failures
+      const [activityEvents, metrics, monthlyHistory, peerData] = await Promise.allSettled([
+        this.fetchActivityEvents(contractorUEI).catch(() => []),
+        this.fetchUniversalMetrics(contractorUEI).catch(() => this.getEmptyMetrics()),
+        this.fetchMonthlyHistory(contractorUEI).catch(() => []),
+        this.fetchPeerComparison(contractorUEI).catch(() => undefined)
       ]);
 
       // Extract contractor info from activity events
-      const contractor = this.extractContractorInfo(activityEvents);
+      const contractor = this.extractContractorInfo(
+        activityEvents.status === 'fulfilled' ? activityEvents.value : []
+      );
 
       const unifiedData: UnifiedContractorData = {
         contractor,
-        activityEvents,
-        metrics,
-        monthlyHistory,
-        peerData,
+        activityEvents: activityEvents.status === 'fulfilled' ? activityEvents.value : [],
+        metrics: metrics.status === 'fulfilled' ? metrics.value : this.getEmptyMetrics(),
+        monthlyHistory: monthlyHistory.status === 'fulfilled' ? monthlyHistory.value : [],
+        peerData: peerData.status === 'fulfilled' ? peerData.value : undefined,
         isLoading: false
       };
 
-      // Cache the result for performance
+      // Cache the result for performance (even if some calls failed)
       this.cache.set(contractorUEI, unifiedData);
       this.cacheExpiry.set(contractorUEI, Date.now() + this.CACHE_DURATION);
 
@@ -192,7 +202,8 @@ class UnifiedDataAdapter {
     } catch (error) {
       console.error('Failed to fetch contractor data:', error);
 
-      return {
+      // Return empty data structure to prevent infinite retry loops
+      const fallbackData: UnifiedContractorData = {
         contractor: { uei: contractorUEI, name: '', location: {}, primaryNaics: '', primaryNaicsDescription: '' },
         activityEvents: [],
         metrics: this.getEmptyMetrics(),
@@ -200,6 +211,12 @@ class UnifiedDataAdapter {
         isLoading: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
+
+      // Cache the fallback data to prevent repeated failures
+      this.cache.set(contractorUEI, fallbackData);
+      this.cacheExpiry.set(contractorUEI, Date.now() + (this.CACHE_DURATION / 6)); // Shorter cache for errors
+
+      return fallbackData;
     }
   }
 
@@ -207,225 +224,255 @@ class UnifiedDataAdapter {
    * Fetch activity events from unified activity table
    */
   private async fetchActivityEvents(contractorUEI: string): Promise<ActivityEvent[]> {
-    const query = `
-      SELECT
-        EVENT_ID,
-        CONTRACTOR_UEI,
-        CONTRACTOR_NAME,
-        RELATED_ENTITY_UEI,
-        RELATED_ENTITY_NAME,
-        RELATED_ENTITY_TYPE,
-        FLOW_DIRECTION,
-        EVENT_TYPE,
-        EVENT_AMOUNT,
-        AWARD_KEY,
-        AWARD_TOTAL_VALUE,
-        AWARD_START_DATE,
-        AWARD_END_DATE,
-        AWARD_POTENTIAL_END_DATE,
-        CONTRACTOR_STATE,
-        CONTRACTOR_CITY,
-        PERFORMANCE_STATE,
-        PERFORMANCE_CITY,
-        EVENT_DATE,
-        FISCAL_YEAR,
-        NAICS_CODE,
-        NAICS_DESCRIPTION,
-        PSC_CODE,
-        AWARD_TYPE
-      FROM USAS_V1.UI_CD_ACTIVITY.FACT_CONTRACTOR_ACTIVITY_EVENTS
-      WHERE CONTRACTOR_UEI = $uei
-      ORDER BY EVENT_DATE DESC
-      LIMIT 10000
-    `;
+    try {
+      const query = `
+        SELECT
+          EVENT_ID,
+          CONTRACTOR_UEI,
+          CONTRACTOR_NAME,
+          RELATED_ENTITY_UEI,
+          RELATED_ENTITY_NAME,
+          RELATED_ENTITY_TYPE,
+          FLOW_DIRECTION,
+          EVENT_TYPE,
+          EVENT_AMOUNT,
+          AWARD_KEY,
+          AWARD_TOTAL_VALUE,
+          AWARD_START_DATE,
+          AWARD_END_DATE,
+          AWARD_POTENTIAL_END_DATE,
+          CONTRACTOR_STATE,
+          CONTRACTOR_CITY,
+          PERFORMANCE_STATE,
+          PERFORMANCE_CITY,
+          EVENT_DATE,
+          FISCAL_YEAR,
+          NAICS_CODE,
+          NAICS_DESCRIPTION,
+          PSC_CODE,
+          AWARD_TYPE
+        FROM USAS_V1.UI_CD_ACTIVITY.FACT_CONTRACTOR_ACTIVITY_EVENTS
+        WHERE CONTRACTOR_UEI = $uei
+        ORDER BY EVENT_DATE DESC
+        LIMIT 10000
+      `;
 
-    const result = await apiService.executeQuery({
-      sql: query,
-      parameters: { uei: contractorUEI }
-    });
-    return result.data || [];
+      const result = await apiService.executeQuery({
+        sql: query,
+        parameters: { uei: contractorUEI }
+      });
+      return result.data || [];
+    } catch (error) {
+      console.warn('Failed to fetch activity events:', error);
+      return [];
+    }
   }
 
   /**
    * Fetch universal metrics from monthly aggregation table
    */
   private async fetchUniversalMetrics(contractorUEI: string): Promise<UniversalMetrics> {
-    const query = `
-      SELECT
-        awards_monthly_millions,
-        revenue_monthly_millions,
-        subcontracting_monthly_millions,
-        pipeline_monthly_millions,
-        awards_ttm_millions,
-        revenue_ttm_millions,
-        subcontracting_ttm_millions,
-        calculated_pipeline_millions,
-        lifetime_awards_millions,
-        revenue_lifetime_millions,
-        ttm_awards_count,
-        lifetime_awards_count,
-        active_awards_count,
-        active_awards_millions,
-        awards_ttm_yoy_growth_pct,
-        revenue_ttm_yoy_growth_pct,
-        active_contracts,
-        pipeline_contracts,
-        avg_contract_duration_months,
-        inflow_relationship_count,
-        outflow_relationship_count,
-        entity_classification,
-        is_defense,
-        months_in_system,
-        is_performing
-      FROM USAS_V1.UI_CD_ACTIVITY.UNIVERSAL_CONTRACTOR_METRICS_MONTHLY
-      WHERE recipient_uei = $uei
-      ORDER BY snapshot_month DESC
-      LIMIT 1
-    `;
+    try {
+      const query = `
+        SELECT
+          awards_monthly_millions,
+          revenue_monthly_millions,
+          subcontracting_monthly_millions,
+          pipeline_monthly_millions,
+          awards_ttm_millions,
+          revenue_ttm_millions,
+          subcontracting_ttm_millions,
+          awards_90d_millions,
+          revenue_90d_millions,
+          subcontracting_90d_millions,
+          calculated_pipeline_millions,
+          lifetime_awards_millions,
+          revenue_lifetime_millions,
+          ttm_awards_count,
+          awards_90d_count,
+          lifetime_awards_count,
+          active_awards_count,
+          active_awards_millions,
+          awards_ttm_yoy_growth_pct,
+          revenue_ttm_yoy_growth_pct,
+          active_contracts,
+          pipeline_contracts,
+          avg_contract_duration_months,
+          inflow_relationship_count,
+          outflow_relationship_count,
+          entity_classification,
+          is_defense,
+          months_in_system,
+          is_performing
+        FROM USAS_V1.UI_CD_ACTIVITY.UNIVERSAL_CONTRACTOR_METRICS_MONTHLY
+        WHERE recipient_uei = $uei
+        ORDER BY snapshot_month DESC
+        LIMIT 1
+      `;
 
-    const result = await apiService.executeQuery({
-      sql: query,
-      parameters: { uei: contractorUEI }
-    });
-    const data = result.data?.[0];
+      const result = await apiService.executeQuery({
+        sql: query,
+        parameters: { uei: contractorUEI }
+      });
+      const data = result.data?.[0];
 
-    if (!data) {
+      if (!data) {
+        return this.getEmptyMetrics();
+      }
+
+      return {
+        current: {
+          awardsMonthly: data.awards_monthly_millions || 0,
+          revenueMonthly: data.revenue_monthly_millions || 0,
+          subcontractingMonthly: data.subcontracting_monthly_millions || 0,
+          pipelineMonthly: data.pipeline_monthly_millions || 0
+        },
+        ttm: {
+          awards: data.awards_ttm_millions || 0,
+          revenue: data.revenue_ttm_millions || 0,
+          subcontracting: data.subcontracting_ttm_millions || 0,
+          awardsCount: data.ttm_awards_count || 0
+        },
+        ninetyDay: {
+          awards: data.awards_90d_millions || 0,
+          revenue: data.revenue_90d_millions || 0,
+          subcontracting: data.subcontracting_90d_millions || 0,
+          awardsCount: data.awards_90d_count || 0
+        },
+        lifetime: {
+          awards: data.lifetime_awards_millions || 0,
+          revenue: data.revenue_lifetime_millions || 0,
+          calculatedPipeline: data.calculated_pipeline_millions || 0,
+          awardsCount: data.lifetime_awards_count || 0
+        },
+        active: {
+          awards: data.active_awards_millions || 0,
+          awardsCount: data.active_awards_count || 0
+        },
+        growth: {
+          awardsYoY: data.awards_ttm_yoy_growth_pct || 0,
+          revenueYoY: data.revenue_ttm_yoy_growth_pct || 0
+        },
+        portfolio: {
+          activeContracts: data.active_contracts || 0,
+          pipelineContracts: data.pipeline_contracts || 0,
+          avgContractDuration: data.avg_contract_duration_months || 0,
+          inflowRelationships: data.inflow_relationship_count || 0,
+          outflowRelationships: data.outflow_relationship_count || 0
+        },
+        entityClassification: data.entity_classification || 'Pure Prime',
+        isDefense: data.is_defense || false,
+        monthsInSystem: data.months_in_system || 0,
+        isPerforming: data.is_performing || false
+      };
+    } catch (error) {
+      console.warn('Failed to fetch universal metrics:', error);
       return this.getEmptyMetrics();
     }
-
-    return {
-      current: {
-        awardsMonthly: data.awards_monthly_millions || 0,
-        revenueMonthly: data.revenue_monthly_millions || 0,
-        subcontractingMonthly: data.subcontracting_monthly_millions || 0,
-        pipelineMonthly: data.pipeline_monthly_millions || 0
-      },
-      ttm: {
-        awards: data.awards_ttm_millions || 0,
-        revenue: data.revenue_ttm_millions || 0,
-        subcontracting: data.subcontracting_ttm_millions || 0,
-        awardsCount: data.ttm_awards_count || 0
-      },
-      lifetime: {
-        awards: data.lifetime_awards_millions || 0,
-        revenue: data.revenue_lifetime_millions || 0,
-        calculatedPipeline: data.calculated_pipeline_millions || 0,
-        awardsCount: data.lifetime_awards_count || 0
-      },
-      active: {
-        awards: data.active_awards_millions || 0,
-        awardsCount: data.active_awards_count || 0
-      },
-      growth: {
-        awardsYoY: data.awards_ttm_yoy_growth_pct || 0,
-        revenueYoY: data.revenue_ttm_yoy_growth_pct || 0
-      },
-      portfolio: {
-        activeContracts: data.active_contracts || 0,
-        pipelineContracts: data.pipeline_contracts || 0,
-        avgContractDuration: data.avg_contract_duration_months || 0,
-        inflowRelationships: data.inflow_relationship_count || 0,
-        outflowRelationships: data.outflow_relationship_count || 0
-      },
-      entityClassification: data.entity_classification || 'Pure Prime',
-      isDefense: data.is_defense || false,
-      monthsInSystem: data.months_in_system || 0,
-      isPerforming: data.is_performing || false
-    };
   }
 
   /**
    * Fetch historical monthly metrics for charts (all available history from 2015)
    */
   private async fetchMonthlyHistory(contractorUEI: string): Promise<MonthlyMetricsData[]> {
-    const query = `
-      SELECT
-        snapshot_month,
-        awards_monthly_millions,
-        revenue_monthly_millions
-      FROM USAS_V1.UI_CD_ACTIVITY.UNIVERSAL_CONTRACTOR_METRICS_MONTHLY
-      WHERE recipient_uei = $uei
-        AND snapshot_month >= '2015-10-31'
-      ORDER BY snapshot_month ASC
-    `;
+    try {
+      const query = `
+        SELECT
+          snapshot_month,
+          awards_monthly_millions,
+          revenue_monthly_millions
+        FROM USAS_V1.UI_CD_ACTIVITY.UNIVERSAL_CONTRACTOR_METRICS_MONTHLY
+        WHERE recipient_uei = $uei
+          AND snapshot_month >= '2015-10-31'
+        ORDER BY snapshot_month ASC
+      `;
 
-    const result = await apiService.executeQuery({
-      sql: query,
-      parameters: { uei: contractorUEI }
-    });
-    return result.data || [];
+      const result = await apiService.executeQuery({
+        sql: query,
+        parameters: { uei: contractorUEI }
+      });
+      return result.data || [];
+    } catch (error) {
+      console.warn('Failed to fetch monthly history:', error);
+      return [];
+    }
   }
 
   /**
    * Fetch peer comparison data from performance schema
    */
   private async fetchPeerComparison(contractorUEI: string): Promise<PeerComparisonData | undefined> {
-    const query = `
-      SELECT
-        awards_score,
-        revenue_score,
-        pipeline_score,
-        duration_score,
-        network_activity_score,
-        growth_score,
-        composite_score,
-        awards_rank,
-        revenue_rank,
-        pipeline_rank,
-        growth_rank,
-        composite_rank,
-        peer_naics_code,
-        peer_entity_classification,
-        peer_group_size,
-        defense_overlay_flag,
-        peer_market_share_percent,
-        size_quartile,
-        peer_performance_tier,
-        performance_classification
-      FROM USAS_V1.UI_CD_PERFORMANCE.UNIVERSAL_PEER_COMPARISONS_MONTHLY
-      WHERE recipient_uei = $uei
-      ORDER BY snapshot_month DESC
-      LIMIT 1
-    `;
+    try {
+      const query = `
+        SELECT
+          awards_score,
+          revenue_score,
+          pipeline_score,
+          duration_score,
+          network_activity_score,
+          growth_score,
+          composite_score,
+          awards_rank,
+          revenue_rank,
+          pipeline_rank,
+          growth_rank,
+          composite_rank,
+          peer_naics_code,
+          peer_entity_classification,
+          peer_group_size,
+          defense_overlay_flag,
+          peer_market_share_percent,
+          size_quartile,
+          peer_performance_tier,
+          performance_classification
+        FROM USAS_V1.UI_CD_PERFORMANCE.UNIVERSAL_PEER_COMPARISONS_MONTHLY
+        WHERE recipient_uei = $uei
+        ORDER BY snapshot_month DESC
+        LIMIT 1
+      `;
 
-    const result = await apiService.executeQuery({
-      sql: query,
-      parameters: { uei: contractorUEI }
-    });
-    const data = result.data?.[0];
+      const result = await apiService.executeQuery({
+        sql: query,
+        parameters: { uei: contractorUEI }
+      });
+      const data = result.data?.[0];
 
-    if (!data) {
+      if (!data) {
+        return undefined;
+      }
+
+      return {
+        scores: {
+          composite: data.composite_score || 0,
+          awards: data.awards_score || 0,
+          revenue: data.revenue_score || 0,
+          pipeline: data.pipeline_score || 0,
+          duration: data.duration_score || 0,
+          networkActivity: data.network_activity_score || 0,
+          growth: data.growth_score || 0
+        },
+        rankings: {
+          composite: data.composite_rank || 0,
+          awards: data.awards_rank || 0,
+          revenue: data.revenue_rank || 0,
+          pipeline: data.pipeline_rank || 0,
+          growth: data.growth_rank || 0
+        },
+        peerGroup: {
+          naicsCode: data.peer_naics_code || '',
+          entityClassification: data.peer_entity_classification || '',
+          groupSize: data.peer_group_size || 0,
+          defenseOverlay: data.defense_overlay_flag || false
+        },
+        marketShare: data.peer_market_share_percent || 0,
+        sizeQuartile: data.size_quartile || 4,
+        performanceTier: data.peer_performance_tier || '0th percentile',
+        performanceClassification: data.performance_classification || 'Insufficient Data'
+      };
+    } catch (error) {
+      console.warn('Failed to fetch peer comparison:', error);
       return undefined;
     }
-
-    return {
-      scores: {
-        composite: data.composite_score || 0,
-        awards: data.awards_score || 0,
-        revenue: data.revenue_score || 0,
-        pipeline: data.pipeline_score || 0,
-        duration: data.duration_score || 0,
-        networkActivity: data.network_activity_score || 0,
-        growth: data.growth_score || 0
-      },
-      rankings: {
-        composite: data.composite_rank || 0,
-        awards: data.awards_rank || 0,
-        revenue: data.revenue_rank || 0,
-        pipeline: data.pipeline_rank || 0,
-        growth: data.growth_rank || 0
-      },
-      peerGroup: {
-        naicsCode: data.peer_naics_code || '',
-        entityClassification: data.peer_entity_classification || '',
-        groupSize: data.peer_group_size || 0,
-        defenseOverlay: data.defense_overlay_flag || false
-      },
-      marketShare: data.peer_market_share_percent || 0,
-      sizeQuartile: data.size_quartile || 4,
-      performanceTier: data.peer_performance_tier || '0th percentile',
-      performanceClassification: data.performance_classification || 'Insufficient Data'
-    };
   }
 
   /**
@@ -456,6 +503,7 @@ class UnifiedDataAdapter {
     return {
       current: { awardsMonthly: 0, revenueMonthly: 0, subcontractingMonthly: 0, pipelineMonthly: 0 },
       ttm: { awards: 0, revenue: 0, subcontracting: 0, awardsCount: 0 },
+      ninetyDay: { awards: 0, revenue: 0, subcontracting: 0, awardsCount: 0 },
       lifetime: { awards: 0, revenue: 0, calculatedPipeline: 0, awardsCount: 0 },
       active: { awards: 0, awardsCount: 0 },
       growth: { awardsYoY: 0, revenueYoY: 0 },

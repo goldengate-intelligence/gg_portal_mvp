@@ -28,10 +28,15 @@ export function ObligationCard({ event, onEventClick }: ObligationCardProps) {
 
 			{/* Basic Card Content */}
 			<div className="pl-3">
+				{/* Event Key Title in Gold */}
+				<div className="text-[#D2AC38] font-semibold text-lg mb-2">
+					{event.award_piid}
+				</div>
+
 				<div className="flex justify-between items-start">
 					<div>
 						<div className="text-white font-medium">
-							{event.award_piid} - {event.action_type}
+							{event.action_type}
 						</div>
 						<div className="text-gray-400 text-sm">{event.recipient_name}</div>
 						<div className="text-gray-500 text-xs">{event.event_date}</div>

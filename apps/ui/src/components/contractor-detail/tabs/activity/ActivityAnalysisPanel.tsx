@@ -8,7 +8,7 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { CONTRACTOR_DETAIL_COLORS } from "../../../../logic/utils";
 import type { ActivityEvent } from "../network/types";
 import type { UniversalMetrics } from "../../services/unified-data-adapter";
@@ -24,6 +24,8 @@ export function ActivityAnalysisPanel({
 	metrics,
 	isLoading,
 }: ActivityAnalysisPanelProps) {
+	const [selectedPeriod, setSelectedPeriod] = useState<'90d' | '1yr'>('90d');
+
 	// Mock partner intelligence data - in production this would come from analysis engine
 	const partnerIntelligence = {
 		topPartner: {
@@ -51,9 +53,13 @@ export function ActivityAnalysisPanel({
 		},
 	};
 
-	// Calculate actual net flow from unified metrics
-	const inflowValue = (metrics?.ttm?.awards || 0); // TTM awards in millions
-	const outflowValue = (metrics?.ttm?.subcontracting || 0); // TTM subcontracting in millions
+	// Calculate actual net flow from unified metrics based on selected period
+	const inflowValue = selectedPeriod === '90d'
+		? (metrics?.ninetyDay?.awards || 0) // 90-day awards in millions
+		: (metrics?.ttm?.awards || 0); // TTM awards in millions
+	const outflowValue = selectedPeriod === '90d'
+		? (metrics?.ninetyDay?.subcontracting || 0) // 90-day subcontracting in millions
+		: (metrics?.ttm?.subcontracting || 0); // TTM subcontracting in millions
 	const netFlowValue = inflowValue - outflowValue; // Net flow
 	const getNetFlowColor = () => {
 		if (netFlowValue > 0) return "#10B981"; // Emerald green for positive
@@ -79,10 +85,24 @@ export function ActivityAnalysisPanel({
 						ACTIVITY ANALYSIS
 					</h4>
 					<div className="flex gap-2">
-						<button className="px-3 py-1 text-xs bg-[#D2AC38]/20 text-[#D2AC38] rounded-full border border-[#D2AC38]/40">
+						<button
+							onClick={() => setSelectedPeriod('90d')}
+							className={`px-3 py-1 text-xs rounded-full border transition-all ${
+								selectedPeriod === '90d'
+									? 'bg-[#D2AC38]/20 text-[#D2AC38] border-[#D2AC38]/40'
+									: 'bg-gray-700/30 text-gray-400 border-gray-700/30 hover:bg-gray-600/30'
+							}`}
+						>
 							90 Days
 						</button>
-						<button className="px-3 py-1 text-xs bg-gray-700/30 text-gray-400 rounded-full border border-gray-700/30 hover:bg-gray-600/30">
+						<button
+							onClick={() => setSelectedPeriod('1yr')}
+							className={`px-3 py-1 text-xs rounded-full border transition-all ${
+								selectedPeriod === '1yr'
+									? 'bg-[#D2AC38]/20 text-[#D2AC38] border-[#D2AC38]/40'
+									: 'bg-gray-700/30 text-gray-400 border-gray-700/30 hover:bg-gray-600/30'
+							}`}
+						>
 							1 Year
 						</button>
 					</div>
@@ -126,7 +146,7 @@ export function ActivityAnalysisPanel({
 									{netFlowValue > 0 ? "+" : ""}${netFlowValue}M
 								</div>
 								<div className="text-sm text-gray-400 uppercase tracking-widest font-medium">
-									90 Day Period
+									{selectedPeriod === '90d' ? '90 Day Period' : '1 Year Period'}
 								</div>
 							</div>
 						</div>

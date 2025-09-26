@@ -118,8 +118,7 @@ export function CompetitiveBenchmarkPanel({
 	const getPercentileRank = (percentile: number) => {
 		if (percentile >= 90) return "Top 10%";
 		if (percentile >= 75) return "Top 25%";
-		if (percentile >= 50) return "Top 50%";
-		return `Bottom ${100 - percentile}%`;
+		return `${Math.floor(percentile)}th percentile`;
 	};
 
 	return (

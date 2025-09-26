@@ -7,11 +7,11 @@ import { Button } from "../../components/ui/button";
 export function Discovery() {
 	return (
 		<div
-			className="text-white relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 pt-20 pb-20"
+			className="text-white relative bg-gradient-to-b from-gray-900/95 via-black/70 to-gray-900/95 pt-20 pb-20"
 			style={{ minHeight: "100vh" }}
 		>
 			{/* Background grid */}
-			<div className="absolute inset-0 opacity-5 z-0">
+			<div className="absolute inset-0 opacity-[0.03] z-0">
 				<div
 					className="absolute inset-0"
 					style={{

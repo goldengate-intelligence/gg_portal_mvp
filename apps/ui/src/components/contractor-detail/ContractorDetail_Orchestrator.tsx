@@ -1,5 +1,5 @@
 import { Activity, BarChart3, Globe, Share2, Users } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { CONTRACTOR_DETAIL_COLORS, cn } from "../../logic/utils";
 import type { Contractor } from "../../types";
 import { ContractorDetailHeader } from "./ContractorDetail_Header";
@@ -21,8 +21,7 @@ import { ActivityTab } from "./tabs/activity";
 import { ContactsTab } from "./tabs/contacts";
 import { OverviewTab } from "./tabs/overview";
 import { PerformanceTab } from "./tabs/performance";
-import { NetworkTab } from "./tabs/relationships";
-import { NetworkTab as UnifiedNetworkTab } from "./tabs/network";
+import { NetworkTab } from "./tabs/network";
 
 interface ContractorDetailProps {
 	contractorId: string;
@@ -42,7 +41,7 @@ export function ContractorDetail({
 	// Notify parent of active tab changes
 	useEffect(() => {
 		onActiveTabChange?.(activeTab);
-	}, [activeTab, onActiveTabChange]);
+	}, [activeTab, onActiveTabChange]); // Include onActiveTabChange but ensure it's properly memoized in parent
 	const [benchmarkData, setBenchmarkData] = useState<any>(null);
 	const [yAxisMetric, setYAxisMetric] = useState("ttm_revenue");
 	const [xAxisMetric, setXAxisMetric] = useState("composite_score");
@@ -50,13 +49,13 @@ export function ContractorDetail({
 	const [revenueTimePeriod, setRevenueTimePeriod] = useState("5");
 
 	// Helper function to get geocoded map positions
-	const getMapPosition = (zipCode?: string, city?: string, state?: string) => {
+	const getMapPosition = useCallback((zipCode?: string, city?: string, state?: string) => {
 		const location = getLocationCoordinates(zipCode, city, state);
 		if (location) {
 			return coordinatesToMapPercentage(location.coordinates);
 		}
 		return { left: "50%", top: "50%" }; // fallback to center
-	};
+	}, []);
 
 
 	// Reset to overview tab when contractor changes
@@ -144,9 +143,11 @@ export function ContractorDetail({
 			case "performance":
 				return (
 					<PerformanceTab
-						activityEvents={unifiedData?.activityEvents || []}
-						metrics={unifiedData?.metrics || ({} as any)}
+						performanceData={contractorDetailData?.performance}
+						benchmarkData={benchmarkData}
+						unifiedMetrics={unifiedData?.metrics}
 						peerData={unifiedData?.peerData}
+						contractor={unifiedData?.contractor}
 						yAxisMetric={yAxisMetric}
 						xAxisMetric={xAxisMetric}
 						onYAxisMetricChange={setYAxisMetric}
@@ -156,7 +157,7 @@ export function ContractorDetail({
 				);
 			case "network":
 				return (
-					<UnifiedNetworkTab
+					<NetworkTab
 						contractorUEI={contractorDetailData?.contractor?.uei || contractorId}
 						activityEvents={unifiedData?.activityEvents || []}
 						isLoading={isLoading || unifiedData?.isLoading || false}
@@ -177,8 +178,8 @@ export function ContractorDetail({
 					<div className="space-y-6">
 						<ContactsTab
 							uei={unifiedData?.contractor?.uei || contractorId}
-							companyName={unifiedData?.contractor?.name || "Unknown Company"}
-							companyDomain="triofab.com"
+							companyName={unifiedData?.contractor?.name || ""}
+							companyDomain={unifiedData?.contractor?.website || ""}
 						/>
 					</div>
 				);
@@ -200,7 +201,13 @@ export function ContractorDetail({
 	};
 
 	return (
-		<div className="min-h-screen">
+		<div
+			className="min-h-screen"
+			data-contractor-name={unifiedData?.contractor?.name || contractorDetailData?.contractor?.name}
+			data-contractor-uei={unifiedData?.contractor?.uei || contractorId}
+			data-current-tab={activeTab}
+			data-context="contractor-detail"
+		>
 			{/* Header - Hybrid Luxury/HUD Design */}
 			<div
 				className={`relative overflow-x-hidden ${CONTRACTOR_DETAIL_COLORS.backgroundColor}`}
@@ -224,6 +231,7 @@ export function ContractorDetail({
 				<div className="container mx-auto px-6 py-8 max-w-7xl relative z-10">
 					<ContractorDetailHeader
 						contractor={contractorDetailData?.contractor || null}
+						unifiedData={unifiedData}
 					/>
 
 					{/* Metrics Cards - Positioned with proper spacing after header section */}

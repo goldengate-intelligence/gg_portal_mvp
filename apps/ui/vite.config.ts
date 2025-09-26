@@ -11,4 +11,22 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
+  server: {
+    watch: {
+      ignored: [
+        '**/ai-insights-cache.json',
+        'ai-insights-cache.json',
+        /ai-insights-cache\.json$/,
+        /src\/data\/ai-insights-cache\.json$/,
+        resolve(__dirname, 'src/data/ai-insights-cache.json')
+      ]
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  }
 })

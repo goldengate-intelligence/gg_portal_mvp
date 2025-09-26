@@ -32,12 +32,14 @@ interface MonitoringDashboardProps {
 	filterSettings: FilterSettings;
 	onAIConfigureClick: () => void;
 	onShowFilterSettings: () => void;
+	onSpreadsheetStateChange?: (activeSpreadsheet: string | null) => void;
 }
 
 export function MonitoringDashboard({
 	filterSettings,
 	onAIConfigureClick,
 	onShowFilterSettings,
+	onSpreadsheetStateChange,
 }: MonitoringDashboardProps) {
 	const [expandedCard, setExpandedCard] = useState<string | null>(null);
 	const [activeSpreadsheet, setActiveSpreadsheet] = useState<string | null>(
@@ -50,12 +52,14 @@ export function MonitoringDashboard({
 
 	const toggleCard = (cardType: string) => {
 		setActiveSpreadsheet(cardType);
+		onSpreadsheetStateChange?.(cardType);
 	};
 
 	const handleBackToMonitoring = () => {
 		setActiveSpreadsheet(null);
 		setShowScores(false); // Reset to values when going back
 		setShowColors(false); // Reset colors when going back
+		onSpreadsheetStateChange?.(null);
 	};
 
 	const toggleScoresValues = () => {
@@ -866,7 +870,7 @@ export function MonitoringDashboard({
 										1,247
 									</div>
 									<div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors mb-3">
-										Total Events (12 months)
+										TTM Events
 									</div>
 									<div className="text-xs text-orange-400 font-light tracking-wider">
 										{expandedCard === "activity" ? "collapse" : "view details"}
@@ -912,7 +916,7 @@ export function MonitoringDashboard({
 										78.4
 									</div>
 									<div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors mb-3">
-										Value-Weighted Performance (Active Awards)
+										Value-Weighted
 									</div>
 									<div className="text-xs text-cyan-400 font-light tracking-wider">
 										{expandedCard === "performance"
@@ -964,7 +968,7 @@ export function MonitoringDashboard({
 										87.2%
 									</div>
 									<div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors mb-3">
-										Value-Weighted Utilization (Active Awards)
+										Value-Weighted
 									</div>
 									<div className="text-xs text-indigo-400 font-light tracking-wider">
 										{expandedCard === "utilization"

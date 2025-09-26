@@ -10,16 +10,20 @@ export * from "./data-sources/iceberg-reader";
 export * from "./data-sources/snowflake-api";
 export * from "./data-sources/lusha-api";
 
-// Classification Services
-export * from "./classification/naics-psc-service";
+// Consolidated Services - New unified APIs
+export * from "./contractors"; // Unified contractor services
+export * from "./visualization"; // Unified visualization services
+export * from "./data-classification"; // Unified classification services
+export * from "./industry-image-matching"; // Industry image matching service
 
-// Visualization Services
+// Individual Services - For backward compatibility
+export * from "./classification/naics-psc-service";
 export * from "./visualization/performance-colors";
 export * from "./visualization/utilization-colors";
-
-// Contractor Services
 export * from "./contractors/contractor-logo-service";
 export * from "./contractors/contractor-metrics-service";
+export * from "./contractors/lusha-enrichment-service";
+export * from "./reference-data";
 
 // Caching Services
 export * from "./caching/large-data-cache";
@@ -33,3 +37,9 @@ export { performanceColors } from "./visualization/performance-colors";
 export { utilizationColors } from "./visualization/utilization-colors";
 export { contractorLogoService } from "./contractors/contractor-logo-service";
 export { contractorMetricsService } from "./contractors/contractor-metrics-service";
+export { lushaEnrichmentService } from "./contractors/lusha-enrichment-service";
+
+// Unified Service Instances - New consolidated APIs
+export { unifiedContractorService } from "./contractors";
+export { unifiedVisualizationService } from "./visualization";
+export { unifiedDataClassificationService } from "./data-classification";

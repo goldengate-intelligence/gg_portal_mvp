@@ -54,7 +54,7 @@ const extractMetricValue = (data: any, metric: string): number => {
 		ttm_revenue: "ttmRevenue",
 		lifetime_awards: "lifetimeAwards",
 		lifetime_revenue: "lifetimeRevenue",
-		total_pipeline: "totalPipeline",
+		calculated_pipeline: "calculatedPipeline",
 		portfolio_duration: "portfolioDuration",
 	};
 
@@ -65,10 +65,10 @@ const extractMetricValue = (data: any, metric: string): number => {
 const getMetricLabel = (metric: string): string => {
 	const labels: Record<string, string> = {
 		ttm_awards: "Awards Captured (TTM)",
-		ttm_revenue: "Estimated Revenue (TTM)",
+		ttm_revenue: "Revenue (TTM)",
 		lifetime_awards: "Lifetime Awards",
 		lifetime_revenue: "Lifetime Revenue",
-		total_pipeline: "Total Pipeline",
+		calculated_pipeline: "Calculated Pipeline",
 		portfolio_duration: "Portfolio Duration",
 	};
 

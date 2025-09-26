@@ -5,6 +5,8 @@ import { CONTRACTOR_DETAIL_COLORS } from "../../logic/utils";
 import { contractorLogoService } from "../../services/contractors/contractor-logo-service";
 import { lushaEnrichmentService } from "../../services/contractors/lusha-enrichment-service";
 import { useIndustrySummary } from "../../services/reference-data";
+import { useContractorBio } from "../../services/contractor-bio/useContractorBio";
+import { getPerformanceTier } from "./utils/performance-tier";
 import type { Contractor } from "../../types";
 import type { ActivityEvent } from "./tabs/network/types";
 import type { UniversalMetrics, PeerComparisonData, UnifiedContractorData } from "./services/unified-data-adapter";
@@ -23,8 +25,8 @@ export function ContractorDetailHeader({
 }: ContractorDetailHeaderProps) {
 	// Extract data from unified data or fallback to legacy contractor
 	const contractorInfo = unifiedData?.contractor || {
-		uei: contractor?.uei || "UNKNOWN12345",
-		name: contractor?.name || "Trio Fabrication LLC",
+		uei: contractor?.uei || "",
+		name: contractor?.name || "",
 		location: {
 			state: contractor?.state,
 			city: contractor?.city
@@ -57,50 +59,57 @@ export function ContractorDetailHeader({
 		return sortedNAICS[0][0];
 	}, [activityEvents]);
 
-	// Calculate Agency Focus (Defense vs Civilian based on 50%+ defense awards)
-	const agencyFocus = useMemo(() => {
-		if (!activityEvents?.length) return "Defense";
-
-		let totalAwardValue = 0;
-		let defenseAwardValue = 0;
-
-		// Defense agencies (common patterns)
-		const defenseAgencies = [
-			'DEPARTMENT OF DEFENSE',
-			'DEPT OF DEFENSE',
-			'DOD',
-			'DEFENSE',
-			'ARMY',
-			'NAVY',
-			'AIR FORCE',
-			'MARINES',
-			'COAST GUARD'
-		];
-
-		activityEvents.forEach(event => {
-			if (event.FLOW_DIRECTION === 'INFLOW' && event.EVENT_AMOUNT) {
-				totalAwardValue += event.EVENT_AMOUNT;
-
-				// Check if it's a defense agency
-				const agencyName = event.RELATED_ENTITY_NAME?.toUpperCase() || '';
-				const isDefense = defenseAgencies.some(defenseKeyword =>
-					agencyName.includes(defenseKeyword)
-				);
-
-				if (isDefense) {
-					defenseAwardValue += event.EVENT_AMOUNT;
-				}
-			}
-		});
-
-		if (totalAwardValue === 0) return "Defense";
-
-		const defensePercentage = defenseAwardValue / totalAwardValue;
-		return defensePercentage >= 0.5 ? "Defense" : "Civilian";
-	}, [activityEvents]);
+	// Get Agency Focus from Snowflake is_defense deterministic field
+	const agencyFocus = unifiedData?.metrics?.isDefense ? "Defense" : "Civilian";
 
 	// Get industry summary from primary NAICS for sector display
 	const { industrySummary } = useIndustrySummary(primaryNAICS);
+
+	// Simple 2-digit NAICS sector lookup (no AI needed)
+	const twoDigitNAICS = primaryNAICS ? primaryNAICS.substring(0, 2) : null;
+	const { industrySummary: sectorSummary } = useIndustrySummary(twoDigitNAICS);
+
+	// Prepare contractor bio context
+	const bioContext = useMemo(() => {
+		if (!contractorInfo.uei || !contractorInfo.name) return null;
+
+		// Get primary agencies from activity events
+		const primaryAgencies = activityEvents
+			?.filter(event => event.FLOW_DIRECTION === 'INFLOW' && event.RELATED_ENTITY_NAME)
+			.reduce((acc, event) => {
+				const agency = event.RELATED_ENTITY_NAME;
+				if (agency && !acc.includes(agency)) {
+					acc.push(agency);
+				}
+				return acc;
+			}, [] as string[])
+			.slice(0, 3) || [];
+
+		// Calculate total contract value
+		const totalValue = activityEvents
+			?.filter(event => event.FLOW_DIRECTION === 'INFLOW' && event.EVENT_AMOUNT)
+			.reduce((sum, event) => sum + event.EVENT_AMOUNT, 0) || 0;
+
+		const contractCount = activityEvents
+			?.filter(event => event.FLOW_DIRECTION === 'INFLOW').length || 0;
+
+		return {
+			uei: contractorInfo.uei,
+			contractorName: contractorInfo.name,
+			naicsCode: primaryNAICS || undefined,
+			naicsDescription: industrySummary || undefined,
+			location: contractorInfo.location,
+			businessContext: {
+				totalValue,
+				contractCount,
+				primaryAgencies,
+				agencyFocus
+			}
+		};
+	}, [contractorInfo, primaryNAICS, industrySummary, activityEvents, unifiedData?.metrics?.isDefense]);
+
+	// Generate AI-powered bio
+	const { bio, isLoading: bioLoading } = useContractorBio(bioContext);
 
 	const navigate = useNavigate();
 	const [contractorLogo, setContractorLogo] = useState<string | null>(null);
@@ -140,21 +149,43 @@ export function ContractorDetailHeader({
 		return { label: "COLD", color: "#3b82f6", bgColor: "#3b82f610" }; // Blue
 	};
 
-	// Calculate performance tier based on peer composite score
-	const getPerformanceTier = () => {
-		if (!peerData?.scores?.composite) return { label: "Strong", color: "#84cc16", bgColor: "#84cc1620" };
+	const activityTemp = getActivityTemperature();
+	const performanceTier = getPerformanceTier(peerData?.scores?.composite);
 
-		const compositeScore = peerData.scores.composite;
-
-		// Elite: 75-100, Strong: 50-74, Weak: 25-49, Deficient: 0-24
-		if (compositeScore >= 75) return { label: "Elite", color: "#22c55e", bgColor: "#22c55e20" };
-		if (compositeScore >= 50) return { label: "Strong", color: "#84cc16", bgColor: "#84cc1620" };
-		if (compositeScore >= 25) return { label: "Weak", color: "#f59e0b", bgColor: "#f59e0b20" };
-		return { label: "Deficient", color: "#ef4444", bgColor: "#ef444420" };
+	// Get tooltip text based on temperature
+	const getTemperatureTooltip = (tempLabel: string) => {
+		switch (tempLabel) {
+			case "HOT":
+				return "New activity within 30 days";
+			case "WARM":
+				return "New activity within 365 days";
+			case "COLD":
+			default:
+				return "No new activity within 365 days";
+		}
 	};
 
-	const activityTemp = getActivityTemperature();
-	const performanceTier = getPerformanceTier();
+	// Generate initials from company name
+	const generateInitials = (companyName: string): string => {
+		if (!companyName) return ""; // No fallback - show empty if no name
+
+		// Remove common business suffixes for cleaner initials
+		const cleanName = companyName
+			.replace(/\b(LLC|INC|CORP|CORPORATION|COMPANY|CO|LTD|LIMITED)\b/gi, '')
+			.trim();
+
+		const words = cleanName.split(/\s+/).filter(word => word.length > 0);
+
+		if (words.length === 0) return ""; // No fallback
+
+		// Take first letter of first 3 significant words
+		const initials = words
+			.slice(0, 3)
+			.map(word => word.charAt(0).toUpperCase())
+			.join('');
+
+		return initials || ""; // No fallback if somehow empty
+	};
 
 	useEffect(() => {
 		if (contractorInfo.uei && contractorInfo.name) {
@@ -237,7 +268,7 @@ export function ContractorDetailHeader({
 													fontSize: "62px",
 												}}
 											>
-												TFL
+												{generateInitials(contractorInfo.name)}
 											</div>
 											<div
 												className="text-xs font-semibold tracking-[0.3em] text-gray-400 mt-2"
@@ -245,7 +276,7 @@ export function ContractorDetailHeader({
 													fontFamily: "system-ui, -apple-system, sans-serif",
 												}}
 											>
-												{contractorInfo.name?.toUpperCase() || "TRIO FABRICATION"}
+												{contractorInfo.name?.toUpperCase() || ""}
 											</div>
 											<div
 												className="text-xs font-normal tracking-[0.4em] text-gray-500"
@@ -281,7 +312,7 @@ export function ContractorDetailHeader({
 										className="text-4xl text-white tracking-wide font-sans"
 										style={{ fontWeight: "250" }}
 									>
-										{contractorInfo.name || "Trio Fabrication LLC"}
+										{contractorInfo.name || ""}
 									</h1>
 								</div>
 								<div className="flex items-center gap-3">
@@ -337,7 +368,7 @@ export function ContractorDetailHeader({
 										className="px-1.5 py-0.5 bg-gray-500/20 border border-gray-500/40 rounded-full uppercase tracking-wider text-gray-400 font-sans font-normal inline-flex items-center"
 										style={{ fontSize: "10px", height: '24px' }}
 									>
-										{contractorInfo.uei || "UNKNOWN12345"}
+										{contractorInfo.uei || ""}
 									</span>
 									<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
 										<div className="text-center font-medium">UEI Number</div>
@@ -359,7 +390,7 @@ export function ContractorDetailHeader({
 									</span>
 									<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
 										<div className="text-center font-medium">
-											Award Activity ≤30 Days
+											{getTemperatureTooltip(activityTemp.label)}
 										</div>
 									</div>
 								</div>
@@ -389,8 +420,11 @@ export function ContractorDetailHeader({
 								className="text-lg text-gray-300 leading-relaxed max-w-3xl mb-6"
 								style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
 							>
-								Defense contractor specializing in structural metal
-								manufacturing and fabrication.
+								{bioLoading
+									? "Loading contractor profile..."
+									: bio ||
+									  "Loading contractor profile..."
+								}
 							</p>
 
 							{/* Location/Sector/Agency Grid - Flat with HUD accents */}
@@ -415,7 +449,7 @@ export function ContractorDetailHeader({
 												? "Washington, DC"
 												: contractorInfo.location?.state
 													? `${contractorInfo.location.state}, USA`
-													: "Location Unknown"}
+													: ""}
 									</div>
 								</div>
 								<div className="col-span-2">
@@ -431,10 +465,11 @@ export function ContractorDetailHeader({
 									</div>
 									<div className="text-lg text-white font-light">
 										{industrySummary ||
+											sectorSummary ||
 											contractor?.industry
 												?.replace("-", " ")
 												.replace(/\b\w/g, (l) => l.toUpperCase()) ||
-											"Manufacturing"}
+											"General Contracting"}
 									</div>
 								</div>
 								<div className="col-span-2">

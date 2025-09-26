@@ -13,6 +13,7 @@ import React from "react";
 import { CONTRACTOR_DETAIL_COLORS } from "../../../../logic/utils";
 import { Card } from "../../../ui/card";
 import { NAICSPSCDisplay } from "../../../shared/NAICSPSCDisplay";
+import { formatMoney } from "../../../../shared";
 
 interface Event {
 	event_id: string;
@@ -48,6 +49,7 @@ interface ObligationCardViewProps {
 	contractTitle: string;
 	onBack: () => void;
 	originContainer?: "inflow" | "outflow";
+	activityEvents?: any[]; // Add activity events for real data
 }
 
 
@@ -56,6 +58,7 @@ export function ObligationCardView({
 	contractTitle,
 	onBack,
 	originContainer = "inflow",
+	activityEvents = [],
 }: ObligationCardViewProps) {
 	const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null);
 	const [expandedItems, setExpandedItems] = React.useState<Set<string>>(
@@ -69,156 +72,77 @@ export function ObligationCardView({
 		items: originContainer === "outflow" ? "Obligation Outflows" : "Obligation Inflows",
 	};
 
-	// Mock data - in production this would come from props or API
-	// This data should be DIFFERENT for inflow vs outflow to demonstrate independence
-	const mockObligations: Event[] = originContainer === "outflow" ? [
-		// OUTFLOW specific obligations - different data
-		{
-			event_id: `${contractId}-OUT-TX-001`,
-			event_type: "SUBAWARD",
-			event_date: "2025-08-20", // Different dates
-			recipient_name: "Outflow Vendor LLC",
-			recipient_uei: "O123456789",
-			event_amount: 12000000,
-			prime_contractor_name: "Trio Fabrication LLC",
-			awarding_agency_name: "Department of Defense",
-			awarding_sub_agency_name: "Navy",
-			naics_code: "541330",
-			naics_description: "Engineering Services",
-			recipient_state: "CA",
-			pop_state: "CA",
-			contract_total_value: 75000000,
-			award_piid: `${contractId}-OUT-001`,
-			action_type: "NEW",
-			fiscal_year: 2024,
-			extent_competed: "FULL",
-			contract_pricing_type: "T&M",
-			small_business_flags: ["Small Business"],
-			parent_company_name: null,
-			start_date: "2024-08-01",
-			end_date: "2026-07-31",
-			utilization: 65,
-			psc_code: "R425",
-			ai_description: "Outflow engineering support services for naval systems",
-		},
-		{
-			event_id: `${contractId}-OUT-TX-002`,
-			event_type: "SUBAWARD",
-			event_date: "2025-07-15",
-			recipient_name: "California Tech Solutions",
-			recipient_uei: "C987654321",
-			event_amount: 8500000,
-			prime_contractor_name: "Trio Fabrication LLC",
-			awarding_agency_name: "Department of Defense",
-			awarding_sub_agency_name: "Navy",
-			naics_code: "541511",
-			naics_description: "Custom Computer Programming",
-			recipient_state: "CA",
-			pop_state: "CA",
-			contract_total_value: 75000000,
-			award_piid: `${contractId}-OUT-002`,
-			action_type: "MOD",
-			fiscal_year: 2024,
-			extent_competed: "SOLE_SOURCE",
-			contract_pricing_type: "FFP",
-			small_business_flags: ["Small Business", "Woman-Owned"],
-			parent_company_name: null,
-			start_date: "2024-07-01",
-			end_date: "2025-12-31",
-			utilization: 82,
-			psc_code: "D316",
-			ai_description: "Software development for outflow management systems",
-		},
-	] : [
-		// INFLOW specific obligations - different data
-		{
-			event_id: `${contractId}-IN-TX-001`,
-			event_type: "PRIME",
-			event_date: "2025-09-10", // Different dates
-			recipient_name: "Trio Fabrication LLC",
-			recipient_uei: "T987654321",
-			event_amount: 18000000,
-			prime_contractor_name: null,
-			awarding_agency_name: "Department of Defense",
-			awarding_sub_agency_name: "Army Corps of Engineers",
-			naics_code: "332312",
-			naics_description: "Fabricated Structural Metal Manufacturing",
-			recipient_state: "DC",
-			pop_state: "CO",
-			contract_total_value: 120000000,
-			award_piid: `${contractId}-IN-001`,
-			action_type: "NEW",
-			fiscal_year: 2024,
-			extent_competed: "FULL",
-			contract_pricing_type: "FFP",
-			small_business_flags: ["Veteran-Owned", "Small Business"],
-			parent_company_name: null,
-			start_date: "2024-09-01",
-			end_date: "2027-08-31",
-			utilization: 42,
-			psc_code: "5110",
-			ai_description: "Inflow prime contract for structural metal fabrication",
-		},
-		{
-			event_id: `${contractId}-IN-TX-002`,
-			event_type: "PRIME",
-			event_date: "2025-06-25",
-			recipient_name: "Trio Fabrication LLC",
-			recipient_uei: "T987654321",
-			event_amount: 15500000,
-			prime_contractor_name: null,
-			awarding_agency_name: "Department of Defense",
-			awarding_sub_agency_name: "Army Corps of Engineers",
-			naics_code: "332312",
-			naics_description: "Fabricated Structural Metal Manufacturing",
-			recipient_state: "DC",
-			pop_state: "CO",
-			contract_total_value: 120000000,
-			award_piid: `${contractId}-IN-002`,
-			action_type: "MOD",
-			fiscal_year: 2024,
-			extent_competed: "FULL",
-			contract_pricing_type: "FFP",
-			small_business_flags: ["Veteran-Owned", "Small Business"],
-			parent_company_name: null,
-			start_date: "2024-06-01",
-			end_date: "2027-05-31",
-			utilization: 38,
-			psc_code: "5110",
-			ai_description: "Inflow contract modification for expanded manufacturing capacity",
-		},
-		{
-			event_id: `${contractId}-IN-TX-003`,
-			event_type: "SUBAWARD",
-			event_date: "2025-05-18",
-			recipient_name: "Denver Materials Corp",
-			recipient_uei: "D456789123",
-			event_amount: 4200000,
-			prime_contractor_name: "Trio Fabrication LLC",
-			awarding_agency_name: "Department of Defense",
-			awarding_sub_agency_name: "Army Corps of Engineers",
-			naics_code: "327320",
-			naics_description: "Ready-Mix Concrete Manufacturing",
-			recipient_state: "CO",
-			pop_state: "CO",
-			contract_total_value: 120000000,
-			award_piid: `${contractId}-IN-SUB-001`,
-			action_type: "NEW",
-			fiscal_year: 2024,
-			extent_competed: "SOLE_SOURCE",
-			contract_pricing_type: "FFP",
-			small_business_flags: ["Small Business"],
-			parent_company_name: null,
-			start_date: "2024-05-01",
-			end_date: "2026-04-30",
-			utilization: 73,
-			psc_code: "3610",
-			ai_description: "Inflow subaward for concrete supply and installation",
-		},
-	];
+	// Filter activity events for this specific contract and flow direction
+	const filteredEvents = activityEvents.filter((event: any) =>
+		event.AWARD_KEY === contractId &&
+		event.FLOW_DIRECTION?.toLowerCase() === originContainer
+	);
 
-	const formatMoney = (value: number): string => {
-		return `$${(value / 1000000).toFixed(1)}M`;
+	// Transform activity events into Event format for display
+	const obligations: Event[] = filteredEvents.length > 0
+		? filteredEvents.map((event: any, index: number) => ({
+			event_id: event.EVENT_ID || `${contractId}-${index}`,
+			event_type: event.EVENT_TYPE || "PRIME",
+			event_date: event.EVENT_DATE || new Date().toISOString().split('T')[0],
+			recipient_name: event.RELATED_ENTITY_NAME || "Unknown Entity",
+			recipient_uei: event.RELATED_ENTITY_UEI || `UEI_${index.toString().padStart(9, '0')}`,
+			event_amount: event.EVENT_AMOUNT || 0,
+			prime_contractor_name: event.EVENT_TYPE === 'SUBAWARD' ? event.CONTRACTOR_NAME : null,
+			awarding_agency_name: event.RELATED_ENTITY_TYPE === 'GOVERNMENT' ? event.RELATED_ENTITY_NAME : "Unknown Agency",
+			awarding_sub_agency_name: "Sub-agency",
+			naics_code: event.NAICS_CODE || "000000",
+			naics_description: event.NAICS_DESCRIPTION || "Professional Services",
+			recipient_state: event.CONTRACTOR_STATE || "Unknown",
+			pop_state: event.PERFORMANCE_STATE || "Unknown",
+			contract_total_value: event.AWARD_TOTAL_VALUE || 0,
+			award_piid: event.AWARD_KEY || contractId,
+			action_type: "EVENT", // Could be enhanced to detect NEW/MOD patterns
+			fiscal_year: event.FISCAL_YEAR || new Date().getFullYear(),
+			extent_competed: "UNKNOWN", // Not available in ActivityEvent
+			contract_pricing_type: event.AWARD_TYPE || "UNKNOWN",
+			small_business_flags: [], // Not available in ActivityEvent
+			parent_company_name: null, // Not available in ActivityEvent
+			start_date: event.AWARD_START_DATE || "",
+			end_date: event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE || "",
+			utilization: 50, // Placeholder - would need calculation
+			psc_code: event.PSC_CODE || "",
+			ai_description: event.NAICS_DESCRIPTION || `${originContainer} event for ${event.RELATED_ENTITY_NAME || 'contract services'}`
+		}))
+		: [
+			// Fallback message when no data available
+			{
+				event_id: `${contractId}-no-data`,
+				event_type: "PRIME" as const,
+				event_date: new Date().toISOString().split('T')[0],
+				recipient_name: "No obligation data available",
+				recipient_uei: "N/A",
+				event_amount: 0,
+				prime_contractor_name: null,
+				awarding_agency_name: "N/A",
+				awarding_sub_agency_name: "",
+				naics_code: "000000",
+				naics_description: `No ${originContainer} obligation events found for this contract`,
+				recipient_state: "N/A",
+				pop_state: "N/A",
+				contract_total_value: 0,
+				award_piid: contractId,
+				action_type: "N/A",
+				fiscal_year: new Date().getFullYear(),
+				extent_competed: "N/A",
+				contract_pricing_type: "N/A",
+				small_business_flags: [],
+				parent_company_name: null,
+				start_date: "",
+				end_date: "",
+				utilization: 0,
+				psc_code: "",
+				ai_description: `No detailed obligation events are available for this ${originContainer} contract. This may indicate the contract is in early stages or the data is still being processed.`
+			}
+		];
+
+	// Using shared formatMoney utility with millions formatting
+	const formatMoneyMillions = (value: number): string => {
+		return formatMoney(value, { forceUnit: 'M' });
 	};
 
 	const formatDate = (dateString: string) => {
@@ -299,12 +223,12 @@ export function ObligationCardView({
 								className="text-sm font-semibold text-gray-400 uppercase tracking-wider"
 								style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
 							>
-								{terminology.container} • {mockObligations.length}
+								{terminology.container} • {obligations.length}
 							</h5>
 						</div>
 
 						<div className="space-y-2">
-							{mockObligations
+							{obligations
 								.sort((a, b) => {
 									// Sort by most recent event_date first (newest to oldest)
 									const dateA = new Date(a.event_date);
@@ -687,7 +611,7 @@ export function ObligationCardView({
 																className="font-bold text-xl block"
 																style={{ color: "#F97316" }}
 															>
-																{formatMoney(event.event_amount)}
+																{formatMoneyMillions(event.event_amount)}
 															</span>
 														</div>
 														<div className="bg-gray-800/30 rounded p-3 border border-gray-700/30 text-center transition-all duration-300 hover:bg-gray-800/40 hover:border-gray-700/50">

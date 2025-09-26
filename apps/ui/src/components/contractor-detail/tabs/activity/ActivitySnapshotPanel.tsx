@@ -13,12 +13,97 @@ import { CONTRACTOR_DETAIL_COLORS, cn } from "../../../../logic/utils";
 interface ActivitySnapshotPanelProps {
 	contractor: any;
 	performanceData: any;
+	activityEvents?: any[]; // Add activity events from Snowflake
+	metrics?: any; // Add unified metrics
 }
 
 export function ActivitySnapshotPanel({
 	contractor,
 	performanceData,
+	activityEvents,
+	metrics,
 }: ActivitySnapshotPanelProps) {
+	// Format currency values
+	const formatCurrency = (amount: number): string => {
+		if (amount >= 1e9) return `$${(amount / 1e9).toFixed(0)}B`;
+		if (amount >= 1e6) return `$${(amount / 1e6).toFixed(0)}M`;
+		if (amount >= 1e3) return `$${(amount / 1e3).toFixed(0)}K`;
+		return `$${amount.toLocaleString()}`;
+	};
+
+	// Calculate real inflow/outflow metrics from activity events
+	const calculateActivityMetrics = () => {
+		if (!activityEvents?.length) {
+			return {
+				inflowTotal: 0,
+				outflowTotal: 0,
+				inflowCount: 0,
+				outflowCount: 0,
+				inflowGrowth: 0,
+				outflowGrowth: 0,
+				avgVelocity: 42 // fallback
+			};
+		}
+
+		// Current quarter (last 3 months)
+		const now = new Date();
+		const currentQuarter = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+		const previousQuarter = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+
+		// Filter events by time periods
+		const currentInflows = activityEvents.filter(e =>
+			e.FLOW_DIRECTION === 'INFLOW' && new Date(e.EVENT_DATE) >= currentQuarter
+		);
+		const currentOutflows = activityEvents.filter(e =>
+			e.FLOW_DIRECTION === 'OUTFLOW' && new Date(e.EVENT_DATE) >= currentQuarter
+		);
+		const previousInflows = activityEvents.filter(e =>
+			e.FLOW_DIRECTION === 'INFLOW' &&
+			new Date(e.EVENT_DATE) >= previousQuarter &&
+			new Date(e.EVENT_DATE) < currentQuarter
+		);
+		const previousOutflows = activityEvents.filter(e =>
+			e.FLOW_DIRECTION === 'OUTFLOW' &&
+			new Date(e.EVENT_DATE) >= previousQuarter &&
+			new Date(e.EVENT_DATE) < currentQuarter
+		);
+
+		// Calculate totals
+		const inflowTotal = currentInflows.reduce((sum, e) => sum + Math.abs(e.EVENT_AMOUNT), 0);
+		const outflowTotal = currentOutflows.reduce((sum, e) => sum + Math.abs(e.EVENT_AMOUNT), 0);
+		const prevInflowTotal = previousInflows.reduce((sum, e) => sum + Math.abs(e.EVENT_AMOUNT), 0);
+		const prevOutflowTotal = previousOutflows.reduce((sum, e) => sum + Math.abs(e.EVENT_AMOUNT), 0);
+
+		// Calculate growth rates
+		const inflowGrowth = prevInflowTotal > 0 ? ((inflowTotal - prevInflowTotal) / prevInflowTotal) * 100 : 0;
+		const outflowGrowth = prevOutflowTotal > 0 ? ((outflowTotal - prevOutflowTotal) / prevOutflowTotal) * 100 : 0;
+
+		// Calculate average contract velocity (days from start to first payment)
+		const velocityDays = activityEvents
+			.filter(e => e.AWARD_START_DATE && e.EVENT_DATE)
+			.map(e => {
+				const start = new Date(e.AWARD_START_DATE);
+				const payment = new Date(e.EVENT_DATE);
+				return Math.abs(payment.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+			})
+			.filter(days => days > 0 && days < 365); // reasonable range
+
+		const avgVelocity = velocityDays.length > 0
+			? Math.round(velocityDays.reduce((sum, days) => sum + days, 0) / velocityDays.length)
+			: metrics?.portfolio?.avgContractDuration || 42;
+
+		return {
+			inflowTotal,
+			outflowTotal,
+			inflowCount: currentInflows.length,
+			outflowCount: currentOutflows.length,
+			inflowGrowth,
+			outflowGrowth,
+			avgVelocity
+		};
+	};
+
+	const activityMetrics = calculateActivityMetrics();
 	return (
 		<div
 			className="h-full rounded-lg border border-gray-700"
@@ -60,17 +145,17 @@ export function ActivitySnapshotPanel({
 								<div className="w-16 h-16 rounded-full bg-[#22c55e]/20 border border-[#22c55e]/40 flex items-center justify-center mb-4 relative">
 									<TrendingUp className="w-6 h-6 text-[#22c55e]" />
 									<div className="absolute -top-1 -right-1 w-4 h-4 bg-[#22c55e] rounded-full flex items-center justify-center">
-										<span className="text-xs text-black font-bold">8</span>
+										<span className="text-xs text-black font-bold">{activityMetrics.inflowCount}</span>
 									</div>
 								</div>
 								<div className="text-2xl font-bold text-[#22c55e] mb-1">
-									$140M
+									{formatCurrency(activityMetrics.inflowTotal)}
 								</div>
 								<div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
 									Obligation Inflows
 								</div>
-								<div className="text-xs text-[#22c55e] bg-[#22c55e]/10 px-2 py-1 rounded-full">
-									+18% vs Q3
+								<div className={`text-xs px-2 py-1 rounded-full ${activityMetrics.inflowGrowth >= 0 ? 'text-[#22c55e] bg-[#22c55e]/10' : 'text-[#ef4444] bg-[#ef4444]/10'}`}>
+									{activityMetrics.inflowGrowth >= 0 ? '+' : ''}{activityMetrics.inflowGrowth.toFixed(0)}% vs Q3
 								</div>
 							</div>
 
@@ -86,7 +171,7 @@ export function ActivitySnapshotPanel({
 								<div className="text-xs text-[#D2AC38] uppercase tracking-wider">
 									Contract Velocity
 								</div>
-								<div className="text-xs text-gray-500">42 days avg</div>
+								<div className="text-xs text-gray-500">{activityMetrics.avgVelocity} days avg</div>
 							</div>
 
 							{/* Outflow Side */}
@@ -94,17 +179,17 @@ export function ActivitySnapshotPanel({
 								<div className="w-16 h-16 rounded-full bg-[#FF4C4C]/20 border border-[#FF4C4C]/40 flex items-center justify-center mb-4 relative">
 									<TrendingDown className="w-6 h-6 text-[#FF4C4C]" />
 									<div className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF4C4C] rounded-full flex items-center justify-center">
-										<span className="text-xs text-white font-bold">3</span>
+										<span className="text-xs text-white font-bold">{activityMetrics.outflowCount}</span>
 									</div>
 								</div>
 								<div className="text-2xl font-bold text-[#FF4C4C] mb-1">
-									$39M
+									{formatCurrency(activityMetrics.outflowTotal)}
 								</div>
 								<div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
 									Obligation Outflows
 								</div>
-								<div className="text-xs text-[#FF4C4C] bg-[#FF4C4C]/10 px-2 py-1 rounded-full">
-									-5% vs Q3
+								<div className={`text-xs px-2 py-1 rounded-full ${activityMetrics.outflowGrowth >= 0 ? 'text-[#22c55e] bg-[#22c55e]/10' : 'text-[#ef4444] bg-[#ef4444]/10'}`}>
+									{activityMetrics.outflowGrowth >= 0 ? '+' : ''}{activityMetrics.outflowGrowth.toFixed(0)}% vs Q3
 								</div>
 							</div>
 						</div>

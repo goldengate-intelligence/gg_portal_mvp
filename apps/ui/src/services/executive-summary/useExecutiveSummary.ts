@@ -45,6 +45,7 @@ export function useExecutiveSummary(data: ExecutiveSummaryData | null) {
     setError(null);
 
     try {
+      // Check if API endpoint exists by doing a simple fetch
       const response = await fetch('/api/v1/executive-summary', {
         method: 'POST',
         headers: {
@@ -54,7 +55,10 @@ export function useExecutiveSummary(data: ExecutiveSummaryData | null) {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to generate executive summary: ${response.status}`);
+        // If API doesn't exist, fall back gracefully without setting error
+        console.warn('Executive summary API not available, using fallback content');
+        setSummary(null);
+        return;
       }
 
       const result: ExecutiveSummaryResponse = await response.json();
@@ -67,9 +71,10 @@ export function useExecutiveSummary(data: ExecutiveSummaryData | null) {
       );
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      console.error('Executive summary generation error:', err);
+      // For network errors or API not existing, don't set error state - just use fallback
+      console.warn('Executive summary API not available, using fallback content:', err);
+      setSummary(null);
+      setError(null);
     } finally {
       setIsLoading(false);
     }
@@ -102,44 +107,48 @@ export function formatContractorDataForSummary(
     return null;
   }
 
+  // Ensure activityEvents is an array
+  const safeActivityEvents = Array.isArray(activityEvents) ? activityEvents : [];
+
   // Extract NAICS codes from activity events
   const naicsCodes = Array.from(new Set(
-    activityEvents
-      .map(event => event.naics_code)
+    safeActivityEvents
+      .map(event => event?.naics_code)
       .filter(Boolean)
   )) as string[];
 
   // Extract PSC codes from activity events
   const pscCodes = Array.from(new Set(
-    activityEvents
-      .map(event => event.psc_code)
+    safeActivityEvents
+      .map(event => event?.psc_code)
       .filter(Boolean)
   )) as string[];
 
   // Extract agencies
   const agencies = Array.from(new Set(
-    activityEvents
-      .map(event => event.awarding_agency_name)
+    safeActivityEvents
+      .map(event => event?.awarding_agency_name)
       .filter(Boolean)
   )) as string[];
 
   // Extract partners/recipients from subawards
   const partners = Array.from(new Set(
-    activityEvents
-      .filter(event => event.event_type === 'SUBAWARD')
-      .map(event => event.recipient_name)
+    safeActivityEvents
+      .filter(event => event?.event_type === 'SUBAWARD')
+      .map(event => event?.recipient_name)
       .filter(Boolean)
   )) as string[];
 
   // Extract contract types
   const contractTypes = Array.from(new Set(
-    activityEvents
-      .map(event => event.contract_pricing_type)
+    safeActivityEvents
+      .map(event => event?.contract_pricing_type)
       .filter(Boolean)
   )) as string[];
 
   // Get recent awards for additional context
-  const recentAwards = activityEvents
+  const recentAwards = safeActivityEvents
+    .filter(event => event?.event_date)
     .sort((a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime())
     .slice(0, 5);
 

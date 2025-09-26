@@ -37,7 +37,7 @@ export function OverviewTab({
 			{/* Command Center Dashboard - Updated Grid Layout */}
 			<div className="grid grid-cols-4 gap-6 items-stretch">
 				{/* UPPER LEFT: Executive Summary */}
-				<div className="col-span-2 flex w-full">
+				<div className="col-span-2">
 					<ExecutiveSummaryPanel
 						contractor={contractor}
 						activityEvents={activityEvents}
@@ -48,7 +48,7 @@ export function OverviewTab({
 				</div>
 
 				{/* UPPER RIGHT: Portfolio Snapshot */}
-				<div className="col-span-1 flex w-full">
+				<div className="col-span-1">
 					<PortfolioSnapshotPanel
 						activityEvents={activityEvents}
 						metrics={metrics}
@@ -57,7 +57,7 @@ export function OverviewTab({
 				</div>
 
 				{/* UPPER FAR RIGHT: Performance Snapshot */}
-				<div className="col-span-1 flex w-full">
+				<div className="col-span-1">
 					<PerformanceSnapshotPanel
 						activityEvents={activityEvents}
 						metrics={metrics}

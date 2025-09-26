@@ -8,6 +8,11 @@
 import { largeDataCache } from "../caching/large-data-cache";
 import { icebergReader } from "../data-sources/iceberg-reader";
 import { snowflakeApi } from "../data-sources/snowflake-api";
+import { mockContractorApi } from "./mockContractorData";
+
+// Use mock API in development
+const isDevelopment = import.meta.env.MODE === 'development' || !import.meta.env.VITE_SNOWFLAKE_API_URL;
+const apiService = isDevelopment ? mockContractorApi : snowflakeApi;
 
 export interface ContractorMetrics {
 	uei: string;
@@ -398,7 +403,7 @@ class ContractorMetricsService {
 		uei: string,
 	): Promise<ContractorMetrics | null> {
 		try {
-			const result = await snowflakeApi.getContractorMetrics(uei);
+			const result = await apiService.getContractorIntelligence(uei, 'competitive');
 			if (result) {
 				return {
 					uei: result.uei,

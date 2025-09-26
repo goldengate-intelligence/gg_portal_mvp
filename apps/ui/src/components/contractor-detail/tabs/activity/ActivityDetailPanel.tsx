@@ -50,6 +50,7 @@ export function ActivityDetailPanel({
 				contractTitle={obligationCardContract.contractTitle}
 				onBack={closeObligationCardView}
 				originContainer={obligationCardContract.originContainer}
+				activityEvents={activityEvents}
 			/>
 		);
 	}

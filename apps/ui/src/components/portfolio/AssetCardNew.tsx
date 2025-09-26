@@ -1022,7 +1022,7 @@ export function AssetCardNew({
 									className="text-gray-400 text-xs uppercase block mb-2"
 									style={{ fontFamily: "Genos, sans-serif" }}
 								>
-									Lifetime Awards
+									Lifetime Obligations
 								</span>
 								<span
 									className="font-bold text-xl block"
@@ -1036,7 +1036,7 @@ export function AssetCardNew({
 									className="text-gray-400 text-xs uppercase block mb-2"
 									style={{ fontFamily: "Genos, sans-serif" }}
 								>
-									Active Awards
+									Active Obligations
 								</span>
 								<span
 									className="font-bold text-xl block"
@@ -1050,7 +1050,7 @@ export function AssetCardNew({
 									className="text-gray-400 text-xs uppercase block mb-2"
 									style={{ fontFamily: "Genos, sans-serif" }}
 								>
-									Estimated Revenue (TTM)
+									Revenue (TTM)
 								</span>
 								<span
 									className="font-bold text-xl block"
@@ -1064,7 +1064,7 @@ export function AssetCardNew({
 									className="text-gray-400 text-xs uppercase block mb-2"
 									style={{ fontFamily: "Genos, sans-serif" }}
 								>
-									Estimated Pipeline
+									Calculated Pipeline
 								</span>
 								<span
 									className="font-bold text-xl block"

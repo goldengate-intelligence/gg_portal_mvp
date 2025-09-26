@@ -1,0 +1,206 @@
+{
+  "insights": {
+    "ABC123XYZ789:executive-summary": {
+      "uei": "ABC123XYZ789",
+      "contractorName": "Example Defense Corp",
+      "insightType": "executive-summary",
+      "current": {
+        "data": {
+          "headline": "Professional contractor",
+          "principalActivity": "Providing professional services and solutions",
+          "bulletPoints": [
+            "Professional services and solutions",
+            "Professional services and solutions",
+            "Professional services and solutions"
+          ],
+          "generatedAt": "2025-09-26T08:07:38.259Z",
+          "source": "ai"
+        },
+        "generatedAt": "2025-09-26T08:07:38.259Z",
+        "dataHash": "eyJuYWljcyI6IiIsInBzYyI6IiIsImFnZW5jaWVzIjoiIiwicGFydG5lcnMiOiIifQ==",
+        "cacheExpiry": "2025-10-26T08:07:38.259Z",
+        "contextSummary": "Same data, cache refresh"
+      },
+      "history": [
+        {
+          "data": {
+            "headline": "Professional contractor",
+            "principalActivity": "Providing professional services and solutions",
+            "bulletPoints": [
+              "Professional services and solutions",
+              "Professional services and solutions",
+              "Professional services and solutions"
+            ],
+            "generatedAt": "2025-09-26T08:07:38.051Z",
+            "source": "ai"
+          },
+          "generatedAt": "2025-09-26T08:07:38.052Z",
+          "dataHash": "eyJuYWljcyI6IiIsInBzYyI6IiIsImFnZW5jaWVzIjoiIiwicGFydG5lcnMiOiIifQ==",
+          "cacheExpiry": "2025-10-26T08:07:38.052Z",
+          "contextSummary": "Initial generation"
+        }
+      ],
+      "lastUpdated": "2025-09-26T08:07:38.259Z",
+      "totalGenerations": 2
+    },
+    "ABC123XYZ789:contractor-bio": {
+      "uei": "ABC123XYZ789",
+      "contractorName": "Example Defense Corp",
+      "insightType": "contractor-bio",
+      "current": {
+        "data": {
+          "bio": "Defense services contractor based in VA specializing in professional, scientific, and technical services.",
+          "source": "ai",
+          "generatedAt": "2025-09-26T08:13:52.994Z",
+          "cacheExpiry": "2025-10-26T08:13:52.994Z"
+        },
+        "generatedAt": "2025-09-26T08:13:52.994Z",
+        "dataHash": "eyJjb250cmFjdG9yTmFtZSI6IkV4YW1wbGUgRGVmZW5zZSBDb3JwIiwibmFpY3NDb2RlIjoiNTQxMzMwIiwibmFpY3NEZXNjcmlwdGlvbiI6IlByb2Zlc3Npb25hbCwgU2NpZW50aWZpYywgYW5kIFRlY2huaWNhbCBTZXJ2aWNlcyIsImxvY2F0aW9uIjp7ImNpdHkiOiJBcmxpbmd0b24iLCJzdGF0ZSI6IlZBIn0sImJ1c2luZXNzQ29udGV4dCI6eyJ0b3RhbFZhbHVlIjoyNTAwMDAwMCwiY29udHJhY3RDb3VudCI6MSwicHJpbWFyeUFnZW5jaWVzIjpbIkRlcGFydG1lbnQgb2YgRGVmZW5zZSJdLCJhZ2VuY3lGb2N1cyI6IkRlZmVuc2UifX0=",
+        "cacheExpiry": "2025-10-26T08:13:52.994Z",
+        "contextSummary": "Data changed, new analysis"
+      },
+      "history": [
+        {
+          "data": {
+            "bio": "Defense services contractor based in VA specializing in specialized manufacturing.",
+            "source": "ai",
+            "generatedAt": "2025-09-26T08:10:07.066Z",
+            "cacheExpiry": "2025-10-26T08:10:07.066Z"
+          },
+          "generatedAt": "2025-09-26T08:10:07.069Z",
+          "dataHash": "eyJjb250cmFjdG9yTmFtZSI6IkV4YW1wbGUgRGVmZW5zZSBDb3JwIiwibmFpY3NDb2RlIjoiNTQxMzMwIiwibG9jYXRpb24iOnsiY2l0eSI6IkFybGluZ3RvbiIsInN0YXRlIjoiVkEifSwiYnVzaW5lc3NDb250ZXh0Ijp7InRvdGFsVmFsdWUiOjI1MDAwMDAwLCJjb250cmFjdENvdW50IjoxLCJwcmltYXJ5QWdlbmNpZXMiOlsiRGVwYXJ0bWVudCBvZiBEZWZlbnNlIl0sImFnZW5jeUZvY3VzIjoiRGVmZW5zZSJ9fQ==",
+          "cacheExpiry": "2025-10-26T08:10:07.069Z",
+          "contextSummary": "Data changed, new analysis"
+        },
+        {
+          "data": {
+            "bio": "Defense services contractor based in VA specializing in professional, scientific, and technical services.",
+            "source": "ai",
+            "generatedAt": "2025-09-26T08:07:38.149Z",
+            "cacheExpiry": "2025-10-26T08:07:38.149Z"
+          },
+          "generatedAt": "2025-09-26T08:07:38.149Z",
+          "dataHash": "eyJjb250cmFjdG9yTmFtZSI6IkV4YW1wbGUgRGVmZW5zZSBDb3JwIiwibmFpY3NDb2RlIjoiNTQxMzMwIiwibmFpY3NEZXNjcmlwdGlvbiI6IlByb2Zlc3Npb25hbCwgU2NpZW50aWZpYywgYW5kIFRlY2huaWNhbCBTZXJ2aWNlcyIsImxvY2F0aW9uIjp7ImNpdHkiOiJBcmxpbmd0b24iLCJzdGF0ZSI6IlZBIn0sImJ1c2luZXNzQ29udGV4dCI6eyJ0b3RhbFZhbHVlIjoyNTAwMDAwMCwiY29udHJhY3RDb3VudCI6MSwicHJpbWFyeUFnZW5jaWVzIjpbIkRlcGFydG1lbnQgb2YgRGVmZW5zZSJdLCJhZ2VuY3lGb2N1cyI6IkRlZmVuc2UifX0=",
+          "cacheExpiry": "2025-10-26T08:07:38.149Z",
+          "contextSummary": "Data changed, new analysis"
+        },
+        {
+          "data": {
+            "bio": "Defense services contractor based in VA specializing in specialized manufacturing.",
+            "source": "ai",
+            "generatedAt": "2025-09-26T08:07:38.098Z",
+            "cacheExpiry": "2025-10-26T08:07:38.098Z"
+          },
+          "generatedAt": "2025-09-26T08:07:38.101Z",
+          "dataHash": "eyJjb250cmFjdG9yTmFtZSI6IkV4YW1wbGUgRGVmZW5zZSBDb3JwIiwibmFpY3NDb2RlIjoiNTQxMzMwIiwibG9jYXRpb24iOnsiY2l0eSI6IkFybGluZ3RvbiIsInN0YXRlIjoiVkEifSwiYnVzaW5lc3NDb250ZXh0Ijp7InRvdGFsVmFsdWUiOjI1MDAwMDAwLCJjb250cmFjdENvdW50IjoxLCJwcmltYXJ5QWdlbmNpZXMiOlsiRGVwYXJ0bWVudCBvZiBEZWZlbnNlIl0sImFnZW5jeUZvY3VzIjoiRGVmZW5zZSJ9fQ==",
+          "cacheExpiry": "2025-10-26T08:07:38.101Z",
+          "contextSummary": "Same data, cache refresh"
+        },
+        {
+          "data": {
+            "bio": "Defense services contractor based in VA specializing in specialized manufacturing.",
+            "source": "ai",
+            "generatedAt": "2025-09-26T08:07:38.062Z",
+            "cacheExpiry": "2025-10-26T08:07:38.062Z"
+          },
+          "generatedAt": "2025-09-26T08:07:38.062Z",
+          "dataHash": "eyJjb250cmFjdG9yTmFtZSI6IkV4YW1wbGUgRGVmZW5zZSBDb3JwIiwibmFpY3NDb2RlIjoiNTQxMzMwIiwibG9jYXRpb24iOnsiY2l0eSI6IkFybGluZ3RvbiIsInN0YXRlIjoiVkEifSwiYnVzaW5lc3NDb250ZXh0Ijp7InRvdGFsVmFsdWUiOjI1MDAwMDAwLCJjb250cmFjdENvdW50IjoxLCJwcmltYXJ5QWdlbmNpZXMiOlsiRGVwYXJ0bWVudCBvZiBEZWZlbnNlIl0sImFnZW5jeUZvY3VzIjoiRGVmZW5zZSJ9fQ==",
+          "cacheExpiry": "2025-10-26T08:07:38.062Z",
+          "contextSummary": "Initial generation"
+        }
+      ],
+      "lastUpdated": "2025-09-26T08:13:52.994Z",
+      "totalGenerations": 5
+    },
+    "TFL123456789:network-insights": {
+      "uei": "TFL123456789",
+      "contractorName": "Loading...",
+      "insightType": "network-insights",
+      "current": {
+        "data": {
+          "contractorProfileHeadline": "SPECIALIZED CONTRACTOR",
+          "contractorProfileDescription": "Manufacturing contractor serving government and prime contractor markets with specialized capabilities.",
+          "agencyClientsInsight": "Direct government contracts for manufacturing",
+          "primeClientsInsight": "Manufacturing support and specialized services for major defense contractors",
+          "subVendorsInsight": "Procurement of raw materials and specialized components from trusted suppliers",
+          "source": "ai",
+          "generatedAt": "2025-09-26T08:08:13.769Z",
+          "cacheExpiry": "2025-10-26T08:08:13.769Z"
+        },
+        "generatedAt": "2025-09-26T08:08:13.769Z",
+        "dataHash": "eyJuYWljcyI6IjMzMjMxMiIsInBzY3MiOiI1MTEwLDUzNDAsOTUxNSIsImFnZW5jeSI6IjUwMDAwMDAwOjEiLCJwcmltZSI6IjM4MDAwMDAwMDo5MSIsInN1YiI6IjI5MDAwMDAwOjE1Iiwib3ZlcnZpZXciOiJ7XCJ0b3RhbFJldmVudWVcIjoyNTAwMDAwMCxcInRvdGFsUGlwZWxpbmVcIjowfSJ9",
+        "cacheExpiry": "2025-10-26T08:08:13.770Z",
+        "contextSummary": "Same data, cache refresh"
+      },
+      "history": [
+        {
+          "data": {
+            "contractorProfileHeadline": "SPECIALIZED CONTRACTOR",
+            "contractorProfileDescription": "Manufacturing contractor serving government and prime contractor markets with specialized capabilities.",
+            "agencyClientsInsight": "Direct government contracts for manufacturing",
+            "primeClientsInsight": "Manufacturing support and specialized services for major defense contractors",
+            "subVendorsInsight": "Procurement of raw materials and specialized components from trusted suppliers",
+            "source": "ai",
+            "generatedAt": "2025-09-26T08:08:13.746Z",
+            "cacheExpiry": "2025-10-26T08:08:13.746Z"
+          },
+          "generatedAt": "2025-09-26T08:08:13.746Z",
+          "dataHash": "eyJuYWljcyI6IjMzMjMxMiIsInBzY3MiOiI1MTEwLDUzNDAsOTUxNSIsImFnZW5jeSI6IjUwMDAwMDAwOjEiLCJwcmltZSI6IjM4MDAwMDAwMDo5MSIsInN1YiI6IjI5MDAwMDAwOjE1Iiwib3ZlcnZpZXciOiJ7XCJ0b3RhbFJldmVudWVcIjoyNTAwMDAwMCxcInRvdGFsUGlwZWxpbmVcIjowfSJ9",
+          "cacheExpiry": "2025-10-26T08:08:13.746Z",
+          "contextSummary": "Same data, cache refresh"
+        },
+        {
+          "data": {
+            "contractorProfileHeadline": "SPECIALIZED CONTRACTOR",
+            "contractorProfileDescription": "Manufacturing contractor serving government and prime contractor markets with specialized capabilities.",
+            "agencyClientsInsight": "Direct government contracts for manufacturing",
+            "primeClientsInsight": "Manufacturing support and specialized services for major defense contractors",
+            "subVendorsInsight": "Procurement of raw materials and specialized components from trusted suppliers",
+            "source": "ai",
+            "generatedAt": "2025-09-26T08:08:13.738Z",
+            "cacheExpiry": "2025-10-26T08:08:13.738Z"
+          },
+          "generatedAt": "2025-09-26T08:08:13.738Z",
+          "dataHash": "eyJuYWljcyI6IjMzMjMxMiIsInBzY3MiOiI1MTEwLDUzNDAsOTUxNSIsImFnZW5jeSI6IjUwMDAwMDAwOjEiLCJwcmltZSI6IjM4MDAwMDAwMDo5MSIsInN1YiI6IjI5MDAwMDAwOjE1Iiwib3ZlcnZpZXciOiJ7XCJ0b3RhbFJldmVudWVcIjoyNTAwMDAwMCxcInRvdGFsUGlwZWxpbmVcIjowfSJ9",
+          "cacheExpiry": "2025-10-26T08:08:13.738Z",
+          "contextSummary": "Initial generation"
+        }
+      ],
+      "lastUpdated": "2025-09-26T08:08:13.769Z",
+      "totalGenerations": 3
+    }
+  },
+  "metadata": {
+    "version": "2.0.0",
+    "description": "Unified AI insights cache for all contractor analysis types",
+    "cacheTypes": [
+      "executive-summary",
+      "performance-insights",
+      "network-insights",
+      "contractor-bio",
+      "industry-descriptions"
+    ],
+    "cachePolicy": {
+      "expirationDays": 30,
+      "revalidationStrategy": "lazy",
+      "description": "Insights expire after 30 days but only regenerate when accessed",
+      "maxHistoryEntries": 10
+    },
+    "lastUpdated": "2025-09-26T08:13:52.994Z",
+    "totalEntries": 3,
+    "totalGenerations": 10,
+    "statistics": {
+      "executiveSummaries": 1,
+      "performanceInsights": 0,
+      "networkInsights": 1,
+      "contractorBios": 1,
+      "industryDescriptions": 0
+    },
+    "historicalStatistics": {
+      "totalHistoricalEntries": 7,
+      "averageGenerationsPerEntry": 3.33,
+      "oldestEntry": "2025-09-26T08:07:38.259Z",
+      "newestEntry": "2025-09-26T08:13:52.994Z"
+    }
+  }
+}

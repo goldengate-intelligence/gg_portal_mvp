@@ -3,6 +3,7 @@ import React from "react";
 import USAMap from "react-usa-map";
 import { USA_STATE_COORDINATES_PRECISE } from "../logic/map-coordinates.js";
 import { CONTRACTOR_DETAIL_COLORS } from "../logic/utils";
+import { formatMoney } from "../shared";
 import { GoldengateNetworkGraph } from "../ui/charts/components";
 import { HudCard } from "./ui/hud-card";
 
@@ -72,8 +73,8 @@ export const NetworkV1Layout: React.FC<NetworkV1LayoutProps> = ({
 	// State to track which dot is being hovered
 	const [hoveredDot, setHoveredDot] = React.useState<string | null>(null);
 
-	// Format monetary values - remove .0 from whole numbers
-	const formatMoney = (value: number): string => {
+	// Using shared formatMoney utility
+	const formatMoneySimple = (value: number): string => {
 		const formatted = value.toFixed(1);
 		return formatted.endsWith(".0") ? formatted.slice(0, -2) : formatted;
 	};
@@ -365,7 +366,7 @@ export const NetworkV1Layout: React.FC<NetworkV1LayoutProps> = ({
 												</div>
 												<div className="text-green-400 font-medium text-lg">
 													+$
-													{formatMoney(
+													{formatMoneySimple(
 														50 +
 															(networkData.relationships?.asSubcontractor
 																?.totalValue || 0) /
@@ -383,7 +384,7 @@ export const NetworkV1Layout: React.FC<NetworkV1LayoutProps> = ({
 												</div>
 												<div className="text-red-400 font-medium text-lg">
 													-$
-													{formatMoney(
+													{formatMoneySimple(
 														(networkData.relationships?.asPrime?.totalValue ||
 															0) / 1000000,
 													)}
@@ -399,7 +400,7 @@ export const NetworkV1Layout: React.FC<NetworkV1LayoutProps> = ({
 												</div>
 												<div className="text-green-400 font-medium text-lg">
 													+$
-													{formatMoney(
+													{formatMoneySimple(
 														50 +
 															(networkData.relationships?.asSubcontractor
 																?.totalValue || 0) /
@@ -491,7 +492,7 @@ export const NetworkV1Layout: React.FC<NetworkV1LayoutProps> = ({
 														style={{ fontSize: "38px" }}
 													>
 														$
-														{formatMoney(
+														{formatMoneySimple(
 															(networkData.relationships?.asSubcontractor
 																?.totalValue || 0) / 1000000,
 														)}
@@ -512,7 +513,7 @@ export const NetworkV1Layout: React.FC<NetworkV1LayoutProps> = ({
 														style={{ fontSize: "38px" }}
 													>
 														$
-														{formatMoney(
+														{formatMoneySimple(
 															(networkData.relationships?.asPrime?.totalValue ||
 																0) / 1000000,
 														)}
@@ -608,7 +609,7 @@ export const NetworkV1Layout: React.FC<NetworkV1LayoutProps> = ({
 																	<div className="flex items-center justify-between mt-1">
 																		<div className="text-base text-green-400 font-semibold">
 																			$
-																			{formatMoney(
+																			{formatMoneySimple(
 																				partner.sharedRevenue / 1000000,
 																			)}
 																			M
@@ -669,7 +670,7 @@ export const NetworkV1Layout: React.FC<NetworkV1LayoutProps> = ({
 																	<div className="flex items-center justify-between mt-1">
 																		<div className="text-base text-red-400 font-semibold">
 																			$
-																			{formatMoney(
+																			{formatMoneySimple(
 																				partner.sharedRevenue / 1000000,
 																			)}
 																			M

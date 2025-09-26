@@ -139,9 +139,9 @@ export function ViewPortfolio() {
 
 	return (
 		<ProtectedRoute>
-			<div className="min-h-screen text-white pb-20 pt-20 relative bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90">
+			<div className="min-h-screen text-white pb-20 pt-20 relative bg-gradient-to-b from-gray-900/95 via-black/70 to-gray-900/95">
 				{/* Background grid */}
-				<div className="absolute inset-0 opacity-5 z-0">
+				<div className="absolute inset-0 opacity-[0.03] z-0">
 					<div
 						className="absolute inset-0"
 						style={{

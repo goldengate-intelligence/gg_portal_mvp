@@ -1,7 +1,10 @@
-import React from "react";
-import { CONTRACTOR_DETAIL_COLORS } from "../../../../logic/utils";
+import React, { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, ArrowUpDown } from "lucide-react";
+import { CONTRACTOR_DETAIL_COLORS, BUBBLE_CHART_CONFIG } from "../../../../shared-config";
 import { GoldengateBubbleChart } from "../../../../ui/charts/components";
 import { Card } from "../../../ui/card";
+import { peerGroupDataService, type PeerGroupData, type PeerContractor } from "./services/peerGroupDataService";
+import { DataSourceIndicator } from "./components/DataSourceIndicator";
 
 interface CompetitivePositionPanelProps {
 	benchmarkData: any;
@@ -9,6 +12,7 @@ interface CompetitivePositionPanelProps {
 	xAxisMetric: string;
 	onYAxisMetricChange: (value: string) => void;
 	onXAxisMetricChange: (value: string) => void;
+	contractorUEI: string;
 }
 
 export function CompetitivePositionPanel({
@@ -17,15 +21,131 @@ export function CompetitivePositionPanel({
 	xAxisMetric,
 	onYAxisMetricChange,
 	onXAxisMetricChange,
+	contractorUEI,
 }: CompetitivePositionPanelProps) {
+	const [isTableExpanded, setIsTableExpanded] = useState(false);
+	const [sortConfig, setSortConfig] = useState({ key: 'xScore', direction: 'desc' as 'asc' | 'desc' });
+	const [peerGroupData, setPeerGroupData] = useState<PeerGroupData | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	// Fetch peer group data on component mount
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				setIsLoading(true);
+				setError(null);
+				const data = await peerGroupDataService.fetchPeerGroupData(contractorUEI);
+				setPeerGroupData(data);
+			} catch (err) {
+				console.error('Failed to fetch peer group data:', err);
+				setError(err instanceof Error ? err.message : 'Failed to load peer data');
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		if (contractorUEI) {
+			fetchData();
+		}
+	}, [contractorUEI]);
+
+	// Transform peer data for table display
+	const getTableData = () => {
+		if (!peerGroupData) return [];
+
+		const tableData = peerGroupData.peers.map(peer => ({
+			name: peer.name,
+			uei: peer.uei,
+			xScore: peerGroupDataService.getXAxisValue(peer, xAxisMetric),
+			yValue: peerGroupDataService.getYAxisValue(peer, yAxisMetric),
+			isSubject: peer.isSubject
+		}));
+
+		// Sort the data
+		return tableData.sort((a, b) => {
+			const aValue = a[sortConfig.key as keyof typeof a];
+			const bValue = b[sortConfig.key as keyof typeof b];
+
+			if (sortConfig.direction === 'asc') {
+				return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+			} else {
+				return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+			}
+		});
+	};
+
+	const handleSort = (key: string) => {
+		let direction: 'asc' | 'desc' = 'desc';
+		if (sortConfig.key === key && sortConfig.direction === 'desc') {
+			direction = 'asc';
+		}
+		setSortConfig({ key, direction });
+	};
+
+	const formatYValue = (value: number) => {
+		return peerGroupDataService.formatYAxisValue(value, yAxisMetric);
+	};
+
+	// Generate bubble chart data from real peer data
+	const generateBubbleChartData = () => {
+		if (!peerGroupData) {
+			return {
+				datasets: [
+					{
+						label: BUBBLE_CHART_CONFIG.labels.peer,
+						data: [],
+						...BUBBLE_CHART_CONFIG.colors.peer,
+					},
+					{
+						label: BUBBLE_CHART_CONFIG.labels.subject,
+						data: [],
+						...BUBBLE_CHART_CONFIG.colors.subject,
+					}
+				]
+			};
+		}
+
+		// Separate peers from subject contractor
+		const peers = peerGroupData.peers.filter(peer => !peer.isSubject);
+		const subject = peerGroupData.subject;
+
+		const peerData = peers.map(peer => ({
+			x: peerGroupDataService.getXAxisValue(peer, xAxisMetric),
+			y: peerGroupDataService.getYAxisValue(peer, yAxisMetric),
+			r: BUBBLE_CHART_CONFIG.sizes.peerRadius,
+		}));
+
+		const subjectData = [{
+			x: peerGroupDataService.getXAxisValue(subject, xAxisMetric),
+			y: peerGroupDataService.getYAxisValue(subject, yAxisMetric),
+			r: BUBBLE_CHART_CONFIG.sizes.subjectRadius,
+		}];
+
+		return {
+			datasets: [
+				{
+					label: BUBBLE_CHART_CONFIG.labels.peer,
+					data: peerData,
+					...BUBBLE_CHART_CONFIG.colors.peer,
+				},
+				{
+					label: subject.name,
+					data: subjectData,
+					...BUBBLE_CHART_CONFIG.colors.subject,
+				}
+			]
+		};
+	};
+
 	// Helper function to get Y-axis title
 	const getYAxisTitle = (metric: string) => {
 		const titles: Record<string, string> = {
 			ttm_awards: "Awards Captured (TTM)",
-			ttm_revenue: "Estimated Revenue (TTM)",
+			ttm_revenue: "Revenue (TTM)",
 			lifetime_awards: "Lifetime Awards",
 			lifetime_revenue: "Lifetime Revenue",
-			total_pipeline: "Estimated Total Pipeline",
+			calculated_pipeline: "Calculated Pipeline",
 			portfolio_duration: "Portfolio Duration",
 			blended_growth: "Blended Growth",
 		};
@@ -35,14 +155,14 @@ export function CompetitivePositionPanel({
 	// Helper function to get X-axis title
 	const getXAxisTitle = (metric: string) => {
 		const titles: Record<string, string> = {
-			composite_score: "Composite Score",
+			composite_score: "Composite",
 			awards_captured: "Awards Captured (TTM)",
-			revenue: "Estimated Revenue (TTM)",
-			pipeline_value: "Estimated Total Pipeline",
+			revenue: "Revenue (TTM)",
+			pipeline_value: "Calculated Pipeline",
 			portfolio_duration: "Portfolio Duration",
 			blended_growth: "Blended Growth",
 		};
-		return titles[metric] || "Composite Score";
+		return titles[metric] || "Composite";
 	};
 
 	const getChartTitle = (yMetric: string, xMetric?: string) => {
@@ -53,36 +173,22 @@ export function CompetitivePositionPanel({
 		return `${yTitle} vs ${xTitle}`;
 	};
 
-	// Helper function to get X-axis value for bubble chart based on selected metric
-	const getXAxisValue = (metric: string) => {
-		// These values should match the Performance Scores subscores
-		const xValues: Record<string, number> = {
-			composite_score: 80,
-			awards_captured: 82,
-			revenue: 76,
-			pipeline_value: 91,
-			portfolio_duration: 68,
-			blended_growth: 85,
-		};
-		return xValues[metric] || 80;
-	};
+	// Loading and error states for display
+	if (isLoading) {
+		return (
+			<div className="min-h-[55vh] flex items-center justify-center">
+				<div className="text-white text-lg">Loading peer group data...</div>
+			</div>
+		);
+	}
 
-	// Generate peer data for X-axis
-	const generatePeerDataForXAxis = (xMetric: string) => {
-		return Array.from({ length: 50 }, (_, i) => ({
-			x: Math.random() * 100, // Random percentile score
-			y: (() => {
-				if (yAxisMetric === "portfolio_duration") {
-					return Math.random() * 6 + 1; // 1-7 years
-				}
-				if (yAxisMetric === "blended_growth") {
-					return Math.random() * 40 - 10; // -10% to 30%
-				}
-				return Math.random() * 500 + 50; // 50M to 550M
-			})(),
-			r: 4,
-		}));
-	};
+	if (error) {
+		return (
+			<div className="min-h-[55vh] flex items-center justify-center">
+				<div className="text-red-400 text-lg">Error: {error}</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="min-h-[55vh]">
@@ -94,15 +200,42 @@ export function CompetitivePositionPanel({
 				>
 					<div className="p-4 h-full flex flex-col relative z-10">
 						<div className="flex items-center justify-between mb-3">
-							<h3
-								className="font-bold tracking-wide mb-3 text-gray-200 uppercase"
-								style={{ fontFamily: "Genos, sans-serif", fontSize: "18px" }}
-							>
-								COMPETITIVE POSITION
-							</h3>
+							<div className="flex items-center gap-3">
+								<h3
+									className="font-bold tracking-wide mb-3 text-gray-200 uppercase"
+									style={{ fontFamily: "Genos, sans-serif", fontSize: "18px" }}
+								>
+									COMPETITIVE POSITION
+								</h3>
+								<DataSourceIndicator className="mb-3 bg-black/40 border border-orange-400/30" />
+							</div>
 							<div className="flex items-center gap-2">
 								<div className="flex items-center gap-1">
-									<span className="text-sm text-gray-400">Y-Axis:</span>
+									<span className="text-sm text-gray-400">X-Axis (Percentile Score):</span>
+									<select
+										className="bg-black/60 border border-[#D2AC38] text-white text-xs px-2 py-1 rounded font-light focus:border-[#D2AC38] focus:outline-none"
+										style={{
+											fontFamily: "system-ui, -apple-system, sans-serif",
+										}}
+										value={xAxisMetric}
+										onChange={(e) => onXAxisMetricChange(e.target.value)}
+									>
+										<option value="composite_score">Composite</option>
+										<option value="awards_captured">
+											Awards Captured (TTM)
+										</option>
+										<option value="revenue">Revenue (TTM)</option>
+										<option value="pipeline_value">
+											Calculated Pipeline
+										</option>
+										<option value="portfolio_duration">
+											Portfolio Duration
+										</option>
+										<option value="blended_growth">Blended Growth</option>
+									</select>
+								</div>
+								<div className="flex items-center gap-1">
+									<span className="text-sm text-gray-400">Y-Axis (Value):</span>
 									<select
 										className="bg-black/60 border border-[#D2AC38] text-white text-xs px-2 py-1 rounded font-light focus:border-[#D2AC38] focus:outline-none"
 										style={{
@@ -112,40 +245,16 @@ export function CompetitivePositionPanel({
 										onChange={(e) => onYAxisMetricChange(e.target.value)}
 									>
 										<option value="ttm_awards">Awards Captured (TTM)</option>
-										<option value="ttm_revenue">Estimated Revenue (TTM)</option>
+										<option value="ttm_revenue">Revenue (TTM)</option>
 										<option value="lifetime_awards">Lifetime Awards</option>
 										<option value="lifetime_revenue">Lifetime Revenue</option>
-										<option value="total_pipeline">
-											Estimated Total Pipeline
+										<option value="calculated_pipeline">
+											Calculated Pipeline
 										</option>
 										<option value="portfolio_duration">
 											Portfolio Duration
 										</option>
 										<option value="blended_growth">Blended Growth Rate</option>
-									</select>
-								</div>
-								<div className="flex items-center gap-1">
-									<span className="text-sm text-gray-400">X-Axis:</span>
-									<select
-										className="bg-black/60 border border-[#D2AC38] text-white text-xs px-2 py-1 rounded font-light focus:border-[#D2AC38] focus:outline-none"
-										style={{
-											fontFamily: "system-ui, -apple-system, sans-serif",
-										}}
-										value={xAxisMetric}
-										onChange={(e) => onXAxisMetricChange(e.target.value)}
-									>
-										<option value="composite_score">Composite Score</option>
-										<option value="awards_captured">
-											Awards Captured (TTM)
-										</option>
-										<option value="revenue">Estimated Revenue (TTM)</option>
-										<option value="pipeline_value">
-											Estimated Total Pipeline
-										</option>
-										<option value="portfolio_duration">
-											Portfolio Duration
-										</option>
-										<option value="blended_growth">Blended Growth</option>
 									</select>
 								</div>
 							</div>
@@ -156,38 +265,7 @@ export function CompetitivePositionPanel({
 								liveIndicator={true}
 								liveText="TRACKING"
 								height={350}
-								data={{
-									datasets: [
-										{
-											label: "Peer Entities",
-											data: generatePeerDataForXAxis(xAxisMetric),
-											backgroundColor: "rgba(255, 68, 68, 0.6)",
-											borderColor: "#FF4444",
-											borderWidth: 1,
-										},
-										{
-											label: "Trio Fabrication LLC",
-											data: [
-												{
-													x: getXAxisValue(xAxisMetric),
-													y: (() => {
-														if (yAxisMetric === "portfolio_duration") {
-															return 3.2; // Average portfolio duration in years
-														}
-														if (yAxisMetric === "blended_growth") {
-															return 24; // 24% growth
-														}
-														return 300; // Default value in millions
-													})(),
-													r: 8,
-												},
-											],
-											backgroundColor: "rgba(210, 172, 56, 0.8)",
-											borderColor: "#D2AC38",
-											borderWidth: 2,
-										},
-									],
-								}}
+								data={generateBubbleChartData()}
 								options={{
 									responsive: true,
 									maintainAspectRatio: false,
@@ -376,6 +454,189 @@ export function CompetitivePositionPanel({
 								}}
 							/>
 						</div>
+					</div>
+				</Card>
+			</div>
+
+			{/* Expandable Data Table */}
+			<div className="mt-4">
+				<Card
+					className="rounded-xl overflow-hidden shadow-2xl transition-all duration-500 border border-[#D2AC38]/50 hover:border-[#D2AC38]/90"
+					style={{ backgroundColor: "#111726" }}
+				>
+					<div className="p-4">
+						<button
+							onClick={() => setIsTableExpanded(!isTableExpanded)}
+							className="w-full flex items-center justify-between text-left focus:outline-none group"
+						>
+							<h3
+								className="font-bold tracking-wide text-gray-200 uppercase group-hover:text-[#D2AC38] transition-colors"
+								style={{ fontFamily: "Genos, sans-serif", fontSize: "18px" }}
+							>
+								Competitive Data ({peerGroupData?.groupSize || 0} Entities)
+							</h3>
+							<div className="flex items-center gap-2">
+								<span className="text-xs text-gray-400 uppercase tracking-wider">
+									{isTableExpanded ? "COLLAPSE" : "EXPAND"}
+								</span>
+								{isTableExpanded ? (
+									<ChevronUp className="w-4 h-4 text-[#D2AC38]" />
+								) : (
+									<ChevronDown className="w-4 h-4 text-[#D2AC38]" />
+								)}
+							</div>
+						</button>
+
+						{isTableExpanded && (
+							<div className="mt-4 overflow-hidden rounded-lg" style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}>
+								<div className="overflow-x-auto">
+									<table className="w-full">
+										<thead className="bg-black/40">
+											<tr>
+												<th className="px-4 py-2 text-left">
+													<button
+														onClick={() => handleSort('name')}
+														className="flex items-center gap-2 text-xs uppercase tracking-wider text-gray-400 hover:text-[#D2AC38] transition-colors focus:outline-none"
+														style={{ fontFamily: "Genos, sans-serif" }}
+													>
+														Contractor Name
+														{sortConfig.key === 'name' ? (
+															sortConfig.direction === 'asc' ? (
+																<ChevronUp className="w-3 h-3" />
+															) : (
+																<ChevronDown className="w-3 h-3" />
+															)
+														) : (
+															<ArrowUpDown className="w-3 h-3 opacity-50" />
+														)}
+													</button>
+												</th>
+												<th className="px-4 py-2 text-left">
+													<button
+														onClick={() => handleSort('uei')}
+														className="flex items-center gap-2 text-xs uppercase tracking-wider text-gray-400 hover:text-[#D2AC38] transition-colors focus:outline-none"
+														style={{ fontFamily: "Genos, sans-serif" }}
+													>
+														UEI
+														{sortConfig.key === 'uei' ? (
+															sortConfig.direction === 'asc' ? (
+																<ChevronUp className="w-3 h-3" />
+															) : (
+																<ChevronDown className="w-3 h-3" />
+															)
+														) : (
+															<ArrowUpDown className="w-3 h-3 opacity-50" />
+														)}
+													</button>
+												</th>
+												<th className="px-4 py-2 text-left">
+													<button
+														onClick={() => handleSort('xScore')}
+														className="flex items-center gap-2 text-xs uppercase tracking-wider text-gray-400 hover:text-[#D2AC38] transition-colors focus:outline-none"
+														style={{ fontFamily: "Genos, sans-serif" }}
+													>
+														{getXAxisTitle(xAxisMetric)} Score
+														{sortConfig.key === 'xScore' ? (
+															sortConfig.direction === 'asc' ? (
+																<ChevronUp className="w-3 h-3" />
+															) : (
+																<ChevronDown className="w-3 h-3" />
+															)
+														) : (
+															<ArrowUpDown className="w-3 h-3 opacity-50" />
+														)}
+													</button>
+												</th>
+												<th className="px-4 py-2 text-left">
+													<button
+														onClick={() => handleSort('yValue')}
+														className="flex items-center gap-2 text-xs uppercase tracking-wider text-gray-400 hover:text-[#D2AC38] transition-colors focus:outline-none"
+														style={{ fontFamily: "Genos, sans-serif" }}
+													>
+														{getYAxisTitle(yAxisMetric)}
+														{sortConfig.key === 'yValue' ? (
+															sortConfig.direction === 'asc' ? (
+																<ChevronUp className="w-3 h-3" />
+															) : (
+																<ChevronDown className="w-3 h-3" />
+															)
+														) : (
+															<ArrowUpDown className="w-3 h-3 opacity-50" />
+														)}
+													</button>
+												</th>
+											</tr>
+										</thead>
+										<tbody>
+											{getTableData().map((contractor, index) => (
+												<tr
+													key={contractor.uei}
+													className={`border-b border-gray-700/30 hover:bg-black/30 transition-colors ${
+														contractor.isSubject
+															? "bg-[#D2AC38]/20 border-[#D2AC38]/30"
+															: index % 2 === 0
+																? "bg-gray-800/30"
+																: "bg-gray-700/30"
+													}`}
+													style={{
+														fontFamily: "system-ui, -apple-system, sans-serif"
+													}}
+												>
+													<td className="px-4 py-2">
+														<span className={`text-sm ${
+															contractor.isSubject
+																? "text-[#D2AC38] font-medium"
+																: "text-white"
+														}`}
+														style={{
+															fontFamily: "system-ui, -apple-system, sans-serif"
+														}}>
+															{contractor.name}
+														</span>
+													</td>
+													<td className="px-4 py-2">
+														<span className={`text-sm ${
+															contractor.isSubject
+																? "text-[#D2AC38] font-medium"
+																: "text-gray-300"
+														}`}
+														style={{
+															fontFamily: "system-ui, -apple-system, sans-serif"
+														}}>
+															{contractor.uei}
+														</span>
+													</td>
+													<td className="px-4 py-2">
+														<span className={`text-sm ${
+															contractor.isSubject
+																? "text-[#D2AC38] font-medium"
+																: "text-white font-medium"
+														}`}
+														style={{
+															fontFamily: "system-ui, -apple-system, sans-serif"
+														}}>
+															{contractor.xScore}
+														</span>
+													</td>
+													<td className="px-4 py-2">
+														<span className={`text-sm ${
+															contractor.isSubject
+																? "text-[#D2AC38] font-medium"
+																: "text-white font-medium"
+														}`}
+														style={{
+															fontFamily: "system-ui, -apple-system, sans-serif"
+														}}>
+															{formatYValue(contractor.yValue)}
+														</span>
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						)}
 					</div>
 				</Card>
 			</div>

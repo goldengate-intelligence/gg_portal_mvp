@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 export interface ChatMessage {
 	id: string;
@@ -59,6 +59,43 @@ export function useAgentChat(): AgentChatHook {
 	});
 
 	const lastUserMessageRef = useRef<string>("");
+	const isLoadingHistory = useRef<boolean>(false);
+
+	// Load chat history when component initializes
+	const loadChatHistory = useCallback(async (sessionId: string) => {
+		if (isLoadingHistory.current) return;
+		isLoadingHistory.current = true;
+
+		try {
+			const response = await fetch(`/api/v1/ai-chat/sessions/${sessionId}`);
+			if (response.ok) {
+				const data = await response.json();
+				if (data.session && data.session.messages && data.session.messages.length > 0) {
+					// Convert timestamps back to Date objects and load messages
+					const historicalMessages = data.session.messages.map((msg: any) => ({
+						...msg,
+						timestamp: new Date(msg.createdAt)
+					}));
+
+					setState(prev => ({
+						...prev,
+						messages: [INITIAL_MESSAGE, ...historicalMessages]
+					}));
+				}
+			}
+		} catch (error) {
+			console.warn('Failed to load chat history:', error);
+		} finally {
+			isLoadingHistory.current = false;
+		}
+	}, []);
+
+	// Load history when session starts
+	React.useEffect(() => {
+		if (state.sessionId) {
+			loadChatHistory(state.sessionId);
+		}
+	}, [state.sessionId, loadChatHistory]);
 
 	const addMessage = useCallback((message: ChatMessage) => {
 		setState((prev) => ({
@@ -74,27 +111,135 @@ export function useAgentChat(): AgentChatHook {
 		}));
 	}, []);
 
-	// Simulate API call to agent service
+	// Call real Claude API through backend
 	const callAgentAPI = async (
 		userMessage: string,
 		metadata?: ChatMessage["metadata"],
+		context?: {
+			currentPage?: string;
+			contractorUEI?: string;
+			contractorName?: string;
+			userData?: any;
+			viewData?: any;
+		}
 	): Promise<ChatMessage> => {
-		// Simulate network delay
-		await new Promise((resolve) =>
-			setTimeout(resolve, 1000 + Math.random() * 2000),
-		);
+		try {
+			const response = await fetch('/api/v1/ai-chat', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					message: userMessage,
+					sessionId: state.sessionId,
+					context,
+					metadata
+				})
+			});
 
-		const response = generateAgentResponse(userMessage, metadata);
+			if (!response.ok) {
+				throw new Error(`API request failed: ${response.status}`);
+			}
 
-		return {
-			id: `agent_${Date.now()}`,
-			content: response.content,
-			role: "agent",
-			timestamp: new Date(),
-			type: response.type,
-			metadata: response.metadata,
-		};
+			const data = await response.json();
+
+			return {
+				id: data.id,
+				content: data.content,
+				role: data.role,
+				timestamp: new Date(data.timestamp),
+				type: data.type,
+				metadata: data.metadata,
+			};
+		} catch (error) {
+			console.error('AI Chat API call failed:', error);
+
+			// Fallback to mock response if API fails
+			const response = generateAgentResponse(userMessage, metadata);
+			return {
+				id: `fallback_${Date.now()}`,
+				content: response.content,
+				role: "agent",
+				timestamp: new Date(),
+				type: response.type,
+				metadata: response.metadata,
+			};
+		}
 	};
+
+	// Helper function to extract context from current page
+	const extractCurrentContext = useCallback(() => {
+		const currentPath = window.location.pathname;
+		let context: {
+			currentPage?: string;
+			contractorUEI?: string;
+			contractorName?: string;
+			userData?: any;
+			viewData?: any;
+		} = {};
+
+		// Detect current page
+		if (currentPath.includes('/contractor-detail/')) {
+			context.currentPage = 'contractor-detail';
+			// Extract UEI from URL
+			const ueiMatch = currentPath.match(/\/contractor-detail\/([^\/]+)/);
+			if (ueiMatch) {
+				context.contractorUEI = ueiMatch[1];
+			}
+			// Try to get contractor name from page title or meta
+			const pageTitle = document.title;
+			if (pageTitle && pageTitle !== 'GoldenGate Portal') {
+				context.contractorName = pageTitle.replace(' - GoldenGate Portal', '');
+			}
+		} else if (currentPath.includes('/dashboard')) {
+			context.currentPage = 'dashboard';
+		} else if (currentPath.includes('/discovery')) {
+			context.currentPage = 'discovery';
+		} else if (currentPath.includes('/portfolio')) {
+			context.currentPage = 'portfolio';
+		} else if (currentPath.includes('/platform')) {
+			context.currentPage = 'platform';
+		}
+
+		// Try to extract any data from the page that might be useful
+		try {
+			// Look for contractor detail context data attributes
+			const contractorNameElement = document.querySelector('[data-contractor-name]');
+			const contractorUEIElement = document.querySelector('[data-contractor-uei]');
+			const currentTabElement = document.querySelector('[data-current-tab]');
+			const contextElement = document.querySelector('[data-context]');
+
+			if (contractorNameElement && !context.contractorName) {
+				context.contractorName = contractorNameElement.getAttribute('data-contractor-name') || undefined;
+			}
+
+			if (contractorUEIElement && !context.contractorUEI) {
+				context.contractorUEI = contractorUEIElement.getAttribute('data-contractor-uei') || undefined;
+			}
+
+			// Additional context from data attributes
+			if (currentTabElement) {
+				const currentTab = currentTabElement.getAttribute('data-current-tab');
+				if (currentTab) {
+					context.viewData = {
+						...context.viewData,
+						activeTab: currentTab
+					};
+				}
+			}
+
+			if (contextElement) {
+				const pageContext = contextElement.getAttribute('data-context');
+				if (pageContext && !context.currentPage) {
+					context.currentPage = pageContext;
+				}
+			}
+		} catch (error) {
+			console.warn('Error extracting context from DOM:', error);
+		}
+
+		return context;
+	}, []);
 
 	const sendMessage = useCallback(
 		async (content: string, metadata?: ChatMessage["metadata"]) => {
@@ -119,8 +264,11 @@ export function useAgentChat(): AgentChatHook {
 			setTyping(true);
 
 			try {
-				// Get agent response
-				const agentResponse = await callAgentAPI(content, metadata);
+				// Extract current context
+				const context = extractCurrentContext();
+
+				// Get agent response with context
+				const agentResponse = await callAgentAPI(content, metadata, context);
 				addMessage(agentResponse);
 			} catch (error) {
 				// Handle error
@@ -137,7 +285,7 @@ export function useAgentChat(): AgentChatHook {
 				setTyping(false);
 			}
 		},
-		[addMessage, setTyping],
+		[addMessage, setTyping, extractCurrentContext],
 	);
 
 	const clearChat = useCallback(() => {

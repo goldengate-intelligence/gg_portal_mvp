@@ -7,6 +7,13 @@
  */
 
 // =============================================================================
+// COMMONLY USED UTILITIES & CONSTANTS (to reduce deep imports)
+// =============================================================================
+
+export { CONTRACTOR_DETAIL_COLORS } from '../../logic/utils';
+export { formatMoney } from '../../shared';
+
+// =============================================================================
 // MAIN COMPONENTS
 // =============================================================================
 
@@ -27,8 +34,8 @@ export * from "./tabs/performance";
 // Activity Tab
 export * from "./tabs/activity";
 
-// Relationships Tab
-export * from "./tabs/relationships";
+// Network Tab
+export * from "./tabs/network";
 
 // Contacts Tab (Enhanced with Lusha Integration)
 export * from "./tabs/contacts";

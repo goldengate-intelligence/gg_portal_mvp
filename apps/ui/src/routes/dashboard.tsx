@@ -63,7 +63,7 @@ function DashboardComponent() {
 
 	return (
 		<ProtectedRoute>
-			<div className="min-h-screen text-white pb-20 bg-gradient-to-b from-black/90 via-gray-900/50 to-black/90 relative">
+			<div className="min-h-screen text-white pb-20 bg-gradient-to-b from-black/70 via-gray-900/95 to-black/70 relative">
 				{/* Background grid */}
 				<div className="absolute inset-0 opacity-5 z-0">
 					<div
@@ -80,23 +80,35 @@ function DashboardComponent() {
 				<div className="container mx-auto px-6 pt-24 pb-20 relative z-10">
 					{/* Dashboard Header */}
 					<div className="mb-8 mt-8">
-						<div className="flex items-center gap-4 mb-4">
-							<div className="p-3 bg-gradient-to-br from-[#D2AC38]/20 to-orange-600/20 border border-[#D2AC38]/40 rounded-xl backdrop-blur-sm">
-								<UserCircle className="w-8 h-8 text-[#D2AC38]" />
+						<div className="flex items-center justify-between mb-4">
+							<div className="flex items-center gap-4">
+								<div className="p-3 bg-gradient-to-br from-[#D2AC38]/20 to-orange-600/20 border border-[#D2AC38]/40 rounded-xl backdrop-blur-sm">
+									<UserCircle className="w-8 h-8 text-[#D2AC38]" />
+								</div>
+								<div>
+									<h1
+										className="text-4xl text-white"
+										style={{
+											fontFamily: "system-ui, -apple-system, sans-serif",
+											fontWeight: "250",
+										}}
+									>
+										Dashboard
+									</h1>
+									<p className="text-[#D2AC38] font-sans text-sm tracking-wide">
+										ACCOUNT MANAGEMENT • SETTINGS • PREFERENCES
+									</p>
+								</div>
 							</div>
-							<div>
-								<h1
-									className="text-4xl text-white"
-									style={{
-										fontFamily: "system-ui, -apple-system, sans-serif",
-										fontWeight: "250",
-									}}
-								>
-									Dashboard
-								</h1>
-								<p className="text-[#D2AC38] font-sans text-sm tracking-wide">
-									ACCOUNT MANAGEMENT • SETTINGS • PREFERENCES
-								</p>
+							<div className="flex items-center">
+								<Link to="/platform">
+									<Button
+										variant="outline"
+										className="border-[#D2AC38]/30 text-[#D2AC38] hover:bg-[#D2AC38]/10 hover:text-[#D2AC38]"
+									>
+										Back to Dashboard
+									</Button>
+								</Link>
 							</div>
 						</div>
 					</div>

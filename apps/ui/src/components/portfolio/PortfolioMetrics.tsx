@@ -131,40 +131,40 @@ export function PortfolioMetrics({ assets }: PortfolioMetricsProps) {
 
 	const metrics = [
 		{
-			title: "PORTFOLIO LIFETIME AWARDS",
+			title: "PORTFOLIO LIFETIME OBLIGATIONS",
 			value: totals.lifetime,
 			accentColor: "#F97316",
 			count: totals.contracts.toString(),
-			countLabel: "entities",
+			countLabel: "obligations",
 			timeframe: "all time",
-			description: "Total historical value",
+			description: "Total historical obligations",
 		},
 		{
-			title: "PORTFOLIO ACTIVE AWARDS",
+			title: "PORTFOLIO ACTIVE OBLIGATIONS",
 			value: totals.activeAwards,
 			accentColor: "#FFB84D",
 			count: totals.contracts.toString(),
-			countLabel: "entities",
+			countLabel: "obligations",
 			timeframe: "performing",
-			description: "Currently active",
+			description: "Currently active obligations",
 		},
 		{
-			title: "PORTFOLIO ESTIMATED REVENUE (TTM)",
+			title: "PORTFOLIO REVENUE (TTM)",
 			value: totals.revenue,
 			accentColor: "#42D4F4",
 			count: "Est",
-			countLabel: "recognized",
-			timeframe: "12 months",
+			countLabel: "(TTM)",
+			timeframe: "12 Months",
 			description: "STRAIGHT-LINE RECOGNITION (SLR)",
 		},
 		{
-			title: "PORTFOLIO ESTIMATED PIPELINE",
+			title: "PORTFOLIO CALCULATED PIPELINE",
 			value: totals.pipeline,
 			accentColor: "#8B8EFF",
 			count: "Est",
-			countLabel: "potential",
-			timeframe: "forecast",
-			description: "LIFETIME AWDS MINUS SLR",
+			countLabel: "Remaining",
+			timeframe: "FORECAST",
+			description: "LIFETIME MINUS RECOGNIZED",
 		},
 	];
 
@@ -210,7 +210,7 @@ export function PortfolioMetrics({ assets }: PortfolioMetricsProps) {
 
 								<div className="flex items-center justify-between text-[11px]">
 									<div className="flex items-baseline gap-1.5">
-										<span className="text-white/70 font-medium">
+										<span className="text-white font-medium">
 											{metric.count}
 										</span>
 										<span className="text-gray-500 uppercase tracking-wide">

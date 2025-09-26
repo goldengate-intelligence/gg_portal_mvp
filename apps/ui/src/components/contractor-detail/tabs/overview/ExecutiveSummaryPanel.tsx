@@ -4,6 +4,7 @@ import { Card } from "../../../ui/card";
 import type { ActivityEvent } from "../network/types";
 import type { UniversalMetrics, PeerComparisonData } from "../../services/unified-data-adapter";
 import { useExecutiveSummary, formatContractorDataForSummary } from "../../../../services/executive-summary";
+import { IndustryImageMatchingService } from "../../../../services/industry-image-matching";
 
 interface ExecutiveSummaryPanelProps {
 	contractor: any; // Contractor basic info (name, uei, etc.)
@@ -11,6 +12,16 @@ interface ExecutiveSummaryPanelProps {
 	metrics: UniversalMetrics;
 	peerData?: PeerComparisonData;
 	isLoading?: boolean;
+}
+
+// Helper function to get the best matching industry image using sophisticated tag matching
+function getBestIndustryImagePath(contractor: any, activityEvents: ActivityEvent[]): string {
+	try {
+		return IndustryImageMatchingService.getBestImageForContractor(contractor, activityEvents);
+	} catch (error) {
+		console.warn('Error in industry image matching, using fallback:', error);
+		return "/gg_industry_images/16_other.jpg?v=3"; // fallback
+	}
 }
 
 export function ExecutiveSummaryPanel({
@@ -28,6 +39,31 @@ export function ExecutiveSummaryPanel({
 
 	// Determine if we should show loading state
 	const showLoading = isLoading || summaryLoading;
+
+	// Get the best matching industry image using comprehensive tag analysis
+	const industryImagePath = React.useMemo(() => {
+		return getBestIndustryImagePath(contractor, activityEvents);
+	}, [contractor, activityEvents]);
+
+	// Check if contractor is currently active based on performance periods
+	const isContractorActive = () => {
+		if (!activityEvents?.length) return false;
+
+		const now = new Date();
+		return activityEvents.some(event => {
+			// Check both inflow and outflow events
+			if (event.FLOW_DIRECTION === 'INFLOW' || event.FLOW_DIRECTION === 'OUTFLOW') {
+				const startDate = new Date(event.start_date || event.AWARD_START_DATE);
+				const endDate = new Date(event.end_date || event.AWARD_END_DATE || event.AWARD_POTENTIAL_END_DATE);
+
+				// Check if current date is within the performance period
+				return startDate <= now && now <= endDate;
+			}
+			return false;
+		});
+	};
+
+	const contractorActive = isContractorActive();
 	return (
 		<Card
 			className="h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group relative border border-[#D2AC38]/50 hover:border-[#D2AC38]/90"
@@ -46,19 +82,13 @@ export function ExecutiveSummaryPanel({
 						style={{ backgroundColor: CONTRACTOR_DETAIL_COLORS.containerColor }}
 					>
 						{/* Left side - Image with gradient */}
-						<div className="relative overflow-hidden" style={{ width: "30%" }}>
+						<div className="relative overflow-hidden" style={{ width: "40%" }}>
 							<div
 								className="w-full h-full bg-cover bg-center bg-no-repeat"
 								style={{
-									backgroundImage:
-										"url(/gg_industry_images/6_manufacturing.jpg?v=3)",
+									backgroundImage: `url(${industryImagePath})`,
 									backgroundSize: "cover",
 									backgroundPosition: "center",
-									imageRendering: "high-quality",
-									transform: "translateZ(0)",
-									willChange: "transform",
-									backfaceVisibility: "hidden",
-									perspective: "1000px",
 								}}
 							/>
 							<div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-gray-900/70" />
@@ -75,14 +105,14 @@ export function ExecutiveSummaryPanel({
 								}}
 							>
 								<div className="relative flex items-center justify-center">
-									<div className="absolute w-2 h-2 bg-green-400 rounded-full animate-ping opacity-75" />
-									<div className="relative w-2 h-2 bg-green-400 rounded-full" />
+									<div className={`absolute w-2 h-2 rounded-full animate-ping opacity-75 ${contractorActive ? 'bg-green-400' : 'bg-red-400'}`} />
+									<div className={`relative w-2 h-2 rounded-full ${contractorActive ? 'bg-green-400' : 'bg-red-400'}`} />
 								</div>
 								<span
 									className="text-xs text-gray-300 uppercase tracking-widest font-light"
 									style={{ fontFamily: "Genos, sans-serif" }}
 								>
-									{isFromCache ? 'Cached Analysis' : 'AI Generated'} {showLoading && '• Loading...'}
+									{contractorActive ? 'Active Contractor' : 'Inactive Contractor'} {showLoading && '• Loading...'}
 								</span>
 							</div>
 
